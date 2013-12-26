@@ -1,0 +1,15 @@
+{% extends "wrapper.html" %}
+
+{% block extrastyles %}
+<link rel="stylesheet" href="{{ STATIC_URL }}css/medium-editor.css">
+<link rel="stylesheet" href="{{ STATIC_URL }}css/jquery.fileupload.css">
+<link rel="stylesheet" href="{{ STATIC_URL }}css/whyqd.css">
+{% endblock extrastyles %}
+
+{% block content %}
+    <div class="whyqd-content col-xs-12 col-md-10 col-md-offset-1">
+        <div id="content" class="editable" contenteditable="true" data-placeholder="Add content" data-medium-element="true">
+        {{ diffgoog|safe }}
+        </div>
+    </div>
+{% endblock content %}

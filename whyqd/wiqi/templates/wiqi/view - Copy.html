@@ -1,0 +1,135 @@
+{% extends "wrapper.html" %}
+
+{% block extrastyles %}
+<link rel="stylesheet" href="{{ STATIC_URL }}css/medium-editor.css">
+<link rel="stylesheet" href="{{ STATIC_URL }}css/jquery.fileupload.css">
+<style type="text/css">
+    .whyqd-header { 
+        height:350px; 
+        overflow:hidden; 
+        background: none repeat scroll 0 0 #FFFFFF;
+        left: 0;
+        position: absolute;
+        right: 0;
+        top: 0;
+        margin: 0;
+    }
+    .whyqd-header img { 
+        background-position: center center;
+        background-size: cover;
+        position: absolute; 
+        top: 0; 
+        left: 0; 
+        height: auto; 
+        width:100%; 
+    }
+    .whyqd-header-text {
+        margin-top: 75px; 
+        margin-bottom: 35px; 
+    }
+    .whyqd-edit-image { margin-top: 70px;}
+    .whyqd-text-white { color: white; }
+    .whyqd-text-black { color: black; }
+    .whyqd-attribution { margin-top: 20px; z-index: 100; text-align: right; }
+    .dropbox {
+        margin-top: 70px;
+        width: 100%;
+        height: 100px;
+        text-align: center;
+    }
+
+</style>
+{% endblock extrastyles %}
+
+{% block head_image %}
+<div class="whyqd-header">
+    <div class="whyqd-text-{{ wiqi_object.stack.header_image.stack.color }} container">
+        <div class="col-xs-12 col-md-10 col-md-offset-1">
+            <div id="source_attribution" class="editable" contenteditable="true" data-placeholder="Image attribution" data-medium-element="true">
+            {{ wiqi_object.stack.header_image.stack.source_attribution|safe }}
+            </div>
+        </div>
+    </div>
+    <div class="container" id="page-header-image">
+        {{ wiqi_object.stack.header_image.htmlresponse|safe }}
+    </div>
+    <div class="container dropbox" id="image-header-upload">
+        <span class="btn btn-default fileinput-button">
+            <i class="glyphicon glyphicon-plus"></i>
+            <span>Edit image...</span>
+            <input id="fileupload" type="file" name="file">
+        </span>
+        <div id="progress" class="progress">
+            <div class="progress-bar progress-bar-success"></div>
+        </div>
+        <!--<div id="files" class="files">{{ wiqi_object.stack.header_image.htmlresponse|safe }}</div>-->
+    </div>
+</div>
+{% endblock head_image %}
+
+{% block heading %}
+<div class="whyqd-text-{{ wiqi_object.stack.header_image.stack.color }} container whyqd-header-text">
+    <div class="col-xs-12 col-md-10 col-md-offset-1">
+        <div id="title" class="editable" contenteditable="true" data-placeholder="Type your text" data-medium-element="true">
+        {{ page_title|safe }}
+        </div>
+        <div id="subtitle" class="editable" contenteditable="true" data-placeholder="Type your text" data-medium-element="true">
+        {{ wiqi_object.stack.subtitle|safe }}
+        </div>
+    </div>
+</div>
+{% endblock heading %}
+
+{% block content %}
+<div class="container">
+    <div class="col-xs-12 col-md-10 col-md-offset-1">
+        <div id="content" class="editable" contenteditable="true" data-placeholder="Type your text" data-medium-element="true">
+    	{{ wiqi_object.htmlresponse|safe }}
+    	</div>
+    </div>
+</div>
+{% endblock content %}
+
+{% block extrascripts %}
+<script src="{{ STATIC_URL }}js/medium-editor.js"></script>
+<script src="{{ STATIC_URL }}js/jquery-ui-1.10.3.custom.min.js"></script>
+<script src="{{ STATIC_URL }}js/load-image.min.js"></script>
+<script src="{{ STATIC_URL }}js/jquery.iframe-transport.js"></script>
+<script src="{{ STATIC_URL }}js/jquery.fileupload.js"></script>
+<!--<script src="{{ STATIC_URL }}js/jquery.fileupload-image.js"></script>
+<script src="{{ STATIC_URL }}js/jquery.fileupload-process.js"></script>
+<script src="{{ STATIC_URL }}js/jquery.fileupload-validate.js"></script>-->
+
+<script src="{{ STATIC_URL }}js/jquery.whyqd.js"></script>
+<script>
+    var editor = new MediumEditor('.editable');
+    $(function () {
+        $('#fileupload').fileupload({
+            url: "/create/image/{{ wiqi_object }}/",
+            type: "POST",
+            formData: editor.serialize(),
+            dataType: 'json',
+            done: function (e, data) {
+                $("#page-header-image").html(data.result.result);
+                $('div[class^="whyqd-text"]').attr('class', 
+                    function(i, c) { return c.replace(/\bwhyqd-text-\S+/g, 
+                        "whyqd-text-" + data.result.color);});
+            }
+        });
+    });
+    // http://stackoverflow.com/questions/2751566/jquery-on-click-event-send-post-request
+    $(function() {
+      $('#save_edit').click(function() {
+        $.ajax({
+            url: "/edit/{{ wiqi_object }}/",
+            type: "POST",
+            data: editor.serialize(),
+            dataType: 'html',
+            //contentType: "application/json",
+            //complete: "/edit/{{ wiqi_object }}/"
+        });
+      });
+    });
+
+</script>
+{% endblock extrascripts %}

@@ -1,0 +1,9 @@
+{% extends "wrapper.html" %}
+
+{% block content %}
+	<ul>
+		{% for wiqi in wiqi_list %}
+		<li><a href="{{ wiqi.get_absolute_url }}">{{ wiqi.stack.title }} ({{ wiqi.get_class }})</a>{% if wiqi.forked %} ...(forked){% endif %}</li>
+		{% endfor %}
+	</ul>
+{% endblock content %}

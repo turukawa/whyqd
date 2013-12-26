@@ -1,0 +1,23 @@
+{% extends "wrapper.html" %}
+
+{% block extrastyles %}
+<link type="text/css" rel="stylesheet" href="{{ STATIC_URL }}css/formalize.css">
+{% endblock extrastyles %}
+
+{% block content %}
+	<hr class="space">
+	<form action="" method="POST" class="inline">{% csrf_token %}
+		{% for field in form %}
+			{{ field.label_tag }}: {{ field }} 
+		{% endfor %}
+		<input type="submit" name="_revert" value="Revert" />
+	</form>
+	<hr class="space">
+	<hr>
+	<p>Reverted by: {{ request.user }} | {{ usr_ip}} | {{ now }}</p>
+{% endblock content %}
+
+{% block extrascripts %}
+<script type="text/javascript" src="{{ STATIC_URL }}js/jquery.formalize.min.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}js/jquery.whyqd.js"></script>
+{% endblock extrascripts %}

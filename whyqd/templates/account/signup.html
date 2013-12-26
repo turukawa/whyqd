@@ -1,0 +1,22 @@
+{% extends "account/base.html" %}
+
+{% block title %}Signup - {{ site_name }}{% endblock title %}
+
+{% block heading %}<h1>Signup</h1>{% endblock heading %}
+
+{% block content %}
+    {% if user.is_authenticated %}
+{% include "account/already_logged_in.html" %}
+    {% else %}
+    <p>Already have an account? Then please <a href="{{ login_url }}">sign in</a>.</p>
+    <form method="post" action="{% url account_signup %}">{% csrf_token %}
+        {{ form.as_p }}
+        {% if redirect_field_value %}
+            <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+        {% endif %}
+        <input type="submit" name="_signup" value="Signup" />
+    </form>
+    {% endif %}
+{% endblock %}
+
+

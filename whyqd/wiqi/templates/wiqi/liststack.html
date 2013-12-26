@@ -1,0 +1,45 @@
+{% extends "wrapper.html" %}
+
+{% block extrastyles %}
+<link rel="stylesheet" href="{{ STATIC_URL }}css/whyqd.css">
+{% endblock extrastyles %}
+
+{% block content %}
+    <div class="whyqd-page col-xs-12 col-md-10 col-md-offset-1">
+    	<form action="" method="POST" class="inline">{% csrf_token %}
+    		<fieldset>
+    			<legend>Limit stack history range:</legend>
+    		{{ range_form }}
+    		<input type="submit" name="_range" value="Go" />
+    		</fieldset>
+    	</form>
+    	<hr/>
+    	<form method="GET" action="{% url "compare_wiqi" wiqi_surl=wiqi_surl %}">
+            <button id="_compare" name="_compare" type="submit" class="btn btn-default"><span class="icon-copy"></span></button>
+    		<ul>
+    		{% for wiqistack in wiqi_stack %}
+    		<li>
+    			<input type="radio" name="a" value="{{ wiqistack.surl }}">
+    			<input type="radio" name="b" value="{{ wiqistack.surl }}">
+    			<a href="{{ wiqistack.get_absolute_url }}">{{ wiqistack.created_on }} | {{ wiqistack.creator}} | {{ wiqistack.creator_ip}}</a>
+    			... {% if wiqistack.reverted_from %} ({{ wiqistack.reverted_from }}){% endif %} - 
+    			<a href="{{ wiqistack.get_revert_url }}{% if params %}?{{ params }}{% endif %}" title="Revert">revert</a>
+    		</li>
+    		{% endfor %}
+    		{% if wiqi_object.forked %}
+    		<li>
+    			<input type="radio" name="a" value="{{ wiqi_object.forked.surl }}">
+    			<input type="radio" name="b" value="{{ wiqi_object.forked.surl }}">
+    			<a href="{{ wiqi_object.forked.get_absolute_url }}">{{ wiqi_object.forked.created_at }} | {{ wiqi_object.forked.creator}} | {{ wiqi_object.forked.creator_ip}}</a>
+    			... {% if wiqi_object.forked.comment %} ({{ wiqi_object.forked.comment }}){% else %}(Minor edit){% endif %} - 
+    			<a href="{{ wiqi_object.forked.get_revert_url }}{% if params %}?{{ params }}{% endif %}" title="Revert">revert</a>
+    		</li>
+    		{% endif %}
+    		</ul>
+    		<button id="_compare" name="_compare" type="submit" class="btn btn-default"><span class="icon-copy"></span></button>
+    	</form>
+    </div>
+{% endblock content %}
+
+{% block extrascripts %}
+{% endblock extrascripts %}

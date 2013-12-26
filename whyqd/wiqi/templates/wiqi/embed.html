@@ -1,0 +1,38 @@
+{% extends "embed_base.html" %}
+
+{% if wiqi_object.get_class == "geomap" %}
+{% block mapstyles %}
+<link type="text/css" rel="stylesheet" href="{{ STATIC_URL }}css/olwidget.css">
+<script type="text/javascript" src="http://openlayers.org/api/2.11/OpenLayers.js"></script>
+<script type="text/javascript" src="http://openstreetmap.org/openlayers/OpenStreetMap.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}js/olwidget.js"></script>
+{% endblock mapstyles %}
+{% endif %}
+
+{% block embedded %}
+	{{ wiqi_object.htmlresponse|safe }}
+{% if wiqi_object.get_class == "geomap" %}
+<script type="text/javascript">
+var div = OpenLayers.Util.getElement("map");
+div.style.height = window.innerHeight + "px";
+olwidget_map.updateSize();
+var extent = new OpenLayers.Bounds();
+for (var i = 0; i < olwidget_map.vectorLayers.length; i++) {
+    var vl = olwidget_map.vectorLayers[i];
+    if (vl.opts.cluster) {
+        for (var j = 0; j < vl.features.length; j++) {
+            for (var k = 0; k < vl.features[j].cluster.length; k++) {
+                extent.extend(vl.features[j].cluster[k].geometry.getBounds());
+            }
+        }
+    } else {
+        extent.extend(vl.getDataExtent());
+    }
+}
+if (!extent.equals(new OpenLayers.Bounds())) {
+    olwidget_map.zoomToExtent(extent);
+    olwidget_map.zoomTo(Math.min(olwidget_map.getZoom(), olwidget_map.opts.zoomToDataExtentMin));
+}
+</script>
+{% endif %}
+{% endblock embedded %}

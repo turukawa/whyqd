@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block site_wrapper %}
+<div id="pagewidth">
+	<div id="navigation">
+		{% include 'tags/navigation.html' %}
+	</div>
+	<div id="generalsearch">
+		{% include 'tags/generalsearch.html' %}
+	</div>
+	<div id="wrapper" class="clearfix" >
+		<div id="leftcolumn">
+			{% include 'tags/topics.html' %}
+		</div>
+		<div id="maincontent" class="clearfix"> 
+			<div id="content">
+				{% block content %}{% endblock %}
+			</div>
+			<div id="selection">
+				[Selection service]
+			</div>
+		</div>
+	</div>
+</div>
+{% endblock %}

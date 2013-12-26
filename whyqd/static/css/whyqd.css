@@ -1,0 +1,58 @@
+/*@import url(http://fonts.googleapis.com/css?family=PT+Serif:400,700,400italic,700italic);*/
+@import url(http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic);
+/*@import url(http://fonts.googleapis.com/css?family=Poly:400,400italic);*/
+html, body, h1, h2, h3, h4 {
+  font-family: 'Lora', serif;
+  -webkit-text-size-adjust: 100%;
+      -ms-text-size-adjust: 100%;
+}
+    .whyqd-header { 
+        height:350px; 
+        overflow:hidden; 
+        background: none repeat scroll 0 0 #FFFFFF;
+        left: 0;
+        position: absolute;
+        right: 0;
+        top: 0;
+        margin: 0;
+    }
+    .whyqd-header img { 
+        background-position: center center;
+        background-size: cover;
+        position: absolute; 
+        top: 0; 
+        left: 0; 
+        height: auto; 
+        width:100%; 
+    }
+    .whyqd-header-text {
+        margin-top: 200px;
+        bottom: 10px;
+    }
+    .whyqd-hidden {
+        display: none;
+    }
+    .whyqd-text-white { color: white; }
+    .whyqd-text-black { color: black; }
+    .whyqd-attribution { 
+        bottom: 0; }
+    .whyqd-content {
+        top: 375px;
+    }
+    :focus, :active {outline:none !important;}
+    ::-moz-focus-inner {border:0 !important;}
+    .whyqd-diff-deleted {
+        background: #ffe6e6;
+    }
+    .whyqd-diff-inserted {
+        background: #e6ffe6;
+    }
+    #nav-image > label > span:hover,
+    #nav-image > label > span:focus {
+        cursor: pointer;
+        text-decoration: none;
+        background-color: #eeeeee;
+    }
+    #nav-image > input {
+        display: none;
+    }
