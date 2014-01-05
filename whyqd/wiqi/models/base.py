@@ -13,11 +13,15 @@ Abstract classes:
                     is_searchable
                     is_deleted
                     tags
-                    base (generic foreign key)
-                    forked (generic foreign key)
+                    stack (generic foreign key)
+                    branched (generic foreign key)
+                    branchlist
                     merged (generic foreign key)
+                    next_wiqi
+                    previous_wiqi
         WiqiStack:
                     title
+                    description
                     creator
                     creator_ip
                     created_on
@@ -46,8 +50,10 @@ from django.conf import settings
 from django.template.defaultfilters import slugify
 
 from datetime import datetime
+from bs4 import BeautifulSoup
 import pytz
-import json
+from jsonfield import JSONField
+import collections
 # Google Diff Match Patch library
 # http://code.google.com/p/google-diff-match-patch
 from taggit.managers import TaggableManager
@@ -84,21 +90,23 @@ class Wiqi(models.Model):
                                      verbose_name="Private", help_text="If unselected, the wiqi will be public.")
     tags = TaggableManager(blank=True,
                            verbose_name="Tags", help_text="Metadata tags can be used to group similar wiqis.")
+    license = models.CharField(max_length=500, blank=True,
+                               verbose_name="Release License", help_text="What form of copyright do you offer?")
     is_active = models.BooleanField(default=True)
     is_searchable = models.BooleanField(default=True)
     is_deleted = models.BooleanField(default=False)
-    stack_content_type = models.ForeignKey(ContentType, related_name="%(app_label)s_%(class)s_ base", null=True)
+    stack_content_type = models.ForeignKey(ContentType, related_name="%(app_label)s_%(class)s_base", null=True)
     stack_object_id = models.PositiveIntegerField(null=True)
     stack = generic.GenericForeignKey("stack_content_type", "stack_object_id")
-    forked_content_type = models.ForeignKey(ContentType, related_name="%(app_label)s_%(class)s_forked", null=True)
-    forked_object_id = models.PositiveIntegerField(null=True)
-    forked = generic.GenericForeignKey("forked_content_type", "forked_object_id")
-    forklist = models.ManyToManyField("self", blank=True)
-    merged_content_type = models.ForeignKey(ContentType, related_name="%(app_label)s_%(class)s_ merged", null=True)
+    branched_content_type = models.ForeignKey(ContentType, related_name="%(app_label)s_%(class)s_branched", null=True)
+    branched_object_id = models.PositiveIntegerField(null=True)
+    branched = generic.GenericForeignKey("branched_content_type", "branched_object_id")
+    branchlist = models.ManyToManyField("self", blank=True)
+    merged_content_type = models.ForeignKey(ContentType, related_name="%(app_label)s_%(class)s_merged", null=True)
     merged_object_id = models.PositiveIntegerField(null=True)
     merged = generic.GenericForeignKey("merged_content_type", "merged_object_id")
-    next_wiqi = models.ForeignKey("self", related_name="%(app_label)s_%(class)s_ next", null=True)
-    previous_wiqi = models.ForeignKey("self", related_name="%(app_label)s_%(class)s_ previous", null=True)
+    next_wiqi = models.ForeignKey("self", related_name="%(app_label)s_%(class)s_next", null=True)
+    previous_wiqi = models.ForeignKey("self", related_name="%(app_label)s_%(class)s_previous", null=True)
     wiqi_objects = WiqiManager() # To extend QuerySet in derived classes
     objects = models.GeoManager()
 
@@ -130,7 +138,7 @@ class Wiqi(models.Model):
                        ("can_protect", "Can change object protection."),      
                        ("can_change_privacy", "Can change object privacy."),                 
                        ("can_revert", "Can revert live object from historical object."),
-                       ("can_fork", "Can fork the object to a new wiqi."),
+                       ("can_branch", "Can branch the object to a new wiqi."),
                        ("can_merge", "Can merge the object into an existing wiqi."),
                        ("can_tag", "Can add tags."),
                        # Access to any of the above properties doesn't apply the right to share any of these with others. Unless below also included.
@@ -141,7 +149,7 @@ class Wiqi(models.Model):
                        ("can_share_protection", "Can share access of change object protection."),
                        ("can_share_privacy", "Can share access of change object privacy."),
                        ("can_share_revert", "Can share access of revert live object."),
-                       ("can_share_fork", "Can share access of fork to a new wiqi."),
+                       ("can_share_branch", "Can share access of branch to a new wiqi."),
                        ("can_share_merge", "Can share access of merge into an existing wiqi."),
                        ("can_share_tag", "Can share access of add tags."),
                        )
@@ -161,8 +169,8 @@ class Wiqi(models.Model):
     def get_revert_url(self):
         return self.get_stacklist_url
     @models.permalink
-    def get_fork_url(self):
-        return ('fork_wiqi', (),{'wiqi_type': self.get_class, 'wiqi_surl': self.stack.surl})
+    def get_branch_url(self):
+        return ('branch_wiqi', (),{'wiqi_type': self.get_class, 'wiqi_surl': self.stack.surl})
     @models.permalink
     def get_merge_url(self):
         return ('merge_wiqi', (), {'wiqi_surl': self.surl})
@@ -179,7 +187,6 @@ class Wiqi(models.Model):
     @property
     def surl(self):
         return surl(self.id)
-
     @property
     def merged_surl(self):
         # Once merged it will always refer to the merged wiqi, although the stack is still accessable
@@ -198,6 +205,19 @@ class Wiqi(models.Model):
         else:
             return None
     
+    @property
+    def get_next(self):
+        if self.next_wiqi:
+            return self.next_wiqi.surl
+        else:
+            return ""
+    @property
+    def get_previous(self):
+        if self.previous_wiqi:
+            return self.previous_wiqi.surl
+        else:
+            return ""
+    
     def set_tags(self, **kwargs):
         if kwargs.get("tags",False):
             if self.id is None:
@@ -212,6 +232,9 @@ class Wiqi(models.Model):
         self.is_live_from = kwargs.get("is_live_from", pytz.UTC.localize(datetime.now()))
         self.is_live_to = kwargs.get("is_live_to",None)
         self.is_private = kwargs.get("is_private",False)
+        self.license = kwargs.get("license","")
+        self.next_wiqi = kwargs.get("next", None)
+        self.previous_wiqi = kwargs.get("previous", None)
         self.save()
         
     def update(self, **kwargs):
@@ -220,24 +243,16 @@ class Wiqi(models.Model):
         """
         if self.id == None:
             raise
+        kwargs["wiqi"] = self
         if self.stack != None:
             # Has already got an assigned wiqistack
             new_base = self.stack.update(**kwargs)
-            if new_base:
-                self.stack = new_base
-                self.save()
         else:
             # Is a new wiqi
             new_base = kwargs["WiqiStack"]()
             new_base.set(**kwargs)
+        if new_base:
             self.stack = new_base
-            self.save()
-
-    def discussion_update(self, **kwargs):
-        try:
-            assert(kwargs["discussion"] == self.discussion)
-        except AssertionError, e:
-            self.discussion = kwargs.get("discussion", None)
             self.save()
 
     @property
@@ -251,11 +266,12 @@ class Wiqi(models.Model):
         # return self.stack.__class__.wiqi_objects.filter(wiqi_content_type__pk=self_type.id, wiqi_object_id=self.id).reverse()
         return self.stack.__class__.wiqi_objects.filter(wiqi=self.id).reverse()
 
-    def fork(self, **kwargs):
+    def branch(self, **kwargs):
         """
-        Create a clone of the current wiqi and return it.
+        Create a branch of the current wiqi and top wiqistack and return
+        the new wiqi.
         """
-        return self.stack.fork(**kwargs)
+        return self.stack.branch(**kwargs)
     
     def merge(self, merge_stack):
         self.merged = merge_stack
@@ -319,14 +335,14 @@ class WiqiStack(models.Model):
                             verbose_name="Title", help_text="This may be used as a title, section or figure heading.")
     description = models.TextField(blank=True,
                                    verbose_name="Description", help_text="May only be necessary where the content may not provide sufficient context.")
-    creator = models.ForeignKey(settings.AUTH_USER_MODEL, null=True)
+    creator = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, related_name="%(app_label)s_%(class)s_creator")
     creator_ip = models.GenericIPAddressField(blank=True, null=True, default="255.255.255.255")
     created_on = models.DateTimeField(auto_now_add=True)
+    jsonresponse = JSONField(load_kwargs={'object_pairs_hook': collections.OrderedDict}, blank=True, null=True)
     #original_creator = models.ForeignKey(settings.AUTH_USER_MODEL, null=True)
-    license = models.CharField(max_length=500, blank=True,
-                               verbose_name="Release License", help_text="What form of copyright do you offer?")
+
     wiqi = models.ForeignKey(Wiqi, null=True)
-    reverted_from_content_type = models.ForeignKey(ContentType, related_name="%(app_label)s_%(class)s_ reverted_from", null=True)
+    reverted_from_content_type = models.ForeignKey(ContentType, related_name="%(app_label)s_%(class)s_reverted_from", null=True)
     reverted_from_object_id = models.PositiveIntegerField(null=True)
     reverted_from = generic.GenericForeignKey("reverted_from_content_type", "reverted_from_object_id")
     wiqi_objects = WiqiManager() # To extend QuerySet in derived classes
@@ -368,8 +384,8 @@ class WiqiStack(models.Model):
     def get_revert_url(self):
         return ('revert_wiqi', (),{'wiqi_type': self.get_class, 'wiqi_surl': self.surl})
     @models.permalink
-    def get_fork_url(self):
-        return ('fork_wiqi', (),{'wiqi_type': self.get_class, 'wiqi_surl': self.surl})
+    def get_branch_url(self):
+        return ('branch_wiqi', (),{'wiqi_type': self.get_class, 'wiqi_surl': self.surl})
     @models.permalink
     def get_stacklist_url(self):
         return ('view_wiqistacklist', (),{'wiqi_surl': self.wiqi_surl})
@@ -406,12 +422,11 @@ class WiqiStack(models.Model):
         return self.id == self.wiqi.stack.id
     
     def set(self, **kwargs):
-        self.title = kwargs.get("title", "")[:250]
+        self.title = kwargs["title"]
         self.creator = kwargs["creator"]
         self.creator_ip =kwargs.get("creator_ip",None)
         #self.original_creator = kwargs["original_creator"]
         self.reverted_from = kwargs.get("reverted_from", None)
-        self.license = kwargs.get("license","")
         self.wiqi = kwargs["wiqi"]
         self.save()
 
@@ -423,41 +438,42 @@ class WiqiStack(models.Model):
         assert(kwargs["title"] == self.title)
         # assert(kwargs["many"].difference(self.many.all()) == set([]))
 
-    def copy(self):
+    def preprocess(self, **kwargs):
+        kwargs["title"] = BeautifulSoup(kwargs.get("title", "")[:250]).get_text().strip()
+        return kwargs
+
+    def copy(self, **kwargs):
         """
-        Provide a deep copy of itself for use in forks
+        Provide a deep copy of itself for use in branchs
         https://docs.djangoproject.com/en/1.5/topics/db/queries/
         If new related objects created (other than default), inherit this class.
         """
-        copy_wiqi = self.wiqi
-        copy_reverted_from = self.reverted_from
         self.pk = None
         self.id = None
-        self.save()
-        self.wiqi = copy_wiqi
-        self.reverted_from = copy_reverted_from
+        self.creator = kwargs.get("creator", self.creator)
+        self.creator_ip = kwargs.get("creator_ip", self.creator_ip)
         self.save()
         return self
         # Replace this entirely if you need additional related copies
         
-    def fork(self, **kwargs):
+    def branch(self, **kwargs):
         """
         Create a clone of the current wiqi and return it.
         """
         # http://stackoverflow.com/a/2064875/295606
-        new_fork = Wiqi() # self.wiqi.__class__()
+        new_branch = Wiqi() # self.wiqi.__class__()
         # Ensure that this doesn't get reverted to None with future sets
-        new_fork.forked = self
-        new_fork.set(**kwargs)
-        self.wiqi.forklist.add(new_fork)
+        new_branch.branched = self
+        new_branch.set(**kwargs)
+        self.wiqi.branchlist.add(new_branch)
         # Clone the wiqi
-        new_fork.stack = self.copy()
+        new_branch.stack = self.copy(**kwargs)
         # Get the object rewired correctly pointing at new Wiqi
-        new_fork.stack.wiqi = new_fork
-        new_fork.save()
-        self.wiqi = new_fork
+        new_branch.stack.wiqi = new_branch
+        new_branch.save()
+        self.wiqi = new_branch
         self.save()
-        return new_fork
+        return self.wiqi
 
     def revert(self, ObjectStack, **kwargs):
         """

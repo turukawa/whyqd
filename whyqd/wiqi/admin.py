@@ -1,5 +1,5 @@
 from django.contrib.gis import admin
-from whyqd.wiqi.models import Wiqi, Text, Image#, Geomap #, Attribute, AttributeStack
+from whyqd.wiqi.models import Wiqi, Text, Image, Book#, Geomap #, Attribute, AttributeStack
 
 class WiqiAdmin(admin.ModelAdmin):
     list_display = ('id', 'stack',)
@@ -20,13 +20,22 @@ class TextAdmin(admin.ModelAdmin):
 admin.site.register(Text, TextAdmin)
 
 class ImageAdmin(admin.ModelAdmin):
-    list_display = ('title', 'file',  'caption',)
-    list_display_links = ('file',)
+    list_display = ('title', 'image',  'source_attribution',)
+    list_display_links = ('image',)
     list_per_page = 50
-    ordering = ['file']
-    search_fields = ['file']
+    ordering = ['image']
+    search_fields = ['title']
 
 admin.site.register(Image, ImageAdmin)
+
+class BookAdmin(admin.ModelAdmin):
+    list_display = ('title', 'authors',  'pitch',)
+    list_display_links = ('title',)
+    list_per_page = 50
+    ordering = ['title']
+    search_fields = ['title', 'authors', 'pitch']
+
+admin.site.register(Book, BookAdmin)
 
 '''
 class GeomapAdmin(admin.ModelAdmin):

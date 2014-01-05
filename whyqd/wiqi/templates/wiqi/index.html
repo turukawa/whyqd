@@ -1,0 +1,65 @@
+{% extends "wrapper.html" %}
+
+{% block content %}
+<div class="whyqd-absolute-top col-xs-12 col-md-10 col-md-offset-1">
+    <div class="row">
+      <div class="col-sm-12 col-md-10">
+        <div class="thumbnail">
+          <img src="http://placekitten.com/g/800/200" alt="..." width="800" height="200">
+          <div class="caption">
+            <h4 class="text-center">Read a book</h4>
+            <p class="text-center"><a id="read" href="{% url 'view_wiqi_list' %}" class="btn btn-default" role="button">Read</a></p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-sm-6 col-md-5">
+        <div class="thumbnail">
+          <img src="http://placehold.it/400x200" alt="..." width="400" height="200">
+          <div class="caption">
+            <h4 class="text-center">Write something</h4>
+            <p class="text-center"><a id="write" href="{% url 'create_default_wiqi' %}" class="btn btn-default" role="button">Write</a></p>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-md-5">
+        <div class="thumbnail">
+          <img src="http://placehold.it/400x200" alt="..." width="400" height="200">
+          <div class="caption">
+            <h4 class="text-center">Create a book</h4>
+            <p class="text-center"><a id="create" href="{% url 'create_book' 'book' %}" class="btn btn-default" role="button">Create</a></p>
+          </div>
+        </div>
+      </div>
+    </div>
+</div>
+{% endblock content %}
+
+{% block extrascripts %}
+<script>
+    $(document).ready(function() {
+        // Text processing
+        $(document).on('click', 'a', function(event){ 
+            event.preventDefault(); 
+            var href = this.href;
+            switch($(this).attr('id')) {
+                case "read":
+                    window.location.href = href;
+                    break;
+                case "write":
+                    window.location.href = href + '?j=view';
+                    break;
+                case "upload":
+                    window.location.href = $(this).attr('href');
+                    break;
+                case "create":
+                    window.location.href = $(this).attr('href');
+                    break;       
+                default:
+                    window.location.href = $(this).attr('href');
+            }
+        });
+    });
+</script>
+{% endblock extrascripts %}

@@ -5,7 +5,7 @@
 {% endblock extrastyles %}
 
 {% block content %}
-    <div class="whyqd-page col-xs-12 col-md-10 col-md-offset-1">
+    <div class="whyqd-page col-xs-12 col-md-10 col-md-offset-1 whyqd-absolute-top">
     	<form action="" method="POST" class="inline">{% csrf_token %}
     		<fieldset>
     			<legend>Limit stack history range:</legend>
@@ -21,18 +21,18 @@
     		<li>
     			<input type="radio" name="a" value="{{ wiqistack.surl }}">
     			<input type="radio" name="b" value="{{ wiqistack.surl }}">
-    			<a href="{{ wiqistack.get_absolute_url }}">{{ wiqistack.created_on }} | {{ wiqistack.creator}} | {{ wiqistack.creator_ip}}</a>
-    			... {% if wiqistack.reverted_from %} ({{ wiqistack.reverted_from }}){% endif %} - 
-    			<a href="{{ wiqistack.get_revert_url }}{% if params %}?{{ params }}{% endif %}" title="Revert">revert</a>
+    			<a href="{{ wiqistack.get_absolute_url }}">{{ wiqistack.created_on }} | {{ wiqistack.creator.first_name }} {{ wiqistack.creator.last_name }}</a>
+    			... {% if wiqistack.reverted_from %} ({{ wiqistack.reverted_from }}){% endif %}
+    			{% if request.user == wiqistack.creator and not forloop.first %} 
+    			<a href="{{ wiqistack.get_revert_url }}{% if params %}?{{ params }}{% endif %}" title="Revert">revert</a>{% endif %}
     		</li>
     		{% endfor %}
-    		{% if wiqi_object.forked %}
+    		{% if wiqi_object.branched %}
     		<li>
-    			<input type="radio" name="a" value="{{ wiqi_object.forked.surl }}">
-    			<input type="radio" name="b" value="{{ wiqi_object.forked.surl }}">
-    			<a href="{{ wiqi_object.forked.get_absolute_url }}">{{ wiqi_object.forked.created_at }} | {{ wiqi_object.forked.creator}} | {{ wiqi_object.forked.creator_ip}}</a>
-    			... {% if wiqi_object.forked.comment %} ({{ wiqi_object.forked.comment }}){% else %}(Minor edit){% endif %} - 
-    			<a href="{{ wiqi_object.forked.get_revert_url }}{% if params %}?{{ params }}{% endif %}" title="Revert">revert</a>
+    			<input type="radio" name="a" value="{{ wiqi_object.branched.surl }}">
+    			<input type="radio" name="b" value="{{ wiqi_object.branched.surl }}">
+    			<a href="{{ wiqi_object.branched.get_absolute_url }}">{{ wiqi_object.branched.created_at }} | {{ wiqi_object.branched.creator.first_name }} {{ wiqi_object.branched.creator.last_name }}</a>
+    			(branch)
     		</li>
     		{% endif %}
     		</ul>

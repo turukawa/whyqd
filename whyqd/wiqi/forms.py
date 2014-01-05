@@ -4,7 +4,7 @@ from django import forms
 from datetime import date
 #from olwidget.forms import MapModelForm
 
-from whyqd.wiqi.models import Wiqi, Text, Image#, Geomap
+from whyqd.wiqi.models import Wiqi, Text, Image, Book#, Geomap
 
 class WiqiStackRevertForm(forms.Form):
     comment = forms.CharField(max_length=500, required=False, label="Reason for reversion")
@@ -36,7 +36,29 @@ class TextForm(forms.ModelForm):
 class ImageForm(forms.ModelForm):
     class Meta:
         model = Image
-        fields = ('file', )
+        fields = ('image', )
+        
+class BookForm(forms.ModelForm):
+    class Meta:
+        model = Book
+        fields = ('title', 'pitch', )
+        # https://docs.djangoproject.com/en/dev/topics/forms/modelforms/#overriding-the-default-fields
+        widgets = {
+            'pitch': forms.Textarea(attrs={'cols': 80, 'rows': 5}),
+        }
+
+class BookFullForm(forms.ModelForm):
+    class Meta:
+        model = Book
+        fields = ('title', 'authors', 'authorsort', 'pitch', 'cover_image', 'summary', 'language', 'series', 'series_index', 'ISBN', )
+       
+WIQI_FORM_TYPE_DICT = {
+                       'text': TextForm,
+                       'image': ImageForm,
+                       'book': BookForm,
+                       #'geomap': GeomapForm,
+                       }
+
 '''        
 class GeomapForm(MapModelForm):
     class Meta:

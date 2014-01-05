@@ -1,0 +1,11 @@
+{% extends "wrapper.html" %}
+
+{% block content %}
+    <div class="col-xs-12 col-md-10 col-md-offset-1 whyqd-absolute-top ">
+<form action="{% url 'facebook_connect' %}" method="post">
+    <input type="hidden" value="{{ request.GET.next }}" name="next" />
+    {% csrf_token %}
+    <input onclick="F.connect(this.parentNode); return false;" type="image" src="{{ STATIC_URL }}django_facebook/images/facebook_login.png" />
+</form>
+</div>
+{% endblock %}

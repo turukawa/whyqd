@@ -2,37 +2,23 @@
 
 {% block extrastyles %}
 <link rel="stylesheet" href="{{ STATIC_URL }}css/medium-editor.css">
-<link rel="stylesheet" href="{{ STATIC_URL }}css/jquery.fileupload.css">
-<link rel="stylesheet" href="{{ STATIC_URL }}css/whyqd.css">
 {% endblock extrastyles %}
 
 {% block heading %}
 <div class="whyqd-header">
     <div class="container">
-        <div id="page-header-image">
-            {{ wiqi_links.header_image.htmlresponse|safe }}
-        </div>
-        <div id="header-image-surl" class="whyqd-hidden">
-            {{ wiqi_links.header_image }}
-        </div>
-        <div id="header-imagestack-surl" class="whyqd-hidden">
-            {{ wiqi_links.header_image.stack }}
-        </div>
-        <div id="header-wiqi-surl" class="whyqd-hidden">
-            {{ wiqi_links.surl }}
-        </div>
-        <div class="whyqd-text-{{ wiqi_links.header_image.stack.color }} whyqd-header-text">
-            <div class="col-xs-12 col-md-10 col-md-offset-1">
+        <div class="whyqd-text-black">
+            <div class="col-xs-12 col-md-12 whyqd-absolute-top ">
+                <small>By {% if wiqi_object.creator %}{{ wiqi_object.creator.first_name }} {{ wiqi_object.creator.last_name }}
+                    {% else %}{{ user.first_name }} {{user.last_name }}{% endif %}</small>
+            </div>
+            <div class="col-xs-12 col-md-11 col-md-offset-1 whyqd-header-text">
                 <h1><div id="title" class="editable" contenteditable="true" data-placeholder="Title" data-medium-element="true">
-                {{ page_title|safe }}
-                </div>
-                <small><div id="subtitle" class="editable" contenteditable="true" data-placeholder="Subtitle (optional)" data-medium-element="true">
-                {{ wiqi_object.stack.subtitle|safe }}
-                </div></small></h1>
-                <small>By {% if wiqi_object.creator %}{{ wiqi_object.creator }}{% else %}{{ user }}{% endif %}</small>
-                <small><div id="source_attribution" class="editable text-right whyqd-attribution" contenteditable="true" data-placeholder="Image attribution (optional)" data-medium-element="true">
-                {{ wiqi_object.stack.header_image.stack.source_attribution|safe }}
-                </div></small>
+                {% if page_title %}{{ page_title|safe }}{% endif %}
+                </div></h1>
+                <h2><small><div id="subtitle" class="editable" contenteditable="true" data-placeholder="Subtitle (optional)" data-medium-element="true">
+                {% if wiqi_object.stack %}{{ wiqi_object.stack.subtitle|safe }}{% else %}{{ wiqi_object.subtitle|safe }}{% endif %}
+                </div></small></h2>
             </div>
         </div>
     </div>
@@ -49,12 +35,5 @@
 
 {% block extrascripts %}
 <script src="{{ STATIC_URL }}js/medium-editor.js"></script>
-<script src="{{ STATIC_URL }}js/jquery-ui-1.10.3.custom.min.js"></script>
-<script src="{{ STATIC_URL }}js/load-image.min.js"></script>
-<script src="{{ STATIC_URL }}js/jquery.iframe-transport.js"></script>
-<script src="{{ STATIC_URL }}js/jquery.fileupload.js"></script>
-<!--<script src="{{ STATIC_URL }}js/jquery.fileupload-image.js"></script>
-<script src="{{ STATIC_URL }}js/jquery.fileupload-process.js"></script>
-<script src="{{ STATIC_URL }}js/jquery.fileupload-validate.js"></script>-->
-<script src="{{ STATIC_URL }}js/jquery.whyqd.js"></script>
+<script src="{{ STATIC_URL }}js/jquery.whyqd.view.js"></script>
 {% endblock extrascripts %}

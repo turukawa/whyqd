@@ -8,129 +8,23 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        # Adding model 'Wiqi'
-        db.create_table(u'wiqi_wiqi', (
-            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('is_live_from', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, null=True, blank=True)),
-            ('is_live_to', self.gf('django.db.models.fields.DateTimeField')(null=True, blank=True)),
-            ('is_protected', self.gf('django.db.models.fields.BooleanField')(default=False)),
-            ('is_private', self.gf('django.db.models.fields.BooleanField')(default=False)),
-            ('license', self.gf('django.db.models.fields.CharField')(max_length=500, blank=True)),
-            ('is_active', self.gf('django.db.models.fields.BooleanField')(default=True)),
-            ('is_searchable', self.gf('django.db.models.fields.BooleanField')(default=True)),
-            ('is_deleted', self.gf('django.db.models.fields.BooleanField')(default=False)),
-            ('stack_content_type', self.gf('django.db.models.fields.related.ForeignKey')(related_name='wiqi_wiqi_ base', null=True, to=orm['contenttypes.ContentType'])),
-            ('stack_object_id', self.gf('django.db.models.fields.PositiveIntegerField')(null=True)),
-            ('branched_content_type', self.gf('django.db.models.fields.related.ForeignKey')(related_name='wiqi_wiqi_branched', null=True, to=orm['contenttypes.ContentType'])),
-            ('branched_object_id', self.gf('django.db.models.fields.PositiveIntegerField')(null=True)),
-            ('merged_content_type', self.gf('django.db.models.fields.related.ForeignKey')(related_name='wiqi_wiqi_ merged', null=True, to=orm['contenttypes.ContentType'])),
-            ('merged_object_id', self.gf('django.db.models.fields.PositiveIntegerField')(null=True)),
-            ('next_wiqi', self.gf('django.db.models.fields.related.ForeignKey')(related_name='wiqi_wiqi_ next', null=True, to=orm['wiqi.Wiqi'])),
-            ('previous_wiqi', self.gf('django.db.models.fields.related.ForeignKey')(related_name='wiqi_wiqi_ previous', null=True, to=orm['wiqi.Wiqi'])),
-        ))
-        db.send_create_signal('wiqi', ['Wiqi'])
+        # Adding field 'Text.jsonresponse'
+        db.add_column('text', 'jsonresponse',
+                      self.gf('jsonfield.fields.JSONField')(null=True, blank=True),
+                      keep_default=False)
 
-        # Adding M2M table for field branchlist on 'Wiqi'
-        m2m_table_name = db.shorten_name(u'wiqi_wiqi_branchlist')
-        db.create_table(m2m_table_name, (
-            ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
-            ('from_wiqi', models.ForeignKey(orm['wiqi.wiqi'], null=False)),
-            ('to_wiqi', models.ForeignKey(orm['wiqi.wiqi'], null=False))
-        ))
-        db.create_unique(m2m_table_name, ['from_wiqi_id', 'to_wiqi_id'])
-
-        # Adding model 'Text'
-        db.create_table('text', (
-            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('title', self.gf('django.db.models.fields.CharField')(max_length=250, blank=True)),
-            ('description', self.gf('django.db.models.fields.TextField')(blank=True)),
-            ('creator', self.gf('django.db.models.fields.related.ForeignKey')(related_name='wiqi_text_ creator', null=True, to=orm['usr.User'])),
-            ('creator_ip', self.gf('django.db.models.fields.GenericIPAddressField')(default='255.255.255.255', max_length=39, null=True, blank=True)),
-            ('created_on', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, blank=True)),
-            ('wiqi', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['wiqi.Wiqi'], null=True)),
-            ('reverted_from_content_type', self.gf('django.db.models.fields.related.ForeignKey')(related_name='wiqi_text_ reverted_from', null=True, to=orm['contenttypes.ContentType'])),
-            ('reverted_from_object_id', self.gf('django.db.models.fields.PositiveIntegerField')(null=True)),
-            ('subtitle', self.gf('django.db.models.fields.CharField')(max_length=500, blank=True)),
-            ('content', self.gf('django.db.models.fields.TextField')(blank=True)),
-            ('word_count', self.gf('django.db.models.fields.IntegerField')(null=True, blank=True)),
-        ))
-        db.send_create_signal('wiqi', ['Text'])
-
-        # Adding model 'Image'
-        db.create_table('image', (
-            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('title', self.gf('django.db.models.fields.CharField')(max_length=250, blank=True)),
-            ('description', self.gf('django.db.models.fields.TextField')(blank=True)),
-            ('creator', self.gf('django.db.models.fields.related.ForeignKey')(related_name='wiqi_image_ creator', null=True, to=orm['usr.User'])),
-            ('creator_ip', self.gf('django.db.models.fields.GenericIPAddressField')(default='255.255.255.255', max_length=39, null=True, blank=True)),
-            ('created_on', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, blank=True)),
-            ('wiqi', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['wiqi.Wiqi'], null=True)),
-            ('reverted_from_content_type', self.gf('django.db.models.fields.related.ForeignKey')(related_name='wiqi_image_ reverted_from', null=True, to=orm['contenttypes.ContentType'])),
-            ('reverted_from_object_id', self.gf('django.db.models.fields.PositiveIntegerField')(null=True)),
-            ('image', self.gf('django.db.models.fields.files.ImageField')(max_length=100, blank=True)),
-            ('caption', self.gf('django.db.models.fields.CharField')(max_length=200, blank=True)),
-            ('source_attribution', self.gf('django.db.models.fields.CharField')(max_length=200, blank=True)),
-            ('color', self.gf('django.db.models.fields.CharField')(max_length=10, blank=True)),
-        ))
-        db.send_create_signal('wiqi', ['Image'])
-
-        # Adding model 'Book'
-        db.create_table('book', (
-            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('title', self.gf('django.db.models.fields.CharField')(max_length=250, blank=True)),
-            ('description', self.gf('django.db.models.fields.TextField')(blank=True)),
-            ('creator', self.gf('django.db.models.fields.related.ForeignKey')(related_name='wiqi_book_ creator', null=True, to=orm['usr.User'])),
-            ('creator_ip', self.gf('django.db.models.fields.GenericIPAddressField')(default='255.255.255.255', max_length=39, null=True, blank=True)),
-            ('created_on', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, blank=True)),
-            ('wiqi', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['wiqi.Wiqi'], null=True)),
-            ('reverted_from_content_type', self.gf('django.db.models.fields.related.ForeignKey')(related_name='wiqi_book_ reverted_from', null=True, to=orm['contenttypes.ContentType'])),
-            ('reverted_from_object_id', self.gf('django.db.models.fields.PositiveIntegerField')(null=True)),
-            ('authors', self.gf('django.db.models.fields.CharField')(max_length=250, blank=True)),
-            ('authorsort', self.gf('django.db.models.fields.CharField')(max_length=250, blank=True)),
-            ('pitch', self.gf('django.db.models.fields.CharField')(max_length=503, blank=True)),
-            ('summary', self.gf('django.db.models.fields.TextField')(blank=True)),
-            ('language', self.gf('django.db.models.fields.CharField')(max_length=50, blank=True)),
-            ('series', self.gf('django.db.models.fields.CharField')(max_length=150, blank=True)),
-            ('series_index', self.gf('django.db.models.fields.CharField')(max_length=10, blank=True)),
-            ('ISBN', self.gf('django.db.models.fields.CharField')(max_length=40, blank=True)),
-            ('cover_image', self.gf('django.db.models.fields.files.ImageField')(max_length=100, blank=True)),
-            ('word_count', self.gf('django.db.models.fields.IntegerField')(null=True, blank=True)),
-            ('cover_banner', self.gf('django.db.models.fields.files.ImageField')(max_length=100, blank=True)),
-            ('cover_thumbnail', self.gf('django.db.models.fields.files.ImageField')(max_length=100, blank=True)),
-            ('jsonresponse', self.gf('jsonfield.fields.JSONField')(null=True, blank=True)),
-            ('ebook_epub', self.gf('django.db.models.fields.files.FileField')(max_length=100, blank=True)),
-            ('ebook_mobi', self.gf('django.db.models.fields.files.FileField')(max_length=100, blank=True)),
-        ))
-        db.send_create_signal('wiqi', ['Book'])
-
-        # Adding M2M table for field chapterlist on 'Book'
-        m2m_table_name = db.shorten_name('book_chapterlist')
-        db.create_table(m2m_table_name, (
-            ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
-            ('book', models.ForeignKey(orm['wiqi.book'], null=False)),
-            ('wiqi', models.ForeignKey(orm['wiqi.wiqi'], null=False))
-        ))
-        db.create_unique(m2m_table_name, ['book_id', 'wiqi_id'])
+        # Adding field 'Image.jsonresponse'
+        db.add_column('image', 'jsonresponse',
+                      self.gf('jsonfield.fields.JSONField')(null=True, blank=True),
+                      keep_default=False)
 
 
     def backwards(self, orm):
-        # Deleting model 'Wiqi'
-        db.delete_table(u'wiqi_wiqi')
+        # Deleting field 'Text.jsonresponse'
+        db.delete_column('text', 'jsonresponse')
 
-        # Removing M2M table for field branchlist on 'Wiqi'
-        db.delete_table(db.shorten_name(u'wiqi_wiqi_branchlist'))
-
-        # Deleting model 'Text'
-        db.delete_table('text')
-
-        # Deleting model 'Image'
-        db.delete_table('image')
-
-        # Deleting model 'Book'
-        db.delete_table('book')
-
-        # Removing M2M table for field chapterlist on 'Book'
-        db.delete_table(db.shorten_name('book_chapterlist'))
+        # Deleting field 'Image.jsonresponse'
+        db.delete_column('image', 'jsonresponse')
 
 
     models = {
@@ -173,7 +67,7 @@ class Migration(SchemaMigration):
             'image': ('django.db.models.fields.files.ImageField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
             'is_active': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
             'is_staff': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'is_subscribed_to': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime(2014, 1, 2, 0, 0)', 'null': 'True', 'blank': 'True'}),
+            'is_subscribed_to': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime(2014, 1, 3, 0, 0)', 'null': 'True', 'blank': 'True'}),
             'is_superuser': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'last_login': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
             'last_name': ('django.db.models.fields.CharField', [], {'max_length': '30', 'blank': 'True'}),
@@ -223,6 +117,7 @@ class Migration(SchemaMigration):
             'description': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'image': ('django.db.models.fields.files.ImageField', [], {'max_length': '100', 'blank': 'True'}),
+            'jsonresponse': ('jsonfield.fields.JSONField', [], {'null': 'True', 'blank': 'True'}),
             'reverted_from_content_type': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'wiqi_image_ reverted_from'", 'null': 'True', 'to': u"orm['contenttypes.ContentType']"}),
             'reverted_from_object_id': ('django.db.models.fields.PositiveIntegerField', [], {'null': 'True'}),
             'source_attribution': ('django.db.models.fields.CharField', [], {'max_length': '200', 'blank': 'True'}),
@@ -237,6 +132,7 @@ class Migration(SchemaMigration):
             'creator_ip': ('django.db.models.fields.GenericIPAddressField', [], {'default': "'255.255.255.255'", 'max_length': '39', 'null': 'True', 'blank': 'True'}),
             'description': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'jsonresponse': ('jsonfield.fields.JSONField', [], {'null': 'True', 'blank': 'True'}),
             'reverted_from_content_type': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'wiqi_text_ reverted_from'", 'null': 'True', 'to': u"orm['contenttypes.ContentType']"}),
             'reverted_from_object_id': ('django.db.models.fields.PositiveIntegerField', [], {'null': 'True'}),
             'subtitle': ('django.db.models.fields.CharField', [], {'max_length': '500', 'blank': 'True'}),

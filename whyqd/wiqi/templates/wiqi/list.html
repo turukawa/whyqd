@@ -1,9 +1,38 @@
 {% extends "wrapper.html" %}
 
 {% block content %}
+<div class="whyqd-absolute-top col-xs-12 col-md-10 col-md-offset-1">
 	<ul>
 		{% for wiqi in wiqi_list %}
-		<li><a href="{{ wiqi.get_absolute_url }}">{{ wiqi.stack.title }} ({{ wiqi.get_class }})</a>{% if wiqi.forked %} ...(forked){% endif %}</li>
+		<li><a href="{{ wiqi.get_absolute_url }}">{{ wiqi.stack.title }} ({{ wiqi.get_class }})</a>{{ wiqi.jsonresponse.bookurl }}{% if wiqi.branched %} ...(branched){% endif %}</li>
 		{% endfor %}
 	</ul>
+</div>
+<!--<div id="booksort">
+    <ul id="sortable">
+            <li data-value="-<p>This is test 1</p>"><span class="ui-icon ui-icon-arrowthick-2-n-s"></span>Test this 1....
+                <label><small>&nbsp; delete &nbsp;</small><input type="checkbox" name="delete" value="delete" /></label>
+                <label><small>chapter &nbsp;</small><input type="checkbox" name="chapter" value="chapter" /></label></li>
+            <li data-value="-<h1>This is test 2</h1>"><span class="ui-icon ui-icon-arrowthick-2-n-s"></span>Test this 2....
+                <label><small>&nbsp; delete &nbsp;</small><input type="checkbox" name="delete" value="delete" /></label>
+                <label><small>chapter &nbsp;</small><input type="checkbox" name="chapter" value="chapter" /></label></li>
+            <li data-value="-<p>This is test 3</p>"><span class="ui-icon ui-icon-arrowthick-2-n-s"></span>Test this 3....
+                <label><small>&nbsp; delete &nbsp;</small><input type="checkbox" name="delete" value="delete" /></label>
+                <label><small>chapter &nbsp;</small><input type="checkbox" name="chapter" value="chapter" /></label></li>
+            <li data-value="-<h2>This is test 4</h2>"><span class="ui-icon ui-icon-arrowthick-2-n-s"></span>Test this 4....
+                <label><small>&nbsp; delete &nbsp;</small><input type="checkbox" name="delete" value="delete" /></label>
+                <label><small>chapter &nbsp;</small><input type="checkbox" name="chapter" value="chapter" /></label></li>
+            <li data-value="-<p>This is test 5</p>"><span class="ui-icon ui-icon-arrowthick-2-n-s"></span>Test this 5....
+                <label><small>&nbsp; delete &nbsp;</small><input type="checkbox" name="delete" value="delete" /></label>
+                <label><small>chapter &nbsp;</small><input type="checkbox" name="chapter" value="chapter" /></label></li>
+            <li data-value="-<p>This is test 6</p>"><span class="ui-icon ui-icon-arrowthick-2-n-s"></span>Test this 6....
+                <label><small>&nbsp; delete &nbsp;</small><input type="checkbox" name="delete" value="delete" /></label>
+                <label><small>chapter &nbsp;</small><input type="checkbox" name="chapter" value="chapter" /></label></li>
+    </ul>
+</div>-->
+
+
 {% endblock content %}
+
+{% block extrascripts %}
+{% endblock extrascripts %}

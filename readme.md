@@ -1,7 +1,7 @@
 Whyqd
 =====
 
-Whyqd is an extensible object-based wiki bringing revision control, content presentation, forking and embedding to any type of digital object.
+Whyqd is an extensible object-based wiki bringing revision control, content presentation, branching and embedding to any type of digital object.
 
 Whyqd is written in Python and Django, with Jquery for the client side.
 
@@ -14,8 +14,8 @@ The current implementation permits the following wiqi objects:
 While you can write your own views and templates, I have included a minimalist wiqi interface influenced by blog sites like [Medium](http://medium.com) and [WriteBox](http://writeboxapps.com/). Note a few permutations of this wiqi:
 
  - WYSIWIG writing interface: no separation of view vs editing pages;
- - Minimal interface: there is an assumption you know what you're doing, no queries regarding forking, new versions, etc.
- - Permissions-based: if you own a document, you can do what you like, if you don't, you fork it if you want to change it;
+ - Minimal interface: there is an assumption you know what you're doing, no queries regarding branching, new versions, etc.
+ - Permissions-based: if you own a document, you can do what you like, if you don't, you branch it if you want to change it;
  - Merge-changes: if you want to merge two docs, view the diff, edit and commit;
 
 I will put a demo up at some point so you can see this in action.
@@ -25,7 +25,7 @@ Roadmap
 
  - Complete the auth system along with per-object permissions;
  - A "book" model so that individual texts can be arranged as a single work;
- - D3.js simple tree view to present wiqi stack, as well as forked changes;
+ - D3.js simple tree view to present wiqi stack, as well as branched changes;
  - Book management system (shuffling order of chapters);
  - Integration of html2docx and python-docx for upload of Docx files, as well as download of work;
  - Integration of [EbookGlue](https://ebookglue.com/) API so books can be saved as .epub and .mobi files;

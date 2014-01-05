@@ -1,10 +1,14 @@
 from django.shortcuts import get_object_or_404, get_list_or_404, render_to_response, redirect, render
 from django.contrib.auth.decorators import login_required
 from django.http import Http404
+from django.contrib.auth import logout
 
 from whyqd.usr.forms import SubscribeForm
 
-def register(request, template_name="registration/register.html"):
+def logout(request, next_page="/"):
+    logout(request)
+
+def register(request, template_name="usr/register.html"):
     """ view displaying customer registration form """
     if request.method == 'POST':
         postdata = request.POST.copy()

@@ -3,9 +3,12 @@
     <head>
         <meta charset="utf-8">
         {% block styles %}
+        {% load staticfiles %}
         <link type="text/css" rel="stylesheet" href="{{ STATIC_URL }}css/bootstrap.min.css">
         <link type="text/css" rel="stylesheet" href="{{ STATIC_URL }}css/icomoon.css">
-        <!--<link type="text/css" rel="stylesheet" href="{{ STATIC_URL }}css/jquery-ui-1.8.16.custom.css">-->
+        <link type="text/css" rel="stylesheet" href="{{ STATIC_URL }}django_facebook/css/facebook.css" media="all" />
+        <link type="text/css" rel="stylesheet" href="{{ STATIC_URL }}css/jquery-ui-1.10.3.custom.min.css">
+        <link type="text/css" rel="stylesheet" href="{{ STATIC_URL }}css/whyqd.css">
         {% endblock styles %}
     	{% block extrastyles %}{% endblock extrastyles %}
     	{% block mapstyles %}{% endblock mapstyles %}
@@ -26,8 +29,10 @@
     	{% endblock wrapper %}
     	{% block scripts %}
     	<script type="text/javascript" src="{{ STATIC_URL }}js/jquery-1.10.2.min.js"></script>
-    	<!--<script type="text/javascript" src="{{ STATIC_URL }}js/jquery-ui-1.8.16.custom.min.js"></script>-->
+    	<script type="text/javascript" src="{{ STATIC_URL }}js/jquery-ui-1.10.3.custom.min.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap.min.js"></script>
+        <script src="{{ STATIC_URL }}js/jquery.whyqd.js"></script>
+        {% include 'django_facebook/_facebook_js.html' %}
     	{% endblock scripts %}
     	{% block extrascripts %}{% endblock extrascripts %}
     </body>

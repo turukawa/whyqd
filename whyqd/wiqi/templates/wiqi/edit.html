@@ -10,21 +10,16 @@
 {% endblock extrastyles %}
 
 {% block content %}
-    <div class="col-xs-12 col-md-10 col-md-offset-1 whyqd-content">
-    	<form action="" enctype="multipart/form-data" method="POST" class="inline">{% csrf_token %}
+    <div class="col-xs-12 col-md-10 col-md-offset-1 whyqd-absolute-top ">
+    	<form action="" enctype="multipart/form-data" method="POST" class="inline">
+    	    {% csrf_token %}
+    	    <input id="previous" type="hidden" value="{% if wiqi_object.stack %}{{ wiqi_object.get_previous }}
+    	       {% else %}{{ wiqi_object.wiqi.get_previous }}{% endif %}"/>
     		{% for field in wiqistack_form %}
-    			{% if forloop.last %}<p>{{ field.label_tag }}: {{ field }}</p>
-    			{% else %}<p>{{ field }}</p>{% endif %}
+    			<p>{{ field.label_tag }} {{ field }}</p>
+    			<p><small>{{ field.help_text }}</small></p>
     		{% endfor %}
-    		{{ wiqi_form.as_p }}
     		<button type="submit" class="btn btn-default" name="_{{ nav_type }}" value="{{ nav_type }}">{{ nav_type }}</button>
     	</form>
-    	<hr>
-    	<p>Being {{ nav_type }}ed by: {{ request.user }} | {{ usr_ip}} | {{ now }}</p>
 	</div>
 {% endblock content %}
-
-<!--{% block extrascripts %}
-<script type="text/javascript" src="{{ STATIC_URL }}js/jquery.formalize.min.js"></script>
-<script type="text/javascript" src="{{ STATIC_URL }}js/jquery.whyqd.js"></script>
-{% endblock extrascripts %}-->
