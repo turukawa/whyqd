@@ -4,7 +4,7 @@
 <div class="whyqd-absolute-top col-xs-12 col-md-10 col-md-offset-1">
 	<ul>
 		{% for wiqi in wiqi_list %}
-		<li><a href="{{ wiqi.get_absolute_url }}">{{ wiqi.stack.title }} ({{ wiqi.get_class }})</a>{{ wiqi.jsonresponse.bookurl }}{% if wiqi.branched %} ...(branched){% endif %}</li>
+		<li><a href="{{ wiqi.get_absolute_url }}">{{ wiqi.stack.title }} ({{ wiqi.get_class }})</a>{% if wiqi.branched %} ...(branched){% endif %}</li>
 		{% endfor %}
 	</ul>
 </div>

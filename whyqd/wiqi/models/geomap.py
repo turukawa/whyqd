@@ -8,26 +8,25 @@ Abstract classes:
                     is_live_from
                     is_live_to
                     is_active
-                    is_protected
                     is_private
                     is_searchable
                     is_deleted
-                    tags
-                    discussion (generic foreign key)
-                    base (generic foreign key)
-                    forked (generic foreign key)
+                    stack (generic foreign key)
+                    branched (generic foreign key)
+                    branchlist
                     merged (generic foreign key)
+                    next_wiqi
+                    previous_wiqi
         WiqiStack:
-                    name
-                    slug
-                    html
+                    title
                     description
                     creator
                     creator_ip
-                    created_at
-                    comment
+                    created_on
+                    licence
+                    citation
+                    jsonresponse
                     reverted_from (generic foreign key)
-                    source (generic foreign key)
                     wiqi (generic foreign key)
 
 Derived classes:

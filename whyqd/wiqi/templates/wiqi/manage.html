@@ -1,0 +1,84 @@
+{% extends "wrapper.html" %}
+
+{% load wiqi_tags %}
+
+{% block extrastyles %}
+<link type="text/css" rel="stylesheet" href="{{ STATIC_URL }}css/medium-editor.css">
+<link rel="stylesheet" href="{{ STATIC_URL }}css/jquery.fileupload.css">
+{% endblock extrastyles %}
+
+{% block content %}
+<div class="whyqd-absolute-top col-xs-12 col-md-10 col-md-offset-1">
+    <ul id="sortable">
+    {% for item in wiqi_object.jsonresponse.chapters|numdict %}
+        <li><span class="ui-icon ui-icon-arrowthick-2-n-s"></span><a href="{{ item.url }}">{{ item.title }} - {{ item.subtitle }}</a>
+            <label><small>&nbsp; delete &nbsp;</small><input type="checkbox" name="delete" value="delete" /></label>
+            </li>
+    {% endfor %}
+    </ul>
+    <!--
+    <div class="row">
+        <div id="bookintro">
+            <blockquote><div id="quote"></div></blockquote>
+            <small class="text-right"><div id="source"></div></small>
+            <h1>A beginning</h1>
+            <p>A title and a premise. The first line will follow. You can write directly in Qwyre, or upload and organise an existing book.</p>
+            <hr />
+        </div>
+        <h2><div id="title" class="editable" contenteditable="true" data-placeholder="Title" data-medium-element="true"></div></h2>
+        <div id="pitch" class="editable" contenteditable="true" data-placeholder="Pitch your book in 503 characters" data-medium-element="true"></div>
+        <p><small id="charactercount">503 characters remaining...</small></p>
+        
+        
+    </div>
+    <div class="row">
+        <hr />
+        <div id="booksort">
+            <span class="navinput-icon btn btn-default" role="button"><label id="getdocx" for="docxupload">Upload Docx</label>
+                <input id="docxupload" type="file" name="file"></span>
+            <span><a id="write" href="{% url 'create_default_wiqi' %}" class="btn btn-default" role="button">Start writing</a></span>
+       </div>
+    </div>
+-->
+
+</div>
+{% endblock content %}
+
+{% block extrascripts %}
+<script src="{{ STATIC_URL }}js/load-image.min.js"></script>
+<script src="{{ STATIC_URL }}js/jquery.iframe-transport.js"></script>
+<script src="{{ STATIC_URL }}js/jquery.fileupload.js"></script>
+<script src="{{ STATIC_URL }}js/medium-editor.js"></script>
+<script src="{{ STATIC_URL }}js/jquery.whyqd.manage.js"></script>
+<script>
+
+function hidebookempties() {
+    if (!$('#title').html().trim()) {
+        $('#pitch').hide(); //animate({opacity:0.0},2000);
+    }
+    if (!$('#pitch').html().trim()) {
+        $('#pitch').hide();
+    }
+}
+
+$(document).ready(function() {
+        $.getJSON("/media/quotes.txt",function(result){
+            var num = Math.floor(Math.random() * 101)+ '';
+            // Lots of help in this
+            // Quotes: http://americanbookreview.org/100bestlines.asp
+            // http://docs.python.org/2/library/re.html
+            // http://stackoverflow.com/a/2936189 re.split(u'\u2014', c)
+            // http://stackoverflow.com/a/4289348 re.split(r'^\d+\.', i)
+            // http://stackoverflow.com/a/6483512 getJSON
+            // http://stackoverflow.com/a/4960020 Math.floor
+            $('#quote').html(result[num]['quote']);
+            $('#source').html(result[num]['source']);
+        });
+        $("#pitch").keyup(function(e) {
+              var count = 503 - $(this).text().length;
+              var colour = count < 0 ? 'red' : 'black';
+              $('#charactercount').text(count + ' characters remaining...').css("color", colour);           
+        });
+});
+</script>
+{% endblock extrascripts %}

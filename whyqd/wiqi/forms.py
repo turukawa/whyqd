@@ -1,10 +1,11 @@
 from django import forms
+from django.forms.models import modelformset_factory
 #https://docs.djangoproject.com/en/dev/topics/forms/modelforms/
 
 from datetime import date
 #from olwidget.forms import MapModelForm
 
-from whyqd.wiqi.models import Wiqi, Text, Image, Book#, Geomap
+from whyqd.wiqi.models import Wiqi, Text, Image #, Book#, Geomap
 
 class WiqiStackRevertForm(forms.Form):
     comment = forms.CharField(max_length=500, required=False, label="Reason for reversion")
@@ -26,7 +27,12 @@ class WiqiForm(forms.ModelForm):
 
     class Meta:
         model = Wiqi
-        fields = ('is_live_from', 'is_live_to', 'is_protected', 'is_private', )
+        fields = ('is_live_from', 'is_live_to', 'is_private', )
+
+class WiqiPriceForm(forms.ModelForm):
+    class Meta:
+        model = Wiqi
+        fields = ('price', 'read_if',)
 
 class TextForm(forms.ModelForm):
     class Meta:
@@ -37,25 +43,17 @@ class ImageForm(forms.ModelForm):
     class Meta:
         model = Image
         fields = ('image', )
-        
-class BookForm(forms.ModelForm):
-    class Meta:
-        model = Book
-        fields = ('title', 'pitch', )
-        # https://docs.djangoproject.com/en/dev/topics/forms/modelforms/#overriding-the-default-fields
-        widgets = {
-            'pitch': forms.Textarea(attrs={'cols': 80, 'rows': 5}),
-        }
 
-class BookFullForm(forms.ModelForm):
-    class Meta:
-        model = Book
-        fields = ('title', 'authors', 'authorsort', 'pitch', 'cover_image', 'summary', 'language', 'series', 'series_index', 'ISBN', )
+
+# class BookFullForm(forms.ModelForm):
+#     class Meta:
+#         model = Book
+#         fields = ('title', 'authors', 'authorsort', 'pitch', 'cover_image', 'summary', 'language', 'series', 'series_index', 'ISBN', )
        
 WIQI_FORM_TYPE_DICT = {
                        'text': TextForm,
                        'image': ImageForm,
-                       'book': BookForm,
+                       #'book': BookForm,
                        #'geomap': GeomapForm,
                        }
 
@@ -64,4 +62,10 @@ class GeomapForm(MapModelForm):
     class Meta:
         model = Geomap
         fields = ('name', 'map_shape', 'comment', )
+
+
+# Dynamic Form Generation - http://jacobian.org/writing/dynamic-form-generation/
+# Django passing object ID in hiddeninput by populating - http://stackoverflow.com/q/16668463
+# https://docs.djangoproject.com/en/dev/topics/forms/formsets/
+# Multi-Object-Edit With Django FormSets - http://christiankaula.com/multi-object-edit-django-formsets.html
 '''

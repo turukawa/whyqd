@@ -49,7 +49,7 @@ Link: http://code.activestate.com/recipes/576918/
 
 DEFAULT_ALPHABET = 'bjGR5HkdStrQVJK1g3sDNCzThZFm2LvpPcIx7fXnMqB'
 DEFAULT_BLOCK_SIZE = 24
-MIN_LENGTH = 5
+MIN_LENGTH = 12
 
 class UrlEncoder(object):
     def __init__(self, alphabet=DEFAULT_ALPHABET, block_size=DEFAULT_BLOCK_SIZE):

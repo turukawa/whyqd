@@ -5,13 +5,12 @@ from django.template.defaultfilters import slugify
 from django.http import Http404
 from django.core.urlresolvers import reverse
 
-from guardian.shortcuts import assign, get_objects_for_user, get_perms
+from guardian.shortcuts import assign_perm, get_objects_for_user, get_perms
 
 from whyqd.wiqi.models import Wiqi, Text, Image, WIQI_TYPE_DICT, DEFAULT_WIQISTACK_TYPE #, Geomap
-from whyqd.wiqi.forms import TextForm, ImageForm, BookForm, WIQI_FORM_TYPE_DICT#, GeomapForm
+from whyqd.wiqi.forms import TextForm, ImageForm,WIQI_FORM_TYPE_DICT#, GeomapForm
 from whyqd.snippets import html2text 
 from whyqd.snippets.diff_match_patch import diff_match_patch
-from whyqd.snippets.shrtn import surl, lurs
 
 import markdown2
 
@@ -24,6 +23,11 @@ def get_user_ip(request):
     return ip
 
 def get_wiqi_or_404(wiqi_type):
+    """
+    Return appropriate Wiqi class
+    :param wiqi_type:
+    :return:
+    """
     try:
         return WIQI_TYPE_DICT[wiqi_type]
     except KeyError:
@@ -38,39 +42,90 @@ def has_permission(wiqi_object, usr, permission):
             return wiqi_object.wiqi.can_do(usr, permission)
     return True
 
-def get_wiqi_object_or_404(wiqi_id, usr, permission, wiqi_type=None):
+def get_user_view_rights(usr, wiqi_object):
     """
-    Get wiqi object and check that user has permisions to perform task
+    Test the user viewing rights and update the current view for later reference;
+    If viewing free while logged in, update price to current maximum;
+    :param usr:
+    :param wiqi_object:
+    :return:
+    """
+    if wiqi_object.read_if == "open":
+        return wiqi_object
+    if usr.is_authenticated():
+        if wiqi_object.read_if == "login" \
+                or (wiqi_object.read_if == "own" and usr.can_read(wiqi_object)):
+            if wiqi_object.price > usr.current_price:
+                usr.current_price = wiqi_object.price
+            usr.current_view = wiqi_object.surl
+            usr.save()
+            return wiqi_object
+    # If user is not authenticated, or has no viewing rights,
+    # return False to force redirect to register/login, or to buy
+    return False
+
+def get_wiqi_object_or_404(wiqi_surl, usr, wiqi_type=None, permission=None, nav_type=False):
+    """
+    Get wiqi object and check that user has permissions to perform task
     Any user can view a public object (protected or not)
     Any logged-in user can create a wiqi
+    :rtype : wiqi
     """
     if wiqi_type:
         WiqiStack = get_wiqi_or_404(wiqi_type)
-        wiqi_object = get_object_or_404(WiqiStack, id=wiqi_id)
+        wiqi_object = get_object_or_404(WiqiStack, surl=wiqi_surl)
     else:
-        wiqi_object = get_object_or_404(Wiqi, id=wiqi_id)
+        wiqi_object = get_object_or_404(Wiqi, surl=wiqi_surl)
+        if nav_type == "view":
+            return get_user_view_rights(usr, wiqi_object)
     if not has_permission(wiqi_object, usr, permission):
         raise Http404
     return wiqi_object
 
-def create_wiqi(request, **kwargs):
+def get_wiqi_kwargs(request, wiqi_type, WiqiStackForm, **kwargs):
     """
-    Create a Wiqi, its first WiqiStack, populate it and return the object
-    Returns False if there is no wiqi_type to avoid any potential errors
-    in calling this powerful function.
+    Update an existing wiqi with supplied kwargs
+    :param request:
+    :param WiqiStackForm:
+    :return:
     """
-    if kwargs.get("wiqi_type", False):
-        kwargs["WiqiStack"] = get_wiqi_or_404(kwargs["wiqi_type"])
-        wiqi_object = Wiqi()
-        wiqi_object.set(**kwargs)
-        kwargs["wiqi"] = wiqi_object
-        wiqi_object.update(**kwargs)
-        if request.user.is_subscribed:
-            # assign all permissions to this wiqi to the user
-            wiqi_object.assign_all_perm(request.user) 
-        return wiqi_object
+    if request.is_ajax():
+        # http://stackoverflow.com/questions/1208067/wheres-my-json-data-in-my-incoming-django-request
+        kwargs = request.POST.dict()
     else:
-        return False
+        wiqistack_form = WiqiStackForm(request.POST, request.FILES)
+        if wiqistack_form.is_valid(): # and wiqi_form.is_valid()
+            # http://stackoverflow.com/questions/38987/how-can-i-merge-two-python-dictionaries-as-a-single-expression
+            #kwargs = dict(wiqi_form.cleaned_data.items() + wiqistack_form.cleaned_data.items())
+            kwargs = wiqistack_form.cleaned_data
+        else:
+            return False
+    kwargs["file"] = request.FILES.get("file", "")
+    kwargs["creator"] = request.user
+    kwargs["creator_ip"] = get_user_ip(request)
+    kwargs["WiqiStack"] = get_wiqi_or_404(wiqi_type)
+    return kwargs
+
+def link_previous_wiqi(request, wiqi_object, previous_wiqi, permission):
+    """
+    Receive the current wiqi and link it to a previous wiqi in a chain of wiqis;
+    :param request:
+    :param wiqi_object:
+    :param previous_wiqi:
+    :param permission:
+    :return:
+    """
+    previous_wiqi_object = get_wiqi_object_or_404(previous_wiqi, request.user, None, permission)
+    if wiqi_object.previous_wiqi != previous_wiqi_object:
+        wiqi_object.previous_wiqi = previous_wiqi_object
+        if previous_wiqi_object.next_wiqi:
+            wiqi_object.next_wiqi = previous_wiqi_object.next_wiqi
+            previous_wiqi_object.next_wiqi.previous_wiqi = wiqi_object
+            previous_wiqi_object.next_wiqi.save()
+        wiqi_object.save()
+        previous_wiqi_object.next_wiqi = wiqi_object
+        previous_wiqi_object.save()
+    return previous_wiqi_object, wiqi_object
 
 def process_linked_wiqi_or_404(request, permission, wiqi_object):
     """
@@ -84,7 +139,7 @@ def process_linked_wiqi_or_404(request, permission, wiqi_object):
     """
     lw = request.GET.get("lw", False)
     if lw:
-        linked_wiqi = get_wiqi_object_or_404(lurs(lw), request.user, permission)
+        linked_wiqi = get_wiqi_object_or_404(lw, request.user, None, permission)
         linked_wiqi.stack.update_link(wiqi_object)
         return True
     else:

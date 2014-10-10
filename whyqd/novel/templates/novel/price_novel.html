@@ -1,0 +1,20 @@
+{% extends "wrapper.html" %}
+
+{% load novel_tags %}
+
+{% block content %}
+<div class="whyqd-absolute-top col-xs-12 col-md-10 col-md-offset-1">
+    <div class="row">
+        <form action="" method="POST" class="inline">
+        {% csrf_token %}
+            <ul>
+            {{ formset.management_form }}
+            {% for form in formset|orderchapters %}
+                <li>{{ form.instance.stack.title }} - {{ form }}</li>
+            {% endfor %}
+            </ul>
+        <button type="submit" class="btn btn-default" name="set_pricing" value="save">save</button>
+        </form>
+    </div>
+</div>
+{% endblock content %}

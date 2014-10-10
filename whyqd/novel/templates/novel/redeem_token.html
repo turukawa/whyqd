@@ -1,0 +1,51 @@
+{% extends "wrapper.html" %}
+
+{% block content %}
+<div class="whyqd-absolute-top col-xs-12 col-md-10 col-md-offset-1">
+    <div class="row">
+        {% if not token_object.is_valid and not request.user.is_authenticated %}
+            <p>This token has already been redeemed.</p>
+        {% elif request.user.is_authenticated %}
+            <p>{{ page_message }}</p>
+        {% else %}
+            <p>{{ token_object.creator.facebook_name }} has {% if token_object.is_purchased %}purchased
+            {{ token_object.novel.title }} for you.{% else %}loaned you a copy of {{ token_object.novel.title }} for
+            {{ days }} days.
+            {% endif %}</p>
+            <form action="{% url 'facebook_connect' %}?next={{ request.path }}&facebook_login=1" method="post">
+                {% csrf_token %}
+                <input type="hidden" value="1" name="connect" />
+                <input type="hidden" value="{{ request.path }}" name="next" />
+                <input type="hidden" value="{{ request.path }}" name="register_next" />
+                <input type="hidden" value="{{ request.path }}" name="error_next" />
+                You will need to<a onclick="F.connect(this.parentNode); return false;" href="javascript:void(0);">
+                login with Facebook</a> in order to redeem this token.
+            </form>
+            <p></p>
+            <small>
+            <dl><dt><strong>How this works:</strong></dt>
+            <dd>
+            <ul>
+                <li>Facebook dedicates tremendous resources to ensuring the majority of their users are real people.
+                This is a good thing for small sites like this one. Unfortunately, this does mean that - if you don't
+                have a Facebook account - you will need to create one in order to read the complete
+                {{ token_object.novel.title }}.</li>
+                <li>The only information we require from your Facebook account is your email address. We don't ask
+                for any other rights or content.</li>
+                {% if token_object.is_purchased %}
+                <li>Once you own {{ token_object.novel.title }} you are able to bulk buy, as well as lend copies to
+                friends. You will also receive an emailed copy of the book in the popular e-reader formats.</li>
+                {% else %}
+                <li>You will have full access to the whole online book for {{ days }} days after which you can ask
+                {{ token_object.creator.facebook_name }} to lend it to you again. Or you could just buy it.</li>
+                {% endif %}
+            </ul>
+            </dd></dl></small>
+        {% endif %}
+    </div>
+</div>
+{% endblock content %}
+
+{% block extrascripts %}
+<script src="{{ STATIC_URL }}js/jquery.whyqd.view.js"></script>
+{% endblock extrascripts %}

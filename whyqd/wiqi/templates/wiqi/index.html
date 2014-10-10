@@ -2,43 +2,74 @@
 
 {% block content %}
 <div class="whyqd-absolute-top col-xs-12 col-md-10 col-md-offset-1">
+    {% if request.user.is_superuser %}
     <div class="row">
-      <div class="col-sm-12 col-md-10">
+        <div class="col-sm-2 col-md-3">
+            <p class="text-center"><a id="create" href="{% url 'create_novel'  %}" class="btn btn-default" role="button">Create</a></p>
+        </div>
+        <div class="col-sm-2 col-md-3">
+            <p class="text-center"><a id="administer" href="{% url 'administer_novel' %}" class="btn btn-default" role="button">Manage</a></p>   
+        </div>
+        <div class="col-sm-2 col-md-3">
+            <p class="text-center"><a id="market" href="{{ user.manage_novel }}" class="btn btn-default" role="button">Market</a></p>   
+        </div>
+    </div>
+    {% endif %}
+    <div class="row">
+      <div class="col-sm-6 col-md-5">
         <div class="thumbnail">
-          <img src="http://placekitten.com/g/800/200" alt="..." width="800" height="200">
+          <img src="http://placekitten.com/g/400/270" alt="..." width="400" height="270">
+        </div>
+      </div>
+      <div class="col-sm-6 col-md-5">
+        <div class="thumbnail">
+          <img src="http://placehold.it/400x200" alt="..." width="400" height="200">
           <div class="caption">
-            <h4 class="text-center">Read a book</h4>
-            <p class="text-center"><a id="read" href="{% url 'view_wiqi_list' %}" class="btn btn-default" role="button">Read</a></p>
+            <p class="text-center"><a id="read" href="{{ novel_object.sentinal.get_url }}"
+                                      class="btn btn-default" role="button">Read</a>
+            {% if request.user.is_authenticated %}
+                <a id="read" href="{{ request.user.current_view }}"
+                   class="btn btn-default" role="button">Bookmark</a></p>
+            {% endif %}</p>
           </div>
         </div>
       </div>
     </div>
     <div class="row">
-      <div class="col-sm-6 col-md-5">
-        <div class="thumbnail">
-          <img src="http://placehold.it/400x200" alt="..." width="400" height="200">
-          <div class="caption">
-            <h4 class="text-center">Write something</h4>
-            <p class="text-center"><a id="write" href="{% url 'create_default_wiqi' %}" class="btn btn-default" role="button">Write</a></p>
-          </div>
-        </div>
+      <div class="col-sm-12 col-md-10">
+        <blockquote><div id="quote"></div></blockquote>
+        <small class="text-right"><div id="source"></div></small>
       </div>
-      <div class="col-sm-6 col-md-5">
+    </div>
+    <div class="row">
+      <div class="col-sm-12 col-md-10">
         <div class="thumbnail">
-          <img src="http://placehold.it/400x200" alt="..." width="400" height="200">
-          <div class="caption">
-            <h4 class="text-center">Create a book</h4>
-            <p class="text-center"><a id="create" href="{% url 'create_book' 'book' %}" class="btn btn-default" role="button">Create</a></p>
-          </div>
+          <img src="http://placekitten.com/g/800/200" alt="..." width="800" height="200">
         </div>
       </div>
     </div>
 </div>
 {% endblock content %}
 
+
+
 {% block extrascripts %}
 <script>
     $(document).ready(function() {
+        $.ajaxSetup({ scriptCharset: "utf-8" , contentType: "application/json; charset=utf-8"});
+        $.getJSON("/media/tartarusquotes.txt",function(result){
+            // return Math.floor(Math.random()*(max-min+1)+min);
+            var num = Math.floor(Math.random() * 10)+ '';
+            // Lots of help in this
+            // Quotes: http://americanbookreview.org/100bestlines.asp
+            // http://docs.python.org/2/library/re.html
+            // http://stackoverflow.com/a/2936189 re.split(u'\u2014', c)
+            // http://stackoverflow.com/a/4289348 re.split(r'^\d+\.', i)
+            // http://stackoverflow.com/a/6483512 getJSON
+            // http://stackoverflow.com/a/4960020 Math.floor
+            $('#quote').html(result[num]['quote']);
+            $('#source').html(result[num]['source']);
+        });
         // Text processing
         $(document).on('click', 'a', function(event){ 
             event.preventDefault(); 
@@ -47,8 +78,11 @@
                 case "read":
                     window.location.href = href;
                     break;
-                case "write":
-                    window.location.href = href + '?j=view';
+                case "administer":
+                    window.location.href = $(this).attr('href');
+                    break;
+                case "market":
+                    window.location.href = $(this).attr('href');
                     break;
                 case "upload":
                     window.location.href = $(this).attr('href');

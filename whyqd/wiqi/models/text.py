@@ -8,12 +8,9 @@ Abstract classes:
                     is_live_from
                     is_live_to
                     is_active
-                    is_protected
                     is_private
                     is_searchable
                     is_deleted
-                    tags
-                    licence
                     stack (generic foreign key)
                     branched (generic foreign key)
                     branchlist
@@ -26,6 +23,9 @@ Abstract classes:
                     creator
                     creator_ip
                     created_on
+                    licence
+                    citation
+                    jsonresponse
                     reverted_from (generic foreign key)
                     wiqi (generic foreign key)
 
@@ -96,23 +96,9 @@ class Text(WiqiStack):
         if not self.jsonresponse:
             self.jsonresponse = jsonset
         else:
-            print "======================"
-            print self.jsonresponse
             self.jsonresponse.update(jsonset)
         self.save()
-    '''    
-    def copy(self, **kwargs):
-        """
-        Provide a deep copy of itself for use in branches
-        https://docs.djangoproject.com/en/1.5/topics/db/queries/
-        If new related objects created (other than default), inherit this class.
-        """
-        super(Text, self).copy(**kwargs)
-        if self.header_image:
-            self.header_image = self.header_image.branch(**kwargs)
-        self.save()
-        return self
-    '''    
+  
     def revert(self, **kwargs):
         """
         Creates a new stack item copying all the content from the original but 

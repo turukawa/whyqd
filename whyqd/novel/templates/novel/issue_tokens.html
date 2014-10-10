@@ -1,0 +1,150 @@
+{% extends "wrapper.html" %}
+
+{% block content %}
+<div class="whyqd-absolute-top col-xs-12 col-md-10 col-md-offset-1">
+    <div class="row">
+        <h1>Share and Manage {{ novel_object.title }}</h1>
+        <p>Resend ebook versions to yourself or share your copy with your friends.</p>
+        <p>The book will be sent to your stored email address.</p>
+        <form action="" method="POST" class="inline">
+        {% csrf_token %}
+            <button type="submit" class="btn btn-default" name="resend_novel" value="send">Resend</button>
+        </form>        
+    </div>
+    <div class="row">
+        <h2>Bulk-buy {{ novel_object.title }} for friends</h2>
+        <p><small id="emailcount">0 emails</small></p>
+        <p id="bulkbuyinfo">Provide a comma separated list of email addresses and buy in bulk.
+        We will email a redemption voucher for you.</p>
+        <form action="" method="POST">
+            {% csrf_token %}
+            <textarea id="email_list" rows="3" cols="40" wrap="hard"></textarea>
+            <input type="hidden" value="{% url 'novel_settings' %}" name="stripeSettings" id="stripeSettings" />
+            <input type="hidden" value="{% url 'buy_novel' %}" name="stripeBuy" id="stripeBuy" />
+        </form>
+        <button id="stripeButton">Buy</button>
+    </div>   
+    <div class="row">
+        <h2>Share {{ novel_object.title }}</h2>
+        <p>Send up to {{ total_tokens }} copies to friends for {{ total_duration }} days.
+        Simply provide their email addresses and send.</p>
+        <form action="" method="POST" class="inline">
+        {% csrf_token %}
+            {{ formset.management_form }}
+            {% for form in formset %}
+                <li>{{ form }}{% if form.instance.days_left %} Loaned for {{ form.instance.days_left }} more days.{% endif %}</li>
+            {% endfor %}
+            </ul>
+            <button type="submit" class="btn btn-default" name="issue_tokens" value="save">Send</button>
+        </form>
+        <p>If your friends haven't taken advantage of your kindness (or you got their email address wrong),
+        change the email address and resend.</p>
+        <ul>
+            {%  for token in token_list %}
+                <li><a href="{{ token.get_token_redemption_url }}">{{ token.surl }}</a></li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+
+
+{% endblock content %}
+
+{% block extrascripts %}
+<script src="https://checkout.stripe.com/checkout.js"></script>
+<script>
+    function getemaillist(form_text) {
+        // http://scottdowne.wordpress.com/2010/07/13/javascript-array-split-on-multiple-characters/
+        var textlist = form_text ? form_text.split(/[\s,;]+/) : 0;
+        // http://stackoverflow.com/a/2507043 and http://www.w3.org/TR/html5/forms.html#valid-e-mail-address
+        var regex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+        var emails = textlist ? [e for (e of textlist) if (regex.test(e))] : 0;
+        return emails;
+    }
+    function getprice(num_emails, price, volume, discount) {
+        if (num_emails) {
+            var bulk_price = price * num_emails;
+            if (num_emails >= volume) {
+                bulk_price = bulk_price * (1 - discount);
+            }
+            return bulk_price;
+        }
+        return 0;
+    }
+    function countemail(price, volume, discount) {
+        var emails = getemaillist(this.value)
+        var count = emails.length;
+        var d_text = "Provide a comma separated list of email addresses and buy in bulk. We will email a redemption voucher for you."
+        var colour = 'black';
+        if (count) {
+            var d_text = count > 1 ? count + " copies for " : count + " copy for ";
+            d_text += "&pound;" + getprice(count, price, volume, discount).toFixed(2);
+            d_text = count >= discount ? d_text + " (unlocked " + Math.floor(discount*100) + "% discount)" : d_text;
+            colour = count >= discount ? 'blue' : 'black';
+        }
+        $('#emailcount').html(d_text).css("color", colour);
+    }
+    $(document).ready(function() {
+        $.ajax({
+            url: $('#stripeSettings').val()
+            }).done(function(data) {
+                ns = data.settings;
+                var handler = StripeCheckout.configure({
+                    key: ns.stripe_key,
+                    image: '/square-image.png',
+                    name: ns.novel_title,
+                    email: ns.user_email,
+                    currency: "GBP",
+                    token: function(token) {
+                        // http://stackoverflow.com/a/22461608
+                        // You can access the token ID with `token.id`
+                        $.ajax({
+                            url: $('#stripeBuy').val(),
+                            type: 'post',
+                            data: {
+                                stripeToken: token.id,
+                                stripeDescription: ns.description,
+                                stripePrice: ns.price,
+                                stripeEmails: ns.emails
+                            },
+                            success: function(data) {
+                              if (data == 'success') {
+                                  console.log("Card successfully charged!");
+                              }
+                              else {
+                                  console.log("Success Error!");
+                              }
+                              window.location.replace(window.location.pathname);
+                            },
+                            error: function(data) {
+                              console.log("Ajax Error!");
+                              console.log(data);
+                            }
+                          }); // end ajax call
+                    }
+                });
+                //https://mathiasbynens.be/notes/oninput
+                var emaillist = document.getElementById("email_list");
+                emaillist.oninput = function() {
+                    this.onkeyup = null;
+                    countemail.call(this, ns.bulk_price, ns.bulk_volume, ns.bulk_discount);
+                };
+                emaillist.onkeyup = function() {
+                    countemail.call(this, ns.bulk_price, ns.bulk_volume, ns.bulk_discount);
+                };
+                document.getElementById('stripeButton').addEventListener('click', function(e) {
+                    var emails = getemaillist($('#email_list').val());
+                    ns.emails = emails.toString();
+                    ns.price = Math.floor(getprice(emails.length, ns.bulk_price, ns.bulk_volume, ns.bulk_discount).toFixed(2) * 100);
+                    ns.description = $('#emailcount').text() + " - " + ns.novel_title;
+                    // Open Checkout with further options
+                    handler.open({
+                      description: ns.description,
+                      amount: ns.price
+                    });
+                    e.preventDefault();
+                });
+            });
+    });
+</script>
+{% endblock extrascripts %}

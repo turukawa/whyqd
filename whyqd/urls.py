@@ -13,6 +13,8 @@ urlpatterns = patterns('',
     url(r'^admin/', include(admin.site.urls)),
     (r'^facebook/', include('django_facebook.urls')),
     (r'^accounts/', include('django_facebook.auth_urls')),
+    url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     url(r'^usr/', include('whyqd.usr.urls')),
+    url(r'^my/', include('whyqd.novel.urls')),
     url(r'^', include('whyqd.wiqi.urls')),
 ) + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

@@ -1,0 +1,100 @@
+{% extends "wrapper.html" %}
+{% load humanize %}
+{% load mathfilters %}
+
+{% block extrastyles %}
+<!--<link rel="stylesheet" href="{{ STATIC_URL }}css/medium-editor.css">-->
+{% endblock extrastyles %}
+
+{% block heading %}
+<div class="whyqd-header">
+    <div class="whyqd-text-black">
+        <div class="col-xs-12 col-md-10 col-md-offset-2 whyqd-header-text">
+            <h1><div id="title">
+            {% if page_title %}{{ page_title|safe }}{% endif %}
+            </div></h1>
+            <h2><small><div id="subtitle">
+            {% if wiqi_object.stack %}{{ wiqi_object.stack.subtitle|safe }}{% else %}{{ wiqi_object.subtitle|safe }}{% endif %}
+            </div></small></h2>
+        </div>
+    </div>
+</div>
+{% endblock heading %}
+
+{% block content %}
+<div class="whyqd-content col-xs-12 col-md-10 col-md-offset-1">
+    <div class="row" id="content">
+    {% if diff_wiqis %}{{ diff_wiqis|safe }}{% else %}{{ wiqi_object.htmlresponse|safe }}{% endif %}
+    </div>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <div class="row" id="pagenav">
+        <div class="col-sm-2 col-md-3">
+            {% if wiqi_object.previous_wiqi %}
+                <a href="{{ wiqi_object.previous_wiqi.get_url }}">Previous</a>
+            {% endif %}
+        </div>
+        <div class="col-sm-4 col-md-6">
+            {% if wiqi_object.next_wiqi %}
+                <div class="row" id="nextpage">
+                {% if can_read_next == "open" %}
+                    <p><a href="{{ next_wiqi.get_url }}">Next chapter</a></p>
+                {% elif not request.user.is_authenticated %}
+                    <form action="{% url 'facebook_connect' %}?next={{ next_wiqi.get_url }}&facebook_login=1" method="post">
+                        {% csrf_token %}
+                        <input type="hidden" value="1" name="connect" />
+                        <input type="hidden" value="{{ next_wiqi.get_url }}" name="next" />
+                        <input type="hidden" value="{{ next_wiqi.get_url }}" name="register_next" />
+                        <input type="hidden" value="{{ request.path }}" name="error_next" />
+                        <a onclick="F.connect(this.parentNode); return false;" href="javascript:void(0);">
+                            Login to read next chapter</a>{% if next_wiqi.price %} (purchase price increases to
+                            {% if request.user.is_authenticated and request.user.current_price > next_wiqi.price %}
+                            {{ request.user.current_price }}{% else %}{{ next_wiqi.price }}{% endif %}{% endif %})
+                    </form>
+                {% else %}
+                    <p>{% if can_read_next != "own" %}<a href="{{ next_wiqi.get_url }}">Read next chapter</a>{% endif %}
+                    {% if can_read_next == "login" %}
+                        {% if wiqi_object.price %}{% if request.user.is_authenticated and request.user.current_price < next_wiqi.price %}
+                        (purchase price increases to &pound;{{ next_wiqi.price }}){% endif %}{% endif %}
+                    {% elif can_read_next == "borrowed" %} before {{ request.user.deadline|naturalday:"l j E Y" }}.
+                    {% elif can_read_next == "own" %}This isn't the end. {{ novel_title }} continues for owners.
+                    {% endif %}</p>
+                {% endif %}
+                </div>
+                <div class="row" id="buynow">
+                    {% if wiqi_object.price and can_read_next != "owns" and can_read_next != "borrowed" %}
+                    <form action="{% url 'buy_novel' %}" method="POST">
+                        {% csrf_token %}
+                        <input type="hidden" value="{% if request.user.is_authenticated and request.user.current_price > wiqi_object.price %}
+                                {{ request.user.current_price|mul:100|floatformat:"0" }}{% else %}{{ wiqi_object.price|mul:100|floatformat:"0" }}{% endif %}"
+                                name="stripePrice" />
+                        <input type="hidden" value="{{ novel_title }} purchase" name="stripeDescription" />
+                        <script
+                          src="https://checkout.stripe.com/checkout.js" class="stripe-button"
+                          data-key="{{ stripe_key }}"
+                          data-image="/square-image.png"
+                          data-name="{{ novel_title }}"
+                          data-description="Buy for &pound;
+                                {% if request.user.is_authenticated and request.user.current_price > wiqi_object.price %}
+                                {{ request.user.current_price }}{% else %}{{ wiqi_object.price }}{% endif %}"
+                          data-email={{ request.user.email }}
+                          data-label="Buy now for &pound;
+                                {% if request.user.is_authenticated and request.user.current_price > wiqi_object.price %}
+                                {{ request.user.current_price }}{% else %}{{ wiqi_object.price }}{% endif %}"
+                          data-amount="{% if request.user.is_authenticated and request.user.current_price > wiqi_object.price %}
+                                {{ request.user.current_price|mul:100|floatformat:"0" }}{% else %}{{ wiqi_object.price|mul:100|floatformat:"0" }}{% endif %}"
+                          data-currency="GBP">
+                        </script>
+                    </form>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+{% block extrascripts %}
+<!--<script src="{{ STATIC_URL }}js/medium-editor.js"></script>-->
+<script src="{{ STATIC_URL }}js/jquery.whyqd.view.js"></script>
+{% endblock extrascripts %}

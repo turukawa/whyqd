@@ -1,0 +1,12 @@
+{% extends "wrapper.html" %}
+
+{% block content %}
+<div class="whyqd-absolute-top col-xs-12 col-md-10 col-md-offset-1">
+    <div class="row">
+        <p>Bought... {{ novel_object.title }}</p>
+        <p>{{ token_object.surl }}</p>
+        <p>{{ charge }}</p>
+        <p>{{ kwargs }}</p>
+    </div>
+</div>
+{% endblock content %}

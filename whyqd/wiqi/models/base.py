@@ -8,11 +8,9 @@ Abstract classes:
                     is_live_from
                     is_live_to
                     is_active
-                    is_protected
                     is_private
                     is_searchable
                     is_deleted
-                    tags
                     stack (generic foreign key)
                     branched (generic foreign key)
                     branchlist
@@ -26,6 +24,8 @@ Abstract classes:
                     creator_ip
                     created_on
                     licence
+                    citation
+                    jsonresponse
                     reverted_from (generic foreign key)
                     wiqi (generic foreign key)
 
@@ -35,9 +35,7 @@ Derived classes:
                 Wiqi -> Component(WiqiStack)
 """
 
-from django.contrib.gis.db import models
-from django.contrib.gis.db.models.query import GeoQuerySet
-from django.core.exceptions import ObjectDoesNotExist
+from django.db import models
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
 from django.db.models.query import QuerySet
@@ -47,22 +45,31 @@ from django.db.models import Q
 #         object_id = models.PositiveIntegerField()
 #         content_object = generic.GenericForeignKey("content_type", "object_id")
 from django.conf import settings
-from django.template.defaultfilters import slugify
 
 from datetime import datetime
 from bs4 import BeautifulSoup
 import pytz
 from jsonfield import JSONField
 import collections
+import hashlib
+from decimal import Decimal
 # Google Diff Match Patch library
 # http://code.google.com/p/google-diff-match-patch
-from taggit.managers import TaggableManager
-# https://github.com/alex/django-taggit
-# tags = TaggableManager()
 from guardian.core import ObjectPermissionChecker
-from guardian.shortcuts import assign, get_objects_for_user, get_perms
+from guardian.shortcuts import assign_perm, get_objects_for_user, get_perms
 
-from whyqd.snippets.shrtn import surl, lurs
+LICENSE_CHOICE = (("(c)","All Rights Reserved"),
+                  ("CC0","No Rights Reserved"),
+                  ("CC BY","CC Attribution"),
+                  ("CC BY-ND","CC Attribution + NoDerivatives"),
+                  ("CC BY-SA","CC Attribution + ShareAlike"),
+                  ("CC BY-NC","CC Attribution + Noncommercial"),
+                  ("CC BY-NC-ND","CC Attribution + Noncommercial + NoDerivatives"),
+                  ("CC BY-NC-SA","CC Attribution + Noncommercial + ShareAlike"))
+
+READ_IF_CHOICE = (("open","Open"),
+                  ("login","Login"),
+                  ("own","Own"))
 
 #########################################################################################################################################
 # Main Wiqi Class
@@ -77,21 +84,17 @@ class WiqiManager(models.Manager):
     
 class Wiqi(models.Model):
     """
-    Fixed point for wiqistack with methods for editing, discussion and listing history.
+    Fixed point for wiqistack with methods for editing and listing history.
     Access to the stack must come from the reverse relationship..
     """
-    is_live_from = models.DateTimeField(blank=True, null=True, default=datetime.now,
-                                        verbose_name="Publish from", help_text="Leave blank to publish immediately, otherwise select a future publication date.")
-    is_live_to = models.DateTimeField(blank=True, null=True,
-                                      verbose_name="Publish until", help_text="Leave blank for permanent publication, otherwise select a date to end publication.")
-    is_protected = models.BooleanField(default=False,
-                                     verbose_name="Protected", help_text="If selected, the wiqi will be public but require permissions to edit.")
-    is_private = models.BooleanField(default=False,
-                                     verbose_name="Private", help_text="If unselected, the wiqi will be public.")
-    tags = TaggableManager(blank=True,
-                           verbose_name="Tags", help_text="Metadata tags can be used to group similar wiqis.")
-    license = models.CharField(max_length=500, blank=True,
-                               verbose_name="Release License", help_text="What form of copyright do you offer?")
+    surl = models.CharField(max_length=32, blank=True,
+                               verbose_name="Short URL")
+    is_live_from = models.DateTimeField(blank=True, null=True, default=datetime.now, verbose_name="Publish from", 
+                                        help_text="Leave blank to publish immediately, otherwise select a future publication date.")
+    is_live_to = models.DateTimeField(blank=True, null=True, verbose_name="Publish until", 
+                                      help_text="Leave blank for permanent publication, otherwise select a date to end publication.")
+    is_private = models.BooleanField(default=False, verbose_name="Private", 
+                                     help_text="If unselected, the wiqi will be public.")
     is_active = models.BooleanField(default=True)
     is_searchable = models.BooleanField(default=True)
     is_deleted = models.BooleanField(default=False)
@@ -107,10 +110,12 @@ class Wiqi(models.Model):
     merged = generic.GenericForeignKey("merged_content_type", "merged_object_id")
     next_wiqi = models.ForeignKey("self", related_name="%(app_label)s_%(class)s_next", null=True)
     previous_wiqi = models.ForeignKey("self", related_name="%(app_label)s_%(class)s_previous", null=True)
+    read_if = models.CharField(max_length=5, choices=READ_IF_CHOICE, default="Open")
+    price = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
     wiqi_objects = WiqiManager() # To extend QuerySet in derived classes
-    objects = models.GeoManager()
 
     class QuerySet(QuerySet):
+        # https://docs.djangoproject.com/en/dev/topics/db/managers/#calling-custom-queryset-methods-from-the-manager
         def published(self):
             """
             Complete set of filters as to whether object is currently published.
@@ -134,24 +139,22 @@ class Wiqi(models.Model):
                        ("can_view", "Can view private object."),
                        ("can_view_stack", "Can view history of private object."),
                        ("can_edit", "Can edit private object and its history."),
-                       ("can_publish", "Can change publication status of private object."),
-                       ("can_protect", "Can change object protection."),      
+                       ("can_publish", "Can change publication status of private object."),  
                        ("can_change_privacy", "Can change object privacy."),                 
                        ("can_revert", "Can revert live object from historical object."),
                        ("can_branch", "Can branch the object to a new wiqi."),
                        ("can_merge", "Can merge the object into an existing wiqi."),
-                       ("can_tag", "Can add tags."),
+                       ("owns", "Has purchased the object."),
+                       ("borrowed", "Has borrowed the object."),
                        # Access to any of the above properties doesn't apply the right to share any of these with others. Unless below also included.
                        ("can_share_view", "Can share access of private object with others."),
                        ("can_share_view_stack", "Can share access of view history."),
                        ("can_share_edit", "Can share access of edit private object."),
                        ("can_share_publish", "Can share access of change publication status."),
-                       ("can_share_protection", "Can share access of change object protection."),
                        ("can_share_privacy", "Can share access of change object privacy."),
                        ("can_share_revert", "Can share access of revert live object."),
                        ("can_share_branch", "Can share access of branch to a new wiqi."),
                        ("can_share_merge", "Can share access of merge into an existing wiqi."),
-                       ("can_share_tag", "Can share access of add tags."),
                        )
 
     @models.permalink
@@ -182,11 +185,8 @@ class Wiqi(models.Model):
         return ('share_wiqi', (), {'wiqi_surl': self.surl})
 
     def __unicode__(self):
-        return surl(self.id)
+        return self.surl
 
-    @property
-    def surl(self):
-        return surl(self.id)
     @property
     def merged_surl(self):
         # Once merged it will always refer to the merged wiqi, although the stack is still accessable
@@ -217,24 +217,15 @@ class Wiqi(models.Model):
             return self.previous_wiqi.surl
         else:
             return ""
-    
-    def set_tags(self, **kwargs):
-        if kwargs.get("tags",False):
-            if self.id is None:
-                self.save()
-            else:
-                self.tags.clear()
-            self.tags.add(*kwargs["tags"])
-            self.save()
-        return self
 
     def set(self, **kwargs):
         self.is_live_from = kwargs.get("is_live_from", pytz.UTC.localize(datetime.now()))
         self.is_live_to = kwargs.get("is_live_to",None)
         self.is_private = kwargs.get("is_private",False)
-        self.license = kwargs.get("license","")
         self.next_wiqi = kwargs.get("next", None)
         self.previous_wiqi = kwargs.get("previous", None)
+        self.save()
+        self.surl = hashlib.md5(''.join((settings.WIQI_SALT, str(self.id)))).hexdigest()
         self.save()
         
     def update(self, **kwargs):
@@ -282,6 +273,7 @@ class Wiqi(models.Model):
         self.is_active = False
         self.is_deleted = True
         self.save()
+        return self
         
     def can_do(self, usr, permission):
         '''
@@ -290,7 +282,7 @@ class Wiqi(models.Model):
         '''
         if permission == "can_view" and not self.is_private:
             return True
-        if not self.is_private and not self.is_protected and usr.is_authenticated():
+        if not self.is_private and usr.is_authenticated():
             return True
         if self.is_private and usr.has_perm(permission, self) and usr.profile.is_subscribed:
             return True
@@ -300,7 +292,7 @@ class Wiqi(models.Model):
         
     def assign_all_perm(self, usr):
         for perm, perm_text in self._meta.permissions:
-            assign(perm, usr, self)
+            assign_perm(perm, usr, self)
 
     # Shortcuts to stack
     @property
@@ -331,22 +323,26 @@ class WiqiStack(models.Model):
     The base wiqi class containing the common elements and functions for all
     the required wiqis.
     """
-    title = models.CharField(blank=True, max_length=250,
-                            verbose_name="Title", help_text="This may be used as a title, section or figure heading.")
-    description = models.TextField(blank=True,
-                                   verbose_name="Description", help_text="May only be necessary where the content may not provide sufficient context.")
+    surl = models.CharField(max_length=32, blank=True,
+                               verbose_name="Short URL")
+    title = models.CharField(blank=True, max_length=250, verbose_name="Title", 
+                             help_text="This may be used as a title, section or figure heading.")
+    description = models.TextField(blank=True, verbose_name="Description", 
+                                   help_text="May only be necessary where the content may not provide sufficient context.")
     creator = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, related_name="%(app_label)s_%(class)s_creator")
     creator_ip = models.GenericIPAddressField(blank=True, null=True, default="255.255.255.255")
     created_on = models.DateTimeField(auto_now_add=True)
+    license = models.CharField(max_length=50, choices=LICENSE_CHOICE, default="All Rights Reserved", 
+                               verbose_name="Release License", help_text="What form of copyright do you offer?")
+    citation = models.CharField(max_length=150, blank=True, default="",
+                                help_text="Please reference the original creator, if it wasn't you.")
     jsonresponse = JSONField(load_kwargs={'object_pairs_hook': collections.OrderedDict}, blank=True, null=True)
     #original_creator = models.ForeignKey(settings.AUTH_USER_MODEL, null=True)
-
     wiqi = models.ForeignKey(Wiqi, null=True)
     reverted_from_content_type = models.ForeignKey(ContentType, related_name="%(app_label)s_%(class)s_reverted_from", null=True)
     reverted_from_object_id = models.PositiveIntegerField(null=True)
     reverted_from = generic.GenericForeignKey("reverted_from_content_type", "reverted_from_object_id")
     wiqi_objects = WiqiManager() # To extend QuerySet in derived classes
-    objects = models.GeoManager()
     
     class QuerySet(QuerySet):
         def range(self, range_from=None, range_to=None):
@@ -394,21 +390,14 @@ class WiqiStack(models.Model):
         return ('share_wiqi', (),{'wiqi_surl': self.wiqi_surl})
     
     def __unicode__(self):
-        return surl(self.id) #"Name: %s | Description: %s" % (self.title, self.description)
+        return self.surl #"Name: %s | Description: %s" % (self.title, self.description)
 
-    @property
-    def surl(self):
-        """
-        Surl is generated direct from primary key id.
-        """
-        return surl(self.id)
-    
     @property
     def wiqi_surl(self):
         """
         Surl is generated direct from primary key id.
         """
-        return surl(self.wiqi.id)
+        return self.wiqi.surl
     
     @property
     def get_class(self):
@@ -425,9 +414,13 @@ class WiqiStack(models.Model):
         self.title = kwargs["title"]
         self.creator = kwargs["creator"]
         self.creator_ip =kwargs.get("creator_ip",None)
+        self.license = kwargs.get("license","All Rights Reserved")
+        self.citation = kwargs.get("citation", "")
         #self.original_creator = kwargs["original_creator"]
         self.reverted_from = kwargs.get("reverted_from", None)
         self.wiqi = kwargs["wiqi"]
+        self.save()
+        self.surl = hashlib.md5(''.join((settings.WIQI_SALT, str(self.id)))).hexdigest()
         self.save()
 
     def update(self, **kwargs):
@@ -453,6 +446,8 @@ class WiqiStack(models.Model):
         self.creator = kwargs.get("creator", self.creator)
         self.creator_ip = kwargs.get("creator_ip", self.creator_ip)
         self.save()
+        self.surl = hashlib.md5(''.join((settings.WIQI_SALT, str(self.id)))).hexdigest()
+        self.save()
         return self
         # Replace this entirely if you need additional related copies
         
@@ -477,7 +472,8 @@ class WiqiStack(models.Model):
 
     def revert(self, ObjectStack, **kwargs):
         """
-        Creates a new stack item copying all the content from the original but replacing with the user information of the revertor.
+        Creates a new stack item copying all the content from the original but replacing with the user information of 
+        the revertor.
         """
         try:
             # Any attempt to revert to itself will fail

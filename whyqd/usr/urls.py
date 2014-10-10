@@ -1,7 +1,7 @@
 from django.conf.urls import patterns, include, url
 
 urlpatterns = patterns('django.contrib.auth.views',
-                       url(r'^logout/$', 'logout', {'next_page': '/list/'}, name='usr_logout'),
+                       url(r'^logout/$', 'logout', {'next_page': '/'}, name='usr_logout'),
 )
 
 urlpatterns += patterns('whyqd.usr.views',
