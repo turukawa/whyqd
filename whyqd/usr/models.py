@@ -24,11 +24,10 @@ class User(AbstractUser, FacebookModel):
             return novel_objects[0]
         return False
 
-    @models.permalink
     def manage_novel(self):
         novel_object = self.get_novel()
         if novel_object:
-            return 'issue_tokens', (), {'surl': novel_object.surl}
+            return reverse('issue_tokens', kwargs={'surl': novel_object.surl})
         return False
     
     def take_ownership(self, novel_object, view_perm):
@@ -41,8 +40,8 @@ class User(AbstractUser, FacebookModel):
             assign_perm(view_perm, self, chapter)
         assign_perm(view_perm, self, novel_object)
     
-    def current_token(self):
-        return self.token_redeemer.filter(is_purchased=False).order_by('-redeemed_on')[0]
+    def current_token(self, purchased=False):
+        return self.token_redeemer.filter(is_purchased=purchased).order_by('-redeemed_on')[0]
 
     def deadline(self, token_object=None):
         try:
@@ -96,7 +95,6 @@ class User(AbstractUser, FacebookModel):
             deadline = self.deadline(token_object).strftime('%d %B %Y')
             return "%s has lent you %s until %s." % (token_object.creator.facebook_name, item.title, deadline)
         return "You don't have access to %s." % item.title
-
 
 '''    
     @property

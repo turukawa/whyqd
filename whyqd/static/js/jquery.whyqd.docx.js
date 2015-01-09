@@ -15,7 +15,7 @@
 
     $(document).ready(function() {
         var editor = new MediumEditor('.editable', {
-            buttons: ['bold', 'italic', 'quote'],
+            buttons: ['bold', 'italic', 'quote']
         });
         // Image processing
         $(document).on('click', 'label', function(event){
@@ -42,14 +42,17 @@
                 case "getdocx":
                     $(function () {
                         $('#docxupload').fileupload({
-                            url: '/docxtract/',
+                            url: '/my/docxtract/',
                             type: "POST",
                             dataType: 'json',
                             done: function (e, data) {
-                                $("#booksort").html(getdocxreview(data.result));
-                                $( "#sortable" ).sortable();
-                                $( "#sortable" ).disableSelection();
+                                var dlist = getdocxreview(data.result);
+                                localStorage.setItem('dlist', dlist);
+                                $("#booksort").html(dlist);
+                                $("#sortable").sortable();
+                                $("#sortable").disableSelection();
                                 $.post(window.location.pathname, editor.serialize(), function(data) {
+                                    localStorage.setItem('book', data.novel);
                                     $('#bookintro').empty();
                                     $('#charactercount').empty();
                                     editor.deactivate();
@@ -70,6 +73,8 @@
                         var bookstructure = {'0': {}};
                         $("#booksort").empty();
                         $("#booksort").append('<p>Please review and submit if you\'re satisfied</p>');
+                        $("#booksort").append('<span><a id="write-accept" href="" class="btn btn-default" role="button">Accept</a></span>');
+                        $("#booksort").append('<span><a id="write-restart" href="" class="btn btn-default" role="button">Restart</a></span>');
                         var content = false;
                         var pagecontent = "";
                         var first = true;
@@ -109,7 +114,8 @@
                         if (content) {
                             bookstructure[j+'']['content'] = content;
                             $("#booksort").append(content);
-                        }                      
+                        }
+                        localStorage.setItem('bookstructure', JSON.stringify({'upload': bookstructure}));
                     });
                     break;
                 default:
@@ -119,7 +125,6 @@
         // Text processing
         $(document).on('click', 'a', function(event){ 
             event.preventDefault();
-            console.log(window.location.pathname);
             switch($(this).attr('id')) {
                 case "edit":
                     break;
@@ -127,9 +132,25 @@
                     break;
                 case "write":
                     $.post(window.location.pathname, editor.serialize(), function(data) {
-                        window.location.href = $('#write').attr('href') + '?j=view&lw=' + data.wiqi.surl;
-                        console.log(window.location.pathname);
-                        console.log($('#write').attr('href') + '?j=view&lw=' + data.wiqi.surl);
+                        window.location.href = $('#write').attr('href') + '?j=view&lw=' + data.novel;
+                    });
+                    break;
+                case "write-accept":
+                    $(function () {
+                        var bookstructure = localStorage.getItem('bookstructure');
+                        localStorage.removeItem('dlist');
+                        localStorage.removeItem('bookstructure');
+                        $.post('/my/organise/' + localStorage.getItem('book') + '/', bookstructure, function(data) {
+                            window.location.href = '/my/organise/' + localStorage.getItem('book') + '/';//data.wiqi.url;
+                        });
+                    });
+                    break;
+                case "write-restart":
+                    $(function () {
+                        var dlist = localStorage.getItem('dlist');
+                        $("#booksort").html(dlist);
+                        $( "#sortable" ).sortable();
+                        $( "#sortable" ).disableSelection();                       
                     });
                     break;
                 default:

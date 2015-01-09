@@ -1,0 +1,20 @@
+{% extends "wrapper.html" %}
+
+{% block content %}
+<div class="whyqd-absolute-top col-xs-12 col-md-10 col-md-offset-1">
+    <div class="row">
+        <p>These are the time-limited download links for {{ token_object.novel.title }}. You have
+        {{ downloads.timer }} seconds before the link expires.</p>
+        <p></p>
+        <ul>
+            {% for k, v in downloads.links %}
+            <li><a href={{ v }}>{{ k }}</a></li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endblock content %}
+
+{% block extrascripts %}
+<script src="{{ STATIC_URL }}js/jquery.whyqd.view.js"></script>
+{% endblock extrascripts %}

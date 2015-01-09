@@ -7,11 +7,15 @@
             <p>This token has already been redeemed.</p>
         {% elif request.user.is_authenticated %}
             <p>{{ page_message }}</p>
-        {% else %}
+        {% elif token_object.is_valid %}
+            {% if token_object.creator %}
             <p>{{ token_object.creator.facebook_name }} has {% if token_object.is_purchased %}purchased
             {{ token_object.novel.title }} for you.{% else %}loaned you a copy of {{ token_object.novel.title }} for
-            {{ days }} days.
-            {% endif %}</p>
+            {{ days }} days.{% endif %}</p>
+        {% elif token_object.is_purchased  %}
+            <p>Thank you for your purchase of {{ token_object.novel.title }} (or, if someone bought it for you, they
+            have chosen to remain anonymous).</p>
+            {% endif %}
             <form action="{% url 'facebook_connect' %}?next={{ request.path }}&facebook_login=1" method="post">
                 {% csrf_token %}
                 <input type="hidden" value="1" name="connect" />
@@ -19,33 +23,125 @@
                 <input type="hidden" value="{{ request.path }}" name="register_next" />
                 <input type="hidden" value="{{ request.path }}" name="error_next" />
                 You will need to<a onclick="F.connect(this.parentNode); return false;" href="javascript:void(0);">
-                login with Facebook</a> in order to redeem this token.
+                login with Facebook</a> in order to redeem this token{% if token_object.is_purchased %}, or you can
+                click the button below. Read the fine-print before you do so because you only get one chance to
+                download{% endif %}.
             </form>
-            <p></p>
-            <small>
-            <dl><dt><strong>How this works:</strong></dt>
-            <dd>
-            <ul>
-                <li>Facebook dedicates tremendous resources to ensuring the majority of their users are real people.
-                This is a good thing for small sites like this one. Unfortunately, this does mean that - if you don't
-                have a Facebook account - you will need to create one in order to read the complete
-                {{ token_object.novel.title }}.</li>
-                <li>The only information we require from your Facebook account is your email address. We don't ask
-                for any other rights or content.</li>
-                {% if token_object.is_purchased %}
-                <li>Once you own {{ token_object.novel.title }} you are able to bulk buy, as well as lend copies to
-                friends. You will also receive an emailed copy of the book in the popular e-reader formats.</li>
-                {% else %}
-                <li>You will have full access to the whole online book for {{ days }} days after which you can ask
-                {{ token_object.creator.facebook_name }} to lend it to you again. Or you could just buy it.</li>
-                {% endif %}
-            </ul>
-            </dd></dl></small>
+    </div>
+    <p></p>
+    <div class="row" id="download_ebook">
+        <div class="col-sm-2 col-md-3">
+            <form action="{% url 'facebook_connect' %}?next={{ request.path }}&facebook_login=1" method="post">
+                {% csrf_token %}
+                <input type="hidden" value="1" name="connect" />
+                <input type="hidden" value="{{ request.path }}" name="next" />
+                <input type="hidden" value="{{ request.path }}" name="register_next" />
+                <input type="hidden" value="{{ request.path }}" name="error_next" />
+                <button id="facebookButton" class="btn btn-default" onclick="F.connect(this.parentNode);
+                return false;" href="javascript:void(0);">Own with Facebook</button> 
+            </form>
+        </div>
+        <div class="col-sm-2 col-md-3">
+            <strong>or</strong> (please read the fine-print)
+        </div>
+        <div class="col-sm-2 col-md-3">
+            {% if token_object.is_purchased %}
+            <form action="{% url 'download_novel' token_object.surl %}" method="POST">
+                {% csrf_token %}
+                <input type="hidden" value="{% url 'download_novel' token_object.surl %}" name="downloadURL" id="downloadURL" />
+            </form>
+            <button id="downloadButton" class="btn btn-default" >One-Time Download</button>
+            {% endif %}
+        </div>
+    </div>
+    <p></p>
+    <div class="row">
+        <small>
+        <dl><dt><strong>How this works (the fine print):</strong></dt>
+        <dd>
+        <ul>
+            <li>Facebook dedicates tremendous resources to ensuring the majority of their users are real people.
+            This is a good thing for small sites like this one. Unfortunately, this does mean that - if you don't
+            have a Facebook account - you will need to create one in order to manage your copy of 
+            {{ token_object.novel.title }}.</li>
+            <li>The only information we require from your Facebook account is your email address. We don't ask
+            for any other rights or content.</li>
+            {% if token_object.is_purchased %}
+            <li><strong>Bonuses for creating an account to manage your copy of {{ token_object.novel.title }}:</strong>
+                <ul>
+                    <li>Download different ebook versions whenever you want;</li>
+                    <li>Read the complete ebook online in any modern web browser;</li>
+                    <li>Lend out copies to friends for free whenever you like;</li>
+                    <li>Bulk-buy copies for friends at discounted rates;</li>
+                    <li>Long-term, this site will offer more features and I will write more novels. You get to be
+                    part of that.</li>
+                </ul>
+            </li>
+            {% else %}
+            <li>You will have full access to the whole online book for {{ days }} days after which you can ask
+            {{ token_object.creator.facebook_name }} to lend it to you again. Or you could just buy it.</li>
+            {% endif %}
+            {% if not token_object.creator and not request.user.is_authenticated %}
+            <li><strong>Should you choose not to create a Facebook account</strong> (and I certainly don't blame
+            you) then, after you click the "Download" button:
+                <ul>
+                    <li>A set of links will be generated;</li>
+                    <li>Your token will be disabled;</li>
+                    <li><strong>The links will expire after {{ expiry }} seconds;</strong></li>
+                    <li>You accept that you will have no further recourse as we will have no way of knowing whether you
+                    downloaded the files or simply picked up a token randomly.</li>
+                </ul>
+            <li>For as long as this token is valid you will be able to visit this page.</li>
+            {% endif %}
+        </ul>
+        </dd></dl></small>
         {% endif %}
     </div>
 </div>
 {% endblock content %}
 
 {% block extrascripts %}
-<script src="{{ STATIC_URL }}js/jquery.whyqd.view.js"></script>
+<script>
+    function timer(time,update,complete) {
+        // http://stackoverflow.com/a/11336046
+        var start = new Date().getTime();
+        var interval = setInterval(function() {
+            var now = time-(new Date().getTime()-start);
+            if( now <= 0) {
+                clearInterval(interval);
+                complete();
+            }
+            else update(Math.floor(now/1000));
+        },100); // the smaller this number, the more accurate the timer will be
+    }
+    function setlinks(links) {
+        var instruct = '<p>Your token has been disabled. Time remaining before links expire: <span id="timer"></span></p>';
+        var dlist = '<ul>';
+        $.each(links, function(k, l) {
+            dlist = dlist + '<li><a href=' + l + '>' + k + '</a></li>';
+        });
+        dlist = instruct + dlist + '</ul>';
+        return dlist;
+    }
+    $(document).ready(function() {
+        $('#downloadButton').on('click', function () {
+            $.ajax({
+               url: $('#downloadURL').val()
+               }).done(function(data) {
+                   var time = data.timer;
+                   var links = data.links;
+                   $('#download_ebook').html(setlinks(links));
+                   timer(
+                       time*1000, // milliseconds
+                       function(timeleft) { // called every step to update the visible countdown
+                           document.getElementById('timer').innerHTML = timeleft + " seconds.";
+                       },
+                       function() { // what to do after
+                           document.getElementById('timer').innerHTML = "download period ended.";
+                       }
+                   );                
+                });           
+            });
+    });
+</script>
 {% endblock extrascripts %}

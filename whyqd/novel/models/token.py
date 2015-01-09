@@ -2,6 +2,7 @@ from django.db import models
 from django.conf import settings
 from django.db.models.query import QuerySet
 from django.db.models import Q
+from django.core.urlresolvers import reverse
 import hashlib
 import pytz
 from datetime import datetime, timedelta
@@ -17,10 +18,10 @@ class TokenQuerySet(QuerySet):
         """
         deadline = pytz.UTC.localize(datetime.now()) - timedelta(days=settings.TOKEN_DELTA)
         return self.filter(Q(creator=user) &
+                           Q(is_purchased=False) &
                            (Q(is_valid=True) |
                            Q(redeemed_on__gt=deadline))
         )
-    
     def valid_purchased(self, user, valid=True):
         """
         Return filtered list of valid purchased tokens.
@@ -35,9 +36,10 @@ class TokenQuerySet(QuerySet):
 class TokenManager(models.Manager):
     def get_queryset(self):
         return TokenQuerySet(self.model, using=self._db)
-
     def issued_list(self, user):
         return self.get_queryset().issued_list(user)
+    def valid_purchased(self, user, valid=True):
+        return self.get_queryset().valid_purchased(user, valid)
 
 class Token(models.Model):
     surl = models.CharField(max_length=32, blank=True, verbose_name="Short URL")
@@ -50,8 +52,8 @@ class Token(models.Model):
     novel = models.ForeignKey(Novel, blank=True, null=True)
     is_valid = models.BooleanField(default=True)
     is_purchased = models.BooleanField(default=False)
-    #charge = JSONField(blank=True, null=True)
-    #price = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
+    charge = JSONField(blank=True, null=True)
+    price = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
     recipient = models.EmailField(blank=True, null=True, verbose_name="Email")
     query = TokenManager()
 
@@ -59,9 +61,8 @@ class Token(models.Model):
         app_label = "novel"
         verbose_name_plural = "Tokens"
 
-    @models.permalink
     def get_token_redemption_url(self):
-        return 'redeem_token', (), {'surl': self.surl}
+        return reverse('redeem_token', kwargs={'surl': self.surl})
 
     def issue(self, **kwargs):
         """
@@ -74,11 +75,11 @@ class Token(models.Model):
         self.novel = kwargs["novel"]
         self.recipient = kwargs["recipient"]
         self.is_purchased = kwargs.get("is_purchased", False)
-        #self.charge = kwargs.get("charge", None)
-        #self.price = kwargs.get("price", Decimal("0.00"))
+        self.charge = kwargs.get("charge", None)
+        self.price = kwargs.get("price", Decimal("0.00"))
         # if purchased, and the creator and recipient are the same, then the person is buying this themselves
         # (i.e.) not a gift - and the book is being automatically sent...
-        if not kwargs["creator"] or (kwargs.get("is_purchased", False) and kwargs["creator"].email == kwargs["recipient"]):
+        if kwargs["creator"] and kwargs.get("is_purchased", False) and kwargs["creator"].email == kwargs["recipient"]:
             self.is_valid = False
             self.redeemer = kwargs["creator"]
             self.redeemer_ip = kwargs.get("creator_ip", None)
@@ -103,15 +104,16 @@ class Token(models.Model):
 
     def redeem(self, **kwargs):
         self.is_valid = False
-        self.redeemer = kwargs["redeemer"]
+        self.redeemer = kwargs.get("redeemer", None)
         self.redeemer_ip = kwargs.get("redeemer_ip", None)
         self.redeemed_on = pytz.UTC.localize(datetime.now())
         self.save()
-        if self.is_purchased:
-            view_perm = "owns"
-        else:
-            view_perm = "borrowed"
-        kwargs["redeemer"].take_ownership(self.novel, view_perm)
+        if self.redeemer:
+            if self.is_purchased:
+                view_perm = "owns"
+            else:
+                view_perm = "borrowed"
+            kwargs["redeemer"].take_ownership(self.novel, view_perm)
 
     def remove(self):
         """

@@ -1,4 +1,4 @@
-from django.contrib.gis import admin
+from django.contrib import admin
 from whyqd.usr.models import User #, Geomap #, Attribute, AttributeStack
 
 class UserAdmin(admin.ModelAdmin):

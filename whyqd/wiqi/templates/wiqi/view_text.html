@@ -52,7 +52,7 @@
                             {{ request.user.current_price }}{% else %}{{ next_wiqi.price }}{% endif %}{% endif %})
                     </form>
                 {% else %}
-                    <p>{% if can_read_next != "own" %}<a href="{{ next_wiqi.get_url }}">Read next chapter</a>{% endif %}
+                    <p>{% if can_read_next != "own" %}<a href="{{ next_wiqi.get_url }}">Next chapter</a>{% endif %}
                     {% if can_read_next == "login" %}
                         {% if wiqi_object.price %}{% if request.user.is_authenticated and request.user.current_price < next_wiqi.price %}
                         (purchase price increases to &pound;{{ next_wiqi.price }}){% endif %}{% endif %}
@@ -66,26 +66,17 @@
                     <form action="{% url 'buy_novel' %}" method="POST">
                         {% csrf_token %}
                         <input type="hidden" value="{% if request.user.is_authenticated and request.user.current_price > wiqi_object.price %}
-                                {{ request.user.current_price|mul:100|floatformat:"0" }}{% else %}{{ wiqi_object.price|mul:100|floatformat:"0" }}{% endif %}"
-                                name="stripePrice" />
-                        <input type="hidden" value="{{ novel_title }} purchase" name="stripeDescription" />
-                        <script
-                          src="https://checkout.stripe.com/checkout.js" class="stripe-button"
-                          data-key="{{ stripe_key }}"
-                          data-image="/square-image.png"
-                          data-name="{{ novel_title }}"
-                          data-description="Buy for &pound;
-                                {% if request.user.is_authenticated and request.user.current_price > wiqi_object.price %}
-                                {{ request.user.current_price }}{% else %}{{ wiqi_object.price }}{% endif %}"
-                          data-email={{ request.user.email }}
-                          data-label="Buy now for &pound;
-                                {% if request.user.is_authenticated and request.user.current_price > wiqi_object.price %}
-                                {{ request.user.current_price }}{% else %}{{ wiqi_object.price }}{% endif %}"
-                          data-amount="{% if request.user.is_authenticated and request.user.current_price > wiqi_object.price %}
-                                {{ request.user.current_price|mul:100|floatformat:"0" }}{% else %}{{ wiqi_object.price|mul:100|floatformat:"0" }}{% endif %}"
-                          data-currency="GBP">
-                        </script>
+                            {{ request.user.current_price|mul:100|floatformat:"0" }}
+                        {% else %}
+                            {{ wiqi_object.price|mul:100|floatformat:"0" }}{% endif %}"
+                                id="stripePrice" name="stripePrice" />
+                        <input type="hidden" value="{% url 'novel_settings' %}" name="stripeSettings" id="stripeSettings" />
+                        <input type="hidden" value="{% url 'buy_novel' %}" name="stripeBuy" id="stripeBuy" />
+                        <input type="hidden" value="{{ next_wiqi.get_url }}" name="stripeNext" id="stripeNext" />
                     </form>
+                    <button id="stripeButton" class="btn btn-default" >Buy for &pound;
+                            {% if request.user.is_authenticated and request.user.current_price > wiqi_object.price %}
+                            {{ request.user.current_price }}{% else %}{{ wiqi_object.price }}{% endif %}</button>
                     {% endif %}
                 </div>
             {% endif %}
@@ -95,6 +86,97 @@
 {% endblock content %}
 
 {% block extrascripts %}
-<!--<script src="{{ STATIC_URL }}js/medium-editor.js"></script>-->
 <script src="{{ STATIC_URL }}js/jquery.whyqd.view.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap.min.js"></script>
+<script src="https://checkout.stripe.com/checkout.js"></script>
+<script>
+    $(document).ready(function() {
+        if ($('#stripeButton').length > 0) {
+            $.ajax({
+                url: $('#stripeSettings').val()
+                }).done(function(data) {
+                    ns = data.settings;
+                    var handler = StripeCheckout.configure({
+                        key: ns.stripe_key,
+                        image: '/square-image.png',
+                        name: ns.novel_title,
+                        email: ns.user_email,
+                        currency: "GBP",
+                        token: function(token) {
+                            // http://stackoverflow.com/a/22461608
+                            // You can access the token ID with `token.id`
+                            if (!ns.user_email) {
+                                ns.user_email = token.email;
+                            }
+                            $.ajax({
+                                url: $('#stripeBuy').val(),
+                                type: 'post',
+                                data: {
+                                    stripeToken: token.id,
+                                    stripeDescription: ns.description,
+                                    stripePrice: ns.price,
+                                    stripeEmails: ns.user_email,
+                                    selfPurchase: true // Buying for own use
+                                },
+                                success: function(data) {
+                                    if (data.response == 'success') {
+                                        var next_page = '<p><a href="' + $('#stripeNext').val() +
+                                                        '">Next chapter</a></p>';
+                                        $('#nextpage').html(next_page);
+                                        $('#buynow').remove();
+                                        if (data.registered) {
+                                            $('#nextpage').after(
+                                                '<div class="alert alert-success alert-dismissable">'+
+                                                '<button type="button" class="close" ' + 
+                                                'data-dismiss="alert" aria-hidden="true">' + '&times;' + 
+                                                '</button>' + 
+                                                '<p><strong>Thank you</strong>, your purchase has been successful.</p>' +
+                                                '<p>You can continue reading ' + ns.novel_title + ' online, or ' +
+                                                '<a href="' + data.link + '" class="alert-link"> download an ebook ' +
+                                                'version</a>. You could even share a copy with your friends.</p>' +
+                                                '</div>');
+                                        }
+                                        else {
+                                            // http://stackoverflow.com/a/506004
+                                            window.location.href = data.link;
+                                        }
+                                    }
+                                    else {
+                                        $('#stripeButton').after(
+                                            '<div class="alert alert-danger alert-dismissable">'+
+                                                '<button type="button" class="close" ' + 
+                                                    'data-dismiss="alert" aria-hidden="true">' + '&times;' + 
+                                                '</button>' + 
+                                                '<strong>Sorry</strong>, something went wrong.' +
+                                                'You have not been charged. Please try again.' +
+                                             '</div>');
+                                    }
+                                },
+                                error: function(data) {
+                                    $('#stripeButton').after(
+                                        '<div class="alert alert-danger alert-dismissable">'+
+                                            '<button type="button" class="close" ' + 
+                                                'data-dismiss="alert" aria-hidden="true">' + '&times;' + 
+                                            '</button>' + 
+                                            '<strong>Sorry</strong>, something went wrong.' +
+                                            'You have not been charged. Please try again.' +
+                                         '</div>');
+                                }
+                              }); // end ajax call
+                        }
+                    });
+                    document.getElementById('stripeButton').addEventListener('click', function(e) {
+                        ns.price = $('#stripePrice').val().trim();
+                        ns.description = "Single purchase of " + ns.novel_title;
+                        // Open Checkout with further options
+                        handler.open({
+                          description: ns.description,
+                          amount: ns.price
+                        });
+                        e.preventDefault();
+                    });
+                });
+        }
+    });
+</script>
 {% endblock extrascripts %}

@@ -1,5 +1,5 @@
 from text import Text
-from image import Image
+#from image import Image
 #from geomap import Geomap
 from base import *
 

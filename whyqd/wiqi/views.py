@@ -14,7 +14,10 @@ def index(request, template_name="wiqi/index.html", nav_type="view"):
     '''
     We're assuming one site, one novel ... this could change in future ...
     '''
-    novel_object = get_list_or_404(Novel)[0]
+    novel_object = Novel.objects.all()
+    if not novel_object:
+        return redirect("create_novel")
+    novel_object = novel_object[0]
     page_title = "Home"
     if novel_object:
         page_title = novel_object.title

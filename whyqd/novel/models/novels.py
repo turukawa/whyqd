@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.urlresolvers import reverse
 from whyqd.wiqi.models import Wiqi
 
 from django.conf import settings
@@ -87,18 +88,15 @@ class Novel(models.Model):
                        ("borrowed", "Has borrowed the object."),
                        )
 
-    @models.permalink
     def get_absolute_url(self):
         # http://stackoverflow.com/a/4863504/295606
-        return 'view_novel', (), {'surl': self.surl}
+        return reverse('view_novel', kwargs={'surl': self.surl})
 
-    @models.permalink
     def get_prices_url(self):
-        return 'price_novel', (), {'surl': self.surl}
+        return reverse('price_novel', kwargs={'surl': self.surl})
 
-    @models.permalink
     def get_manage_tokens_url(self):
-        return 'issue_tokens', (), {'surl': self.surl}
+        return reverse('issue_tokens', kwargs={'surl': self.surl})
 
     def __unicode__(self):
         return self.surl #"Name: %s | Description: %s" % (self.title, self.description)

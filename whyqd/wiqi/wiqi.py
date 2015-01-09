@@ -7,8 +7,8 @@ from django.core.urlresolvers import reverse
 
 from guardian.shortcuts import assign_perm, get_objects_for_user, get_perms
 
-from whyqd.wiqi.models import Wiqi, Text, Image, WIQI_TYPE_DICT, DEFAULT_WIQISTACK_TYPE #, Geomap
-from whyqd.wiqi.forms import TextForm, ImageForm,WIQI_FORM_TYPE_DICT#, GeomapForm
+from whyqd.wiqi.models import Wiqi, Text, WIQI_TYPE_DICT, DEFAULT_WIQISTACK_TYPE #, Geomap, Image
+from whyqd.wiqi.forms import TextForm, WIQI_FORM_TYPE_DICT#, GeomapForm, ImageForm
 from whyqd.snippets import html2text 
 from whyqd.snippets.diff_match_patch import diff_match_patch
 

@@ -5,7 +5,7 @@ from django.forms.models import modelformset_factory
 from datetime import date
 #from olwidget.forms import MapModelForm
 
-from whyqd.wiqi.models import Wiqi, Text, Image #, Book#, Geomap
+from whyqd.wiqi.models import Wiqi, Text #, Image #, Book#, Geomap
 
 class WiqiStackRevertForm(forms.Form):
     comment = forms.CharField(max_length=500, required=False, label="Reason for reversion")
@@ -39,11 +39,11 @@ class TextForm(forms.ModelForm):
         model = Text
         fields = ('title', 'content', )
         
-class ImageForm(forms.ModelForm):
-    class Meta:
-        model = Image
-        fields = ('image', )
-
+#class ImageForm(forms.ModelForm):
+#    class Meta:
+#        model = Image
+#        fields = ('image', )
+#
 
 # class BookFullForm(forms.ModelForm):
 #     class Meta:
@@ -52,7 +52,7 @@ class ImageForm(forms.ModelForm):
        
 WIQI_FORM_TYPE_DICT = {
                        'text': TextForm,
-                       'image': ImageForm,
+                       #'image': ImageForm,
                        #'book': BookForm,
                        #'geomap': GeomapForm,
                        }

@@ -45,6 +45,7 @@ from django.db.models import Q
 #         object_id = models.PositiveIntegerField()
 #         content_object = generic.GenericForeignKey("content_type", "object_id")
 from django.conf import settings
+from django.core.urlresolvers import reverse
 
 from datetime import datetime
 from bs4 import BeautifulSoup
@@ -79,7 +80,7 @@ class WiqiManager(models.Manager):
     """
     Generates a new QuerySet method and extends the original query object manager in the Model
     """
-    def get_query_set(self):
+    def get_queryset(self):
         return self.model.QuerySet(self.model)
     
 class Wiqi(models.Model):
@@ -110,7 +111,7 @@ class Wiqi(models.Model):
     merged = generic.GenericForeignKey("merged_content_type", "merged_object_id")
     next_wiqi = models.ForeignKey("self", related_name="%(app_label)s_%(class)s_next", null=True)
     previous_wiqi = models.ForeignKey("self", related_name="%(app_label)s_%(class)s_previous", null=True)
-    read_if = models.CharField(max_length=5, choices=READ_IF_CHOICE, default="Open")
+    read_if = models.CharField(max_length=5, choices=READ_IF_CHOICE, default="open")
     price = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
     wiqi_objects = WiqiManager() # To extend QuerySet in derived classes
 
@@ -157,32 +158,24 @@ class Wiqi(models.Model):
                        ("can_share_merge", "Can share access of merge into an existing wiqi."),
                        )
 
-    @models.permalink
     def get_absolute_url(self):
         # http://stackoverflow.com/a/4863504/295606
-        return ('view_wiqi_full', (), {'wiqi_surl': self.merged_surl})
-    @models.permalink
+        return reverse('view_wiqi_full', kwargs={'wiqi_surl': self.merged_surl})
     def get_url(self):
         # For short url address
-        return ('view_wiqi', (), {'wiqi_surl': self.merged_surl})
-    @models.permalink
+        return reverse('view_wiqi', kwargs={'wiqi_surl': self.merged_surl})
     def get_edit_url(self):
-        return ('edit_wiqi', (), {'wiqi_type': self.get_class, 'wiqi_surl': self.stack.surl})
-    @models.permalink
+        return reverse('edit_wiqi', kwargs={'wiqi_type': self.get_class, 'wiqi_surl': self.stack.surl})
     def get_revert_url(self):
         return self.get_stacklist_url
-    @models.permalink
     def get_branch_url(self):
-        return ('branch_wiqi', (),{'wiqi_type': self.get_class, 'wiqi_surl': self.stack.surl})
-    @models.permalink
+        return reverse('branch_wiqi', kwargs={'wiqi_type': self.get_class, 'wiqi_surl': self.stack.surl})
     def get_merge_url(self):
-        return ('merge_wiqi', (), {'wiqi_surl': self.surl})
-    @models.permalink
+        return reverse('merge_wiqi', kwargs={'wiqi_surl': self.surl})
     def get_stacklist_url(self):
-        return ('view_wiqistacklist', (), {'wiqi_surl': self.surl})
-    @models.permalink
+        return reverse('view_wiqistacklist', kwargs={'wiqi_surl': self.surl})
     def get_share_url(self):
-        return ('share_wiqi', (), {'wiqi_surl': self.surl})
+        return reverse('share_wiqi', kwargs={'wiqi_surl': self.surl})
 
     def __unicode__(self):
         return self.surl
@@ -194,6 +187,13 @@ class Wiqi(models.Model):
             return self.merged.surl
         else:
             return self.surl
+        
+    @property
+    def base_wiqi(self):
+        """
+        Return the Wiqi where such ambiguity causes problems.
+        """
+        return self
 
     @property
     def get_class(self):
@@ -365,30 +365,23 @@ class WiqiStack(models.Model):
         get_latest_by = "created_on"
         ordering = ("created_on", )
 
-    @models.permalink
     def get_absolute_url(self):
         # http://stackoverflow.com/a/4863504/295606
-        return ('view_wiqistack', (), {'wiqi_type': self.get_class, 'wiqi_surl': self.surl})
-    @models.permalink
+        return reverse('view_wiqistack', kwargs={'wiqi_type': self.get_class, 'wiqi_surl': self.surl})
     def get_url(self):
         # For short url address
-        return ('view_wiqi', (), {'wiqi_surl': self.wiqi.merged_surl})
-    @models.permalink
+        return reverse('view_wiqi', kwargs={'wiqi_surl': self.wiqi.merged_surl})
     def get_edit_url(self):
-        return ('edit_wiqi', (),{'wiqi_type': self.get_class, 'wiqi_surl': self.surl})
-    @models.permalink
+        return reverse('edit_wiqi', kwargs={'wiqi_type': self.get_class, 'wiqi_surl': self.surl})
     def get_revert_url(self):
-        return ('revert_wiqi', (),{'wiqi_type': self.get_class, 'wiqi_surl': self.surl})
-    @models.permalink
+        return reverse('revert_wiqi', kwargs={'wiqi_type': self.get_class, 'wiqi_surl': self.surl})
     def get_branch_url(self):
-        return ('branch_wiqi', (),{'wiqi_type': self.get_class, 'wiqi_surl': self.surl})
-    @models.permalink
+        return reverse('branch_wiqi', kwargs={'wiqi_type': self.get_class, 'wiqi_surl': self.surl})
     def get_stacklist_url(self):
-        return ('view_wiqistacklist', (),{'wiqi_surl': self.wiqi_surl})
-    @models.permalink
+        return reverse('view_wiqistacklist', kwargs={'wiqi_surl': self.wiqi_surl})
     def get_share_url(self):
-        return ('share_wiqi', (),{'wiqi_surl': self.wiqi_surl})
-    
+        return reverse('share_wiqi', kwargs={'wiqi_surl': self.wiqi_surl})
+
     def __unicode__(self):
         return self.surl #"Name: %s | Description: %s" % (self.title, self.description)
 
@@ -409,6 +402,13 @@ class WiqiStack(models.Model):
     @property
     def is_top_of_stack(self):
         return self.id == self.wiqi.stack.id
+    
+    @property
+    def base_wiqi(self):
+        """
+        Return the Wiqi from the WiqiStack where such ambiguity causes problems.
+        """
+        return self.wiqi
     
     def set(self, **kwargs):
         self.title = kwargs["title"]

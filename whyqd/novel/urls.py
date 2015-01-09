@@ -31,10 +31,14 @@ urlpatterns = patterns("whyqd.novel.views",
                        # JSONResponse settings
                        url(r"^settings/", "novel_settings",
                            name="novel_settings"),
-                       # Email ebooks to user
+                       # Email token link to user
                        url(r"^resend/", "resend_novel",
                            {"template_name": "novel/issue_tokens.html"},
                            name="resend_novel"),
+                       # Download books based on one-time link
+                       url(r"^download/(?P<surl>[-\w]+)/", "download_novel",
+                           {"template_name": "novel/download_novel.html"},
+                           name="download_novel"),
                        # Administer novel
                         url(r"^sortit/", "administer_novel",
                            {"template_name": "novel/administer_novel.html", "permission":"can_edit"},

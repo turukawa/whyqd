@@ -4,46 +4,91 @@
 <div class="whyqd-absolute-top col-xs-12 col-md-10 col-md-offset-1">
     <div class="row">
         <h1>Share and Manage {{ novel_object.title }}</h1>
-        <p>Resend ebook versions to yourself or share your copy with your friends.</p>
-        <p>The book will be sent to your stored email address.</p>
-        <form action="" method="POST" class="inline">
-        {% csrf_token %}
-            <button type="submit" class="btn btn-default" name="resend_novel" value="send">Resend</button>
-        </form>        
+        <p>Download ebook versions for yourself or share your copy with your friends.</p>
     </div>
+    {% if not request.user.is_superuser %}
+    <p></p>
+    <div class="row" id="download_ebook">
+        <div class="col-sm-2 col-md-3">
+            {% if token_download.is_purchased %}
+            <form action="{% url 'download_novel' token_download.surl %}" method="POST">
+                {% csrf_token %}
+                <input type="hidden" value="{% url 'download_novel' token_download.surl %}" name="downloadURL" id="downloadURL" />
+            </form>
+            <button id="downloadButton" class="btn btn-default" >Generate Links</button>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+    <p></p>
     <div class="row">
-        <h2>Bulk-buy {{ novel_object.title }} for friends</h2>
-        <p><small id="emailcount">0 emails</small></p>
-        <p id="bulkbuyinfo">Provide a comma separated list of email addresses and buy in bulk.
-        We will email a redemption voucher for you.</p>
-        <form action="" method="POST">
-            {% csrf_token %}
-            <textarea id="email_list" rows="3" cols="40" wrap="hard"></textarea>
-            <input type="hidden" value="{% url 'novel_settings' %}" name="stripeSettings" id="stripeSettings" />
-            <input type="hidden" value="{% url 'buy_novel' %}" name="stripeBuy" id="stripeBuy" />
-        </form>
-        <button id="stripeButton">Buy</button>
-    </div>   
-    <div class="row">
-        <h2>Share {{ novel_object.title }}</h2>
-        <p>Send up to {{ total_tokens }} copies to friends for {{ total_duration }} days.
-        Simply provide their email addresses and send.</p>
-        <form action="" method="POST" class="inline">
-        {% csrf_token %}
-            {{ formset.management_form }}
-            {% for form in formset %}
-                <li>{{ form }}{% if form.instance.days_left %} Loaned for {{ form.instance.days_left }} more days.{% endif %}</li>
-            {% endfor %}
-            </ul>
-            <button type="submit" class="btn btn-default" name="issue_tokens" value="save">Send</button>
-        </form>
-        <p>If your friends haven't taken advantage of your kindness (or you got their email address wrong),
-        change the email address and resend.</p>
-        <ul>
-            {%  for token in token_list %}
-                <li><a href="{{ token.get_token_redemption_url }}">{{ token.surl }}</a></li>
-            {% endfor %}
+        <ul id="share-tabs" class="nav nav-tabs" role="tablist">
+            <li class="active"><a href="#tab-buy" data-toggle="tab">Bulk-buy</a></li>
+            <li><a href="#tab-lend" data-toggle="tab">Lend</a></li>
+            <li><a href="#tab-refund" data-toggle="tab">Refunds</a></li>
+            <li><a href="#tab-purchases" data-toggle="tab">Purchases</a></li>
         </ul>
+        <div id="share-tab-content" class="tab-content">
+            <div id="tab-buy" class="tab-pane active">
+                <p id="bulkbuyinfo">Provide a comma separated list of email addresses and buy in bulk.
+                We will email a redemption voucher for you.</p>
+                <form action="" method="POST">
+                    {% csrf_token %}
+                    <textarea id="email_list" rows="3" cols="40" wrap="hard"></textarea>
+                    <input type="hidden" value="{% url 'novel_settings' %}" name="stripeSettings" id="stripeSettings" />
+                    <input type="hidden" value="{% url 'buy_novel' %}" name="stripeBuy" id="stripeBuy" />
+                </form>
+                <button id="stripeButton" class="btn btn-default" >Buy</button>
+            </div>
+            <div id="tab-lend" class="tab-pane">
+                <p>Send up to {{ total_tokens }} copies to friends for {{ total_duration }} days.
+                Simply provide their email addresses and send.</p>
+                <form action="" method="POST" class="inline">
+                {% csrf_token %}
+                    {{ issue_token_formset.management_form }}
+                    {% for form in issue_token_formset %}
+                        <li>{{ form }}{% if form.instance.days_left %} Loaned for {{ form.instance.days_left }} more
+                        days.{% endif %}</li>
+                    {% endfor %}
+                    </ul>
+                    <button type="submit" class="btn btn-default" name="issue_tokens" value="save">Send</button>
+                </form>
+                <p>If your friends haven't taken advantage of your kindness (or you got their email address wrong),
+                change the email address and resend.</p>
+            </div>
+            <div id="tab-refund" class="tab-pane">
+                <p>Send up to {{ total_tokens }} copies to friends for {{ total_duration }} days.
+                Simply provide their email addresses and send.</p>
+                <form action="" method="POST" class="inline">
+                {% csrf_token %}
+                    {{ refund_token_formset.management_form }}
+                    {% for form in refund_token_formset %}
+                        <li>{{ form }}{% if form.instance.is_valid %} Refund.{% endif %}</li>
+                    {% endfor %}
+                    </ul>
+                    <button type="submit" class="btn btn-default" name="refund_tokens" value="save">Send</button>
+                </form>
+                <p>If your friends haven't taken advantage of your kindness (or you got their email address wrong),
+                change the email address and resend.</p>
+            </div>
+            <div id="tab-purchases" class="tab-pane">
+                <ul>
+                {%  for token in token_issued_list %}
+                    <li><a href="{{ token.get_token_redemption_url }}">{{ token.surl }}</a></li>
+                {% endfor %}
+                </ul>
+                <ul>
+                {% for token in token_purchased_list %}
+                    <li>{{ token.surl }}</li>
+                {% endfor %}
+                </ul>
+                <ul>
+                {% for token in token_refund_list %}
+                    <li>{{ token.surl }}</li>
+                {% endfor %}
+                </ul>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -51,6 +96,7 @@
 {% endblock content %}
 
 {% block extrascripts %}
+<script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap.min.js"></script>
 <script src="https://checkout.stripe.com/checkout.js"></script>
 <script>
     function getemaillist(form_text) {
@@ -58,7 +104,8 @@
         var textlist = form_text ? form_text.split(/[\s,;]+/) : 0;
         // http://stackoverflow.com/a/2507043 and http://www.w3.org/TR/html5/forms.html#valid-e-mail-address
         var regex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
-        var emails = textlist ? [e for (e of textlist) if (regex.test(e))] : 0;
+        // http://stackoverflow.com/questions/4964456/make-javascript-do-list-comprehension
+        var emails = jQuery.map(textlist, function(e) { if (regex.test(e)) { return e; } });
         return emails;
     }
     function getprice(num_emails, price, volume, discount) {
@@ -84,6 +131,27 @@
         }
         $('#emailcount').html(d_text).css("color", colour);
     }
+    function timer(time,update,complete) {
+        // http://stackoverflow.com/a/11336046
+        var start = new Date().getTime();
+        var interval = setInterval(function() {
+            var now = time-(new Date().getTime()-start);
+            if( now <= 0) {
+                clearInterval(interval);
+                complete();
+            }
+            else update(Math.floor(now/1000));
+        },100); // the smaller this number, the more accurate the timer will be
+    }
+    function setlinks(links) {
+        var instruct = '<p>Time remaining before links expire: <span id="timer"></span></p>';
+        var dlist = '<ul>';
+        $.each(links, function(k, l) {
+            dlist = dlist + '<li><a href=' + l + '>' + k + '</a></li>';
+        });
+        dlist = instruct + dlist + '</ul>';
+        return dlist;
+    }
     $(document).ready(function() {
         $.ajax({
             url: $('#stripeSettings').val()
@@ -108,17 +176,35 @@
                                 stripeEmails: ns.emails
                             },
                             success: function(data) {
-                              if (data == 'success') {
-                                  console.log("Card successfully charged!");
-                              }
-                              else {
-                                  console.log("Success Error!");
-                              }
-                              window.location.replace(window.location.pathname);
+                                if (data.response == 'success') {
+                                    $('#stripeButton').after(
+                                        '<div class="alert alert-success alert-dismissable">'+
+                                            '<button type="button" class="close" ' + 
+                                                'data-dismiss="alert" aria-hidden="true">' + '&times;' + 
+                                            '</button>' + 
+                                            '<strong>Thank you</strong>, your purchase has been successful and' +
+                                            'vouchers will be sent automatically. ' +
+                                            'If you need to make any changes, go to the refunds tab.' +
+                                         '</div>');
+                                }
+                                else {
+                                    $('#stripeButton').after(
+                                        '<div class="alert alert-danger alert-dismissable">'+
+                                            '<button type="button" class="close" ' + 
+                                                'data-dismiss="alert" aria-hidden="true">' + '&times;' + 
+                                            '</button>' + 
+                                            '<strong>Sorry</strong>, something went wrong. Please try again.' +
+                                         '</div>');
+                                }
                             },
                             error: function(data) {
-                              console.log("Ajax Error!");
-                              console.log(data);
+                                $('#stripeButton').after(
+                                    '<div class="alert alert-danger alert-dismissable">'+
+                                        '<button type="button" class="close" ' + 
+                                            'data-dismiss="alert" aria-hidden="true">' + '&times;' + 
+                                        '</button>' + 
+                                        '<strong>Sorry</strong>, something went wrong. Please try again.' +
+                                     '</div>');
                             }
                           }); // end ajax call
                     }
@@ -144,6 +230,26 @@
                     });
                     e.preventDefault();
                 });
+            });
+        $('#downloadButton').on('click', function () {
+            $.ajax({
+               url: $('#downloadURL').val()
+               }).done(function(data) {
+                   var time = data.timer;
+                   var links = data.links;
+                   // http://stackoverflow.com/a/5557728
+                   var divclone = $('#download_ebook').clone(true, true);
+                   $('#download_ebook').html(setlinks(links));
+                   timer(
+                       5000,//time*1000, // milliseconds
+                       function(timeleft) { // called every step to update the visible countdown
+                           document.getElementById('timer').innerHTML = timeleft + " seconds.";
+                       },
+                       function() { // what to do after
+                           $('#download_ebook').replaceWith(divclone);
+                       }
+                   );                
+                });           
             });
     });
 </script>
