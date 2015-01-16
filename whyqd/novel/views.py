@@ -399,8 +399,8 @@ def organise_novel(request, surl, template_name="novel/create_novel.html", permi
         return Http404
     novel_object = get_object_or_404(Novel, surl=surl)
     page_title = novel_object.title
-    if not request.user.has_perm(permission, novel_object):
-        raise Http404
+    #if not request.user.has_perm(permission, novel_object):
+    #    raise Http404
     if request.method == "POST":
         if request.is_ajax():
             kwargs = json.loads(request.body)
