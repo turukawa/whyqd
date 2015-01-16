@@ -10,6 +10,11 @@ from whyqd.novel.models import Novel
 from jsonfield import JSONField
 from decimal import Decimal
 
+#http://character-code.com/currency-html-codes.php
+CURRENCY_CHOICE = (("gbp","&pound;"),
+    ("usd","$"),
+    ("eur","&euro;"))
+
 class TokenQuerySet(QuerySet):
     # https://docs.djangoproject.com/en/dev/topics/db/managers/#calling-custom-queryset-methods-from-the-manager
     def issued_list(self, user):
@@ -53,6 +58,7 @@ class Token(models.Model):
     is_valid = models.BooleanField(default=True)
     is_purchased = models.BooleanField(default=False)
     charge = JSONField(blank=True, null=True)
+    currency = models.CharField(max_length=7, choices=CURRENCY_CHOICE, default="gbp")
     price = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
     recipient = models.EmailField(blank=True, null=True, verbose_name="Email")
     query = TokenManager()
@@ -122,6 +128,7 @@ class Token(models.Model):
         :return:
         """
         self.is_valid = False
+        self.is_purchased = False
         self.redeemed_on = pytz.UTC.localize(datetime.now())
         self.save()
     

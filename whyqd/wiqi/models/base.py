@@ -72,6 +72,10 @@ READ_IF_CHOICE = (("open","Open"),
                   ("login","Login"),
                   ("own","Own"))
 
+CURRENCY_CHOICE = (("gbp","&pound;"),
+    ("usd","$"),
+    ("eur","&euro;"))
+
 #########################################################################################################################################
 # Main Wiqi Class
 #########################################################################################################################################
@@ -111,6 +115,7 @@ class Wiqi(models.Model):
     merged = generic.GenericForeignKey("merged_content_type", "merged_object_id")
     next_wiqi = models.ForeignKey("self", related_name="%(app_label)s_%(class)s_next", null=True)
     previous_wiqi = models.ForeignKey("self", related_name="%(app_label)s_%(class)s_previous", null=True)
+    currency = models.CharField(max_length=7, choices=CURRENCY_CHOICE, default="gbp")
     read_if = models.CharField(max_length=5, choices=READ_IF_CHOICE, default="open")
     price = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
     wiqi_objects = WiqiManager() # To extend QuerySet in derived classes

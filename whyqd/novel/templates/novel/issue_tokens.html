@@ -23,24 +23,52 @@
     <p></p>
     <div class="row">
         <ul id="share-tabs" class="nav nav-tabs" role="tablist">
-            <li class="active"><a href="#tab-buy" data-toggle="tab">Bulk-buy</a></li>
+            <li class="active"><a href="#tab-buy" data-toggle="tab">Buy</a></li>
             <li><a href="#tab-lend" data-toggle="tab">Lend</a></li>
-            <li><a href="#tab-refund" data-toggle="tab">Refunds</a></li>
-            <li><a href="#tab-purchases" data-toggle="tab">Purchases</a></li>
+            <li><a href="#tab-refund" data-toggle="tab">Refund</a></li>
+            {% if request.user.is_superuser %}
+            <li><a href="#tab-market" data-toggle="tab">Market</a></li>
+            {% endif %}
         </ul>
         <div id="share-tab-content" class="tab-content">
             <div id="tab-buy" class="tab-pane active">
-                <p id="bulkbuyinfo">Provide a comma separated list of email addresses and buy in bulk.
+                <p></p>
+                <p>Provide a comma separated list of email addresses and buy in bulk.
                 We will email a redemption voucher for you.</p>
                 <form action="" method="POST">
                     {% csrf_token %}
                     <textarea id="email_list" rows="3" cols="40" wrap="hard"></textarea>
+                    <input type="hidden" value="{{ fxp }}" id="basePrice" name="basePrice" />
+                    <input type="hidden" value="{{ fxp }}" id="stripePrice" name="stripePrice" />
+                    <input type="hidden" value="{{ fxd }}" id="stripeCurrency" name="stripeCurrency" />
+                    <input type="hidden" value="0" id="stripeDiscount" name="stripeDiscount" />
+                    <input type="hidden" value="10" id="stripeVolume" name="stripeVolume" />
+                    <input type="hidden" value="1" id="stripeCount" name="stripeCount" />
                     <input type="hidden" value="{% url 'novel_settings' %}" name="stripeSettings" id="stripeSettings" />
                     <input type="hidden" value="{% url 'buy_novel' %}" name="stripeBuy" id="stripeBuy" />
                 </form>
-                <button id="stripeButton" class="btn btn-default" >Buy</button>
+                <p></p>
+                <div class="row">
+                    <div class="col-sm-4">
+                        <div class="btn-group">
+                            <button id="stripeButton" class="btn btn-default" >Buy 1 for &pound;
+                            {{ novel_object.sentinal.price }}</button>
+                            <button id="stripeCaret" type="button" data-toggle="dropdown" class="btn btn-default dropdown-toggle">
+                                <span class="caret"></span>
+                                <span class="sr-only">Toggle Dropdown</span>
+                            </button>
+                            <ul class="dropdown-menu" role="menu">
+                                <li id="forex_usd" value={{ fx.usd }}><a href="#">USD</a></li>
+                                <li id="forex_gbp" value={{ fx.gbp }}><a href="#">GBP</a></li>
+                                <li id="forex_eur" value={{ fx.eur }}><a href="#">EUR</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-sm-3 col-md-4" id="bulkbuyinfo"></div>
+                </div>
             </div>
             <div id="tab-lend" class="tab-pane">
+                <p></p>
                 <p>Send up to {{ total_tokens }} copies to friends for {{ total_duration }} days.
                 Simply provide their email addresses and send.</p>
                 <form action="" method="POST" class="inline">
@@ -48,46 +76,48 @@
                     {{ issue_token_formset.management_form }}
                     {% for form in issue_token_formset %}
                         <li>{{ form }}{% if form.instance.days_left %} Loaned for {{ form.instance.days_left }} more
-                        days.{% endif %}</li>
+                    days.{% endif %}
+                        </li>
                     {% endfor %}
                     </ul>
+                    <p></p>
                     <button type="submit" class="btn btn-default" name="issue_tokens" value="save">Send</button>
                 </form>
-                <p>If your friends haven't taken advantage of your kindness (or you got their email address wrong),
-                change the email address and resend.</p>
             </div>
             <div id="tab-refund" class="tab-pane">
-                <p>Send up to {{ total_tokens }} copies to friends for {{ total_duration }} days.
-                Simply provide their email addresses and send.</p>
+                <p></p>
+                <p>This is a list of your recent unredeemed purchases. While active, you can change the email
+                notification address or request an instant refund.</p>
                 <form action="" method="POST" class="inline">
-                {% csrf_token %}
+                    {% csrf_token %}
                     {{ refund_token_formset.management_form }}
                     {% for form in refund_token_formset %}
-                        <li>{{ form }}{% if form.instance.is_valid %} Refund.{% endif %}</li>
+                        <li>{{ form }}{% if form.instance.is_valid %}
+                            <button type="submit" class="btn btn-default btn-xs"
+                                    id="refundToken_{{forloop.counter0}}"
+                                    value={% url 'refund_token' form.instance.surl %}>Refund</button>
+                            <button type="submit" class="btn btn-default btn-xs"
+                                    id="resendToken_{{forloop.counter0}}"
+                                    value={% url 'resend_token' form.instance.surl %}>Resend</button>
+                        {% endif %}</li>
                     {% endfor %}
                     </ul>
-                    <button type="submit" class="btn btn-default" name="refund_tokens" value="save">Send</button>
                 </form>
-                <p>If your friends haven't taken advantage of your kindness (or you got their email address wrong),
-                change the email address and resend.</p>
             </div>
-            <div id="tab-purchases" class="tab-pane">
-                <ul>
-                {%  for token in token_issued_list %}
-                    <li><a href="{{ token.get_token_redemption_url }}">{{ token.surl }}</a></li>
-                {% endfor %}
-                </ul>
-                <ul>
-                {% for token in token_purchased_list %}
-                    <li>{{ token.surl }}</li>
-                {% endfor %}
-                </ul>
-                <ul>
-                {% for token in token_refund_list %}
-                    <li>{{ token.surl }}</li>
-                {% endfor %}
-                </ul>
-            </div>
+            {% if request.user.is_superuser %}
+            <div id="tab-market" class="tab-pane">
+                <p></p>
+                <form action="" method="POST">
+                    {% csrf_token %}
+                    <textarea id="market_list" rows="3" cols="40" wrap="hard"></textarea>
+                    <input type="hidden" value="{% url 'market_tokens' novel_object.surl %}" name="marketTokens" id="marketTokens" />
+                    <p></p>
+                    <button type="submit" class="btn btn-default" name="market_tokens"
+                            id="market_tokens" value="save">Send</button>
+                </form>
+                
+                
+            {% endif %}
         </div>
     </div>
 </div>
@@ -96,7 +126,6 @@
 {% endblock content %}
 
 {% block extrascripts %}
-<script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap.min.js"></script>
 <script src="https://checkout.stripe.com/checkout.js"></script>
 <script>
     function getemaillist(form_text) {
@@ -108,28 +137,56 @@
         var emails = jQuery.map(textlist, function(e) { if (regex.test(e)) { return e; } });
         return emails;
     }
-    function getprice(num_emails, price, volume, discount) {
-        if (num_emails) {
-            var bulk_price = price * num_emails;
-            if (num_emails >= volume) {
+    function setprice() {
+        var count = $("#stripeCount").val();
+        var discount = $("#stripeDiscount").val();
+        var volume = $("#stripeVolume").val();
+        var fx_currency = $("#stripeCurrency").val().toLowerCase();
+        var fx_price = parseFloat($('#forex_' + fx_currency).attr('value').trim()).toFixed(2);
+        var base_price = parseFloat($('#basePrice').attr('value').trim()).toFixed(2);
+        var bulk_price = base_price * fx_price;
+        if (count) {
+            bulk_price = bulk_price * count;
+            if (count >= volume) {
                 bulk_price = bulk_price * (1 - discount);
             }
-            return bulk_price;
         }
-        return 0;
+        $("#stripePrice").val(bulk_price);
     }
-    function countemail(price, volume, discount) {
-        var emails = getemaillist(this.value)
-        var count = emails.length;
-        var d_text = "Provide a comma separated list of email addresses and buy in bulk. We will email a redemption voucher for you."
-        var colour = 'black';
-        if (count) {
-            var d_text = count > 1 ? count + " copies for " : count + " copy for ";
-            d_text += "&pound;" + getprice(count, price, volume, discount).toFixed(2);
-            d_text = count >= discount ? d_text + " (unlocked " + Math.floor(discount*100) + "% discount)" : d_text;
-            colour = count >= discount ? 'blue' : 'black';
+    function getcurrencysymbol() {
+        var forex_currency = $("#stripeCurrency").val();
+        switch (forex_currency) {
+            case 'GBP':
+                return '&pound;';
+            case 'EUR':
+                return '&euro;';
+            case 'USD':
+                return '$';
+            default:
+                return '&pound;';
         }
-        $('#emailcount').html(d_text).css("color", colour);
+    }
+    function setcount(volume, discount) {
+        var emails = getemaillist(this.value)
+        var count = emails.length > 1 ? emails.length : 1;
+        $("#stripeCount").val(count);
+        $("#stripeDiscount").val(discount);
+        $("#stripeVolume").val(volume);
+        setprice();
+        setbuttonprice();
+    }
+    function setbuttonprice() {
+        var count = $("#stripeCount").val();
+        var discount = $("#stripeDiscount").val();
+        var volume = $("#stripeVolume").val();
+        var currency = getcurrencysymbol();
+        var price = $("#stripePrice").val();
+        var d_text = "Buy " + count + " for " + currency + " " + (price/100).toFixed(2);
+        var cin = count >= volume ? 'btn-success' : 'btn-default';
+        var cout = count < volume ? 'btn-success' : 'btn-default';
+        d_text = count >= volume ? d_text + " (" + Math.floor(discount*100) + "% discount)" : d_text;
+        $('#stripeButton').html(d_text).addClass(cin).removeClass(cout);
+        $("#stripeCaret").addClass(cin).removeClass(cout);
     }
     function timer(time,update,complete) {
         // http://stackoverflow.com/a/11336046
@@ -162,7 +219,6 @@
                     image: '/square-image.png',
                     name: ns.novel_title,
                     email: ns.user_email,
-                    currency: "GBP",
                     token: function(token) {
                         // http://stackoverflow.com/a/22461608
                         // You can access the token ID with `token.id`
@@ -173,37 +229,33 @@
                                 stripeToken: token.id,
                                 stripeDescription: ns.description,
                                 stripePrice: ns.price,
-                                stripeEmails: ns.emails
+                                stripeEmails: ns.emails,
+                                template: 'gift_purchase'
                             },
                             success: function(data) {
                                 if (data.response == 'success') {
-                                    $('#stripeButton').after(
-                                        '<div class="alert alert-success alert-dismissable">'+
-                                            '<button type="button" class="close" ' + 
-                                                'data-dismiss="alert" aria-hidden="true">' + '&times;' + 
-                                            '</button>' + 
-                                            '<strong>Thank you</strong>, your purchase has been successful and' +
-                                            'vouchers will be sent automatically. ' +
-                                            'If you need to make any changes, go to the refunds tab.' +
-                                         '</div>');
+                                    $("#email_list").val("");
+                                    window.location.href = window.location.href;;
                                 }
                                 else {
-                                    $('#stripeButton').after(
+                                    $('#bulkbuyinfo').html(
                                         '<div class="alert alert-danger alert-dismissable">'+
                                             '<button type="button" class="close" ' + 
                                                 'data-dismiss="alert" aria-hidden="true">' + '&times;' + 
                                             '</button>' + 
-                                            '<strong>Sorry</strong>, something went wrong. Please try again.' +
+                                            '<strong>Sorry</strong>, something went wrong. ' +
+                                            'You have not been charged. Please try again.' +
                                          '</div>');
                                 }
                             },
                             error: function(data) {
-                                $('#stripeButton').after(
+                                $('#bulkbuyinfo').html(
                                     '<div class="alert alert-danger alert-dismissable">'+
                                         '<button type="button" class="close" ' + 
                                             'data-dismiss="alert" aria-hidden="true">' + '&times;' + 
                                         '</button>' + 
-                                        '<strong>Sorry</strong>, something went wrong. Please try again.' +
+                                        '<strong>Sorry</strong>, something went wrong. ' +
+                                        'You have not been charged. Please try again.' +
                                      '</div>');
                             }
                           }); // end ajax call
@@ -213,20 +265,22 @@
                 var emaillist = document.getElementById("email_list");
                 emaillist.oninput = function() {
                     this.onkeyup = null;
-                    countemail.call(this, ns.bulk_price, ns.bulk_volume, ns.bulk_discount);
+                    setcount.call(this, ns.bulk_volume, ns.bulk_discount);
                 };
                 emaillist.onkeyup = function() {
-                    countemail.call(this, ns.bulk_price, ns.bulk_volume, ns.bulk_discount);
+                    setcount.call(this, ns.bulk_volume, ns.bulk_discount);
                 };
                 document.getElementById('stripeButton').addEventListener('click', function(e) {
                     var emails = getemaillist($('#email_list').val());
                     ns.emails = emails.toString();
-                    ns.price = Math.floor(getprice(emails.length, ns.bulk_price, ns.bulk_volume, ns.bulk_discount).toFixed(2) * 100);
-                    ns.description = $('#emailcount').text() + " - " + ns.novel_title;
+                    ns.price = $("#stripePrice").val();
+                    ns.description = ns.novel_title + " - " + $('#stripeButton').html();
+                    ns.currency = $('#stripeCurrency').val();
                     // Open Checkout with further options
                     handler.open({
                       description: ns.description,
-                      amount: ns.price
+                      amount: ns.price,
+                      currency: ns.currency
                     });
                     e.preventDefault();
                 });
@@ -241,15 +295,76 @@
                    var divclone = $('#download_ebook').clone(true, true);
                    $('#download_ebook').html(setlinks(links));
                    timer(
-                       5000,//time*1000, // milliseconds
+                       time*1000, // milliseconds
                        function(timeleft) { // called every step to update the visible countdown
                            document.getElementById('timer').innerHTML = timeleft + " seconds.";
                        },
                        function() { // what to do after
                            $('#download_ebook').replaceWith(divclone);
                        }
-                   );                
-                });           
+                   );
+                });
+            });
+        $('[id^=refundToken_]').on('click', function (e) {
+            var tid = this;
+            $.ajax({
+                url: tid.value
+                }).done(function(data) {
+                    if (data.response == 'success') {
+                        $(tid).closest('li').remove();
+                    }
+                });
+            e.preventDefault();
+            });
+        $('[id^=resendToken_]').on('click', function (e) {
+            var tid = this;
+            var rid = tid.id.replace("resendToken_","");
+            rid = "id_refund-" + rid + "-recipient";
+            var recipient = $('#' + rid).val();
+            $.ajax({
+                url: tid.value,
+                type: 'post',
+                data: {
+                    recipient: recipient,
+                    template: 'gift_purchase'
+                },
+               }).done(function(data) {
+                    if (data.response == 'success') {
+                        console.log(data.recipient)
+                    }
+                });
+            e.preventDefault();
+            });
+        $('[id^=forex_]').on('click', function (e) {
+            var forex = this;
+            switch (this.id) {
+                case 'forex_usd':
+                    $("#stripeCurrency").val('USD');
+                    break;
+                case 'forex_gbp':
+                    $("#stripeCurrency").val('GBP');
+                    break;
+                case 'forex_eur':
+                    $("#stripeCurrency").val('EUR');
+                    break;
+            }
+            setprice();
+            setbuttonprice();
+            e.preventDefault();
+            });
+        $('#market_tokens').on('click', function (e) {
+            var emails = getemaillist($('#market_list').val());
+            emails = emails.toString();
+            $.ajax({
+                url: $('#marketTokens').val(),
+                type: 'post',
+                data: {
+                    recipients: emails
+                }
+                }).done(function(data) {
+                    $("#market_list").val("");
+                });
+            e.preventDefault();
             });
     });
 </script>

@@ -1,6 +1,7 @@
 from django.shortcuts import get_object_or_404, get_list_or_404, redirect, render
 from django.contrib.auth.decorators import login_required
 from django.http import Http404, HttpResponse
+from django.conf import settings
 
 import json
 from guardian.shortcuts import assign_perm, get_objects_for_user, get_perms
@@ -9,6 +10,7 @@ from whyqd.wiqi.models import Wiqi, DEFAULT_WIQISTACK_TYPE
 from whyqd.wiqi.forms import WiqiForm, WiqiStackRangeForm, WiqiStackRevertForm
 from whyqd.wiqi import wiqi as wiqid
 from whyqd.novel.models import Novel
+from whyqd.snippets.forex import get_forex
 
 def index(request, template_name="wiqi/index.html", nav_type="view"):
     '''
@@ -18,9 +20,7 @@ def index(request, template_name="wiqi/index.html", nav_type="view"):
     if not novel_object:
         return redirect("create_novel")
     novel_object = novel_object[0]
-    page_title = "Home"
-    if novel_object:
-        page_title = novel_object.title
+    page_title = novel_object.title
     nav_set = None
     if request.is_ajax():
         HttpResponse(json.dumps({}), content_type="application/json")
@@ -43,13 +43,13 @@ def view_wiqi(request, wiqi_surl, wiqi_type=None, template_name="wiqi/view.html"
         nav_set = wiqid.get_wiqi_nav(request, nav_type, wiqi_object)
         template_name = "wiqi/view_%s.html" % wiqi_object.get_class
         try:
-            page_title = wiqi_object.stack.title
+            chapter_title = wiqi_object.stack.title
             # Kludge for novel title
-            novel_title = wiqi_object.stack.wiqi.novel_chapterlist.all()[0].title
+            page_title = wiqi_object.stack.wiqi.novel_chapterlist.all()[0].title
         except AttributeError:
             # It's from a wiqistack
-            page_title = wiqi_object.title
-            novel_title = wiqi_object.wiqi.novel_chapterlist.all()[0].title
+            chapter_title = wiqi_object.title
+            page_title = wiqi_object.wiqi.novel_chapterlist.all()[0].title
             nav_title = "stack"
         # Prepare for viewing next_wiqi
         next_wiqi = wiqi_object.next_wiqi
@@ -59,6 +59,9 @@ def view_wiqi(request, wiqi_surl, wiqi_type=None, template_name="wiqi/view.html"
                 can_read_next = request.user.can_read(next_wiqi)
             if not can_read_next:
                 can_read_next = next_wiqi.read_if
+        # forex settings
+        fx = get_forex()
+        fxd = settings.DEFAULT_CURRENCY
     if request.is_ajax():
         return HttpResponse(json.dumps(nav_set), content_type="application/json")
     else:

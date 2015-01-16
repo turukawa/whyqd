@@ -2,7 +2,7 @@ from pydocx import Docx2Html
 from bs4 import BeautifulSoup
 
 def docxtract(file="C:/Users/Gavin/SkyDrive/Documents/Tartarus Falls/sample.docx"):
-    valid_keep = ['em', 'i', 'b', 'strong', 'div']
+    valid_keep = ['em', 'i', 'b', 'strong', 'div', 'span']
     valid_del = ['hr']
     header = [u'h1', u'h2', u'h3', u'h4']
     html = Docx2Html(file).parsed
@@ -28,7 +28,7 @@ def docxtract(file="C:/Users/Gavin/SkyDrive/Documents/Tartarus Falls/sample.docx
         else:
             if child.get_text().strip():
                 if p:
-                        p = ''.join([p, unicode(child)])
+                    p = ''.join([p, unicode(child)])
                 else:
                     p = unicode(child)
                     ptext = "%s..." % child.get_text()[:80]

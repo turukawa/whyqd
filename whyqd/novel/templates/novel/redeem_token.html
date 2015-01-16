@@ -38,9 +38,11 @@
                 <input type="hidden" value="{{ request.path }}" name="register_next" />
                 <input type="hidden" value="{{ request.path }}" name="error_next" />
                 <button id="facebookButton" class="btn btn-default" onclick="F.connect(this.parentNode);
-                return false;" href="javascript:void(0);">Own with Facebook</button> 
+                return false;" href="javascript:void(0);">{% if token_object.is_purchased %}Own{% else %}Read{% endif %}
+                    with Facebook</button> 
             </form>
         </div>
+        {% if token_object.is_purchased %}
         <div class="col-sm-2 col-md-3">
             <strong>or</strong> (please read the fine-print)
         </div>
@@ -53,6 +55,7 @@
             <button id="downloadButton" class="btn btn-default" >One-Time Download</button>
             {% endif %}
         </div>
+        {% endif %}
     </div>
     <p></p>
     <div class="row">
@@ -124,6 +127,24 @@
         return dlist;
     }
     $(document).ready(function() {
+        $('#downloadButton').on('click', function () {
+            $.ajax({
+               url: $('#downloadURL').val()
+               }).done(function(data) {
+                   var time = data.timer;
+                   var links = data.links;
+                   $('#download_ebook').html(setlinks(links));
+                   timer(
+                       time*1000, // milliseconds
+                       function(timeleft) { // called every step to update the visible countdown
+                           document.getElementById('timer').innerHTML = timeleft + " seconds.";
+                       },
+                       function() { // what to do after
+                           document.getElementById('timer').innerHTML = "download period ended.";
+                       }
+                   );                
+                });           
+            });
         $('#downloadButton').on('click', function () {
             $.ajax({
                url: $('#downloadURL').val()

@@ -24,6 +24,15 @@ urlpatterns = patterns("whyqd.novel.views",
                        url(r"^tokens/redeem/(?P<surl>[-\w]+)/", "redeem_token",
                            {"template_name": "novel/redeem_token.html"},
                            name="redeem_token"),
+                       url(r"^tokens/refund/(?P<surl>[-\w]+)/", "refund_token",
+                           {"template_name": "novel/refund_token.html"},
+                           name="refund_token"),
+                       url(r"^tokens/market/(?P<surl>[-\w]+)/", "market_tokens",
+                           name="market_tokens"),
+                       # Email token link to user
+                       url(r"^tokens/resend/(?P<surl>[-\w]+)/", "resend_token",
+                           {"template_name": "novel/issue_tokens.html"},
+                           name="resend_token"),
                        # Buy and bulk-buy novel
                        url(r"^buy/", "buy_novel",
                            {"template_name": "novel/buy_novel.html"},
@@ -31,10 +40,6 @@ urlpatterns = patterns("whyqd.novel.views",
                        # JSONResponse settings
                        url(r"^settings/", "novel_settings",
                            name="novel_settings"),
-                       # Email token link to user
-                       url(r"^resend/", "resend_novel",
-                           {"template_name": "novel/issue_tokens.html"},
-                           name="resend_novel"),
                        # Download books based on one-time link
                        url(r"^download/(?P<surl>[-\w]+)/", "download_novel",
                            {"template_name": "novel/download_novel.html"},

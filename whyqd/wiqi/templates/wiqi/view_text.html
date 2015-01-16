@@ -31,14 +31,14 @@
     <div class="row" id="pagenav">
         <div class="col-sm-2 col-md-3">
             {% if wiqi_object.previous_wiqi %}
-                <a href="{{ wiqi_object.previous_wiqi.get_url }}">Previous</a>
+                <a href="{{ wiqi_object.previous_wiqi.get_url }}" class="btn btn-default" role="button">Previous</a>
             {% endif %}
         </div>
         <div class="col-sm-4 col-md-6">
             {% if wiqi_object.next_wiqi %}
                 <div class="row" id="nextpage">
                 {% if can_read_next == "open" %}
-                    <p><a href="{{ next_wiqi.get_url }}">Next chapter</a></p>
+                    <p><a href="{{ next_wiqi.get_url }}" class="btn btn-default" role="button">Next chapter</a></p>
                 {% elif not request.user.is_authenticated %}
                     <form action="{% url 'facebook_connect' %}?next={{ next_wiqi.get_url }}&facebook_login=1" method="post">
                         {% csrf_token %}
@@ -46,13 +46,15 @@
                         <input type="hidden" value="{{ next_wiqi.get_url }}" name="next" />
                         <input type="hidden" value="{{ next_wiqi.get_url }}" name="register_next" />
                         <input type="hidden" value="{{ request.path }}" name="error_next" />
-                        <a onclick="F.connect(this.parentNode); return false;" href="javascript:void(0);">
+                        <a onclick="F.connect(this.parentNode); return false;" href="javascript:void(0);"
+                           class="btn btn-default" role="button">
                             Login to read next chapter</a>{% if next_wiqi.price %} (purchase price increases to
                             {% if request.user.is_authenticated and request.user.current_price > next_wiqi.price %}
                             {{ request.user.current_price }}{% else %}{{ next_wiqi.price }}{% endif %}{% endif %})
                     </form>
                 {% else %}
-                    <p>{% if can_read_next != "own" %}<a href="{{ next_wiqi.get_url }}">Next chapter</a>{% endif %}
+                    <p>{% if can_read_next != "own" %}<a href="{{ next_wiqi.get_url }}" class="btn btn-default"
+                                                         role="button">Next chapter</a>{% endif %}
                     {% if can_read_next == "login" %}
                         {% if wiqi_object.price %}{% if request.user.is_authenticated and request.user.current_price < next_wiqi.price %}
                         (purchase price increases to &pound;{{ next_wiqi.price }}){% endif %}{% endif %}
@@ -69,14 +71,31 @@
                             {{ request.user.current_price|mul:100|floatformat:"0" }}
                         {% else %}
                             {{ wiqi_object.price|mul:100|floatformat:"0" }}{% endif %}"
+                                id="basePrice" name="basePrice" />
+                        <input type="hidden" value="{{ fxd }}" id="stripeCurrency" name="stripeCurrency" />
+                        <input type="hidden" value="{% if request.user.is_authenticated and request.user.current_price > wiqi_object.price %}
+                            {{ request.user.current_price|mul:100|floatformat:"0" }}
+                        {% else %}
+                            {{ wiqi_object.price|mul:100|floatformat:"0" }}{% endif %}"
                                 id="stripePrice" name="stripePrice" />
                         <input type="hidden" value="{% url 'novel_settings' %}" name="stripeSettings" id="stripeSettings" />
                         <input type="hidden" value="{% url 'buy_novel' %}" name="stripeBuy" id="stripeBuy" />
                         <input type="hidden" value="{{ next_wiqi.get_url }}" name="stripeNext" id="stripeNext" />
                     </form>
-                    <button id="stripeButton" class="btn btn-default" >Buy for &pound;
-                            {% if request.user.is_authenticated and request.user.current_price > wiqi_object.price %}
-                            {{ request.user.current_price }}{% else %}{{ wiqi_object.price }}{% endif %}</button>
+                    <div class="btn-group">
+                        <button id="stripeButton" class="btn btn-default" >Buy for &pound;
+                                {% if request.user.is_authenticated and request.user.current_price > wiqi_object.price %}
+                                {{ request.user.current_price }}{% else %}{{ wiqi_object.price }}{% endif %}</button>
+                        <button type="button" data-toggle="dropdown" class="btn btn-default dropdown-toggle">
+                            <span class="caret"></span>
+                            <span class="sr-only">Toggle Dropdown</span>
+                        </button>
+                        <ul class="dropdown-menu" role="menu">
+                            <li id="forex_usd" value={{ fx.usd }}><a href="#">USD</a></li>
+                            <li id="forex_gbp" value={{ fx.gbp }}><a href="#">GBP</a></li>
+                            <li id="forex_eur" value={{ fx.eur }}><a href="#">EUR</a></li>
+                        </ul>
+                    </div>
                     {% endif %}
                 </div>
             {% endif %}
@@ -87,7 +106,6 @@
 
 {% block extrascripts %}
 <script src="{{ STATIC_URL }}js/jquery.whyqd.view.js"></script>
-<script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap.min.js"></script>
 <script src="https://checkout.stripe.com/checkout.js"></script>
 <script>
     $(document).ready(function() {
@@ -101,7 +119,6 @@
                         image: '/square-image.png',
                         name: ns.novel_title,
                         email: ns.user_email,
-                        currency: "GBP",
                         token: function(token) {
                             // http://stackoverflow.com/a/22461608
                             // You can access the token ID with `token.id`
@@ -116,7 +133,8 @@
                                     stripeDescription: ns.description,
                                     stripePrice: ns.price,
                                     stripeEmails: ns.user_email,
-                                    selfPurchase: true // Buying for own use
+                                    selfPurchase: true, // Buying for own use
+                                    template: 'purchase'
                                 },
                                 success: function(data) {
                                     if (data.response == 'success') {
@@ -168,15 +186,39 @@
                     document.getElementById('stripeButton').addEventListener('click', function(e) {
                         ns.price = $('#stripePrice').val().trim();
                         ns.description = "Single purchase of " + ns.novel_title;
+                        ns.currency = $('#stripeCurrency').val();
                         // Open Checkout with further options
                         handler.open({
                           description: ns.description,
-                          amount: ns.price
+                          amount: ns.price,
+                          currency: ns.currency
                         });
                         e.preventDefault();
                     });
                 });
         }
+        $('[id^=forex_]').on('click', function (e) {
+            var forex = this;
+            var base_price = parseFloat($('#basePrice').attr('value').trim()).toFixed(2);
+            var select_price = parseFloat($(this).attr('value').trim()).toFixed(2);
+            var new_price = (select_price * base_price);
+            $("#stripePrice").val(new_price);
+            switch (this.id) {
+                case 'forex_usd':
+                    $('#stripeButton').html("Buy for $ " + (new_price/100).toFixed(2));
+                    $("#stripeCurrency").val('USD');
+                    break;
+                case 'forex_gbp':
+                    $('#stripeButton').html("Buy for &pound; " + (new_price/100).toFixed(2));
+                    $("#stripeCurrency").val('GBP');
+                    break;
+                case 'forex_eur':
+                    $('#stripeButton').html("Buy for &euro; " + (new_price/100).toFixed(2));
+                    $("#stripeCurrency").val('EUR');
+                    break;
+            }
+            e.preventDefault();
+            });
     });
 </script>
 {% endblock extrascripts %}
