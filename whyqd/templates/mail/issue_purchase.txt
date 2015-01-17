@@ -1,0 +1,28 @@
+--------------------------------------------------------------------------------
+{{ token_object.novel.title }}
+Order Ref. - #{{ token_object.surl }}
+Price: {{ token_object.charge.currency.upper }} {{ token_object.charge.amount }}
+--------------------------------------------------------------------------------
+
+Dear {{ token_object.creator.facebook_name }},
+
+Thank you so much for buying copies of {{ token_object.novel.title }} for your
+friends and loved-ones.
+
+The links below are for each of the redemption pages for each of the tokens
+generated for the copies you purchased. We have automatically emailed each of
+these folks, but - should you wish to do so - you can copy and include them in
+your own emails.
+{% for token in token_list %}
+* {{ token.recipient }}
+  https://{{ website }}{{ token.get_token_redemption_url }}
+{% endfor %}
+If you wish to make any changes, or have second thoughts, your management page
+on the site will permit you to do the necessary. Visit the following link:
+
+https://{{ website }}{% url 'issue_tokens' token_object.novel.surl %}
+
+Thank you and I hope everyone enjoys your gift,
+
+{{ token_object.novel.creator.facebook_name }}
+Author - {{ website }}

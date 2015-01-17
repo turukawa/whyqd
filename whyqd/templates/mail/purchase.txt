@@ -1,0 +1,33 @@
+--------------------------------------------------------------------------------
+{{ token_object.novel.title }}
+Order ref. - #{{ token_object.surl }}
+Price: {{ token_object.currency.upper }} {{ token_object.price }}
+--------------------------------------------------------------------------------
+
+{% if token_object.creator %}Dear {{ token_object.creator.facebook_name }},{% else %}Hi,{% endif %}
+
+Thank you for buying a copy of {{ token_object.novel.title }}.
+
+The link below will take you to the redemption page for you to download an ebook
+version, and manage your access.
+
+https://{{ website }}{{ token_object.get_token_redemption_url }}
+
+Your online access allows you to:
+
+- Download different ebook versions whenever you want;
+- Read the complete ebook online in any modern web browser;
+- Lend out copies to friends for free whenever you like;
+- Bulk-buy copies for friends at discounted rates;
+- Long-term, this site will offer more features and I will write more novels.
+  You get to be part of that.
+
+If you have had second thoughts, then the redemption page also permits you to
+reverse the transaction for a full refund.
+
+Thank you once again and I hope you love the book,
+
+{{ token_object.novel.creator.facebook_name }}
+
+Author - {{ token_object.novel.title }}
+https://{{ website }}/
