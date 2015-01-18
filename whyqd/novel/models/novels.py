@@ -1,4 +1,4 @@
-from django.db import models
+from django.db import models, IntegrityError
 from django.core.urlresolvers import reverse
 from whyqd.wiqi.models import Wiqi
 
@@ -8,7 +8,7 @@ from guardian.shortcuts import assign_perm
 from bs4 import BeautifulSoup
 from jsonfield import JSONField
 import collections
-import hashlib
+import shortuuid as shrtn
 import re
 
 LICENSE_CHOICE = (("(c)","All Rights Reserved"),
@@ -31,13 +31,13 @@ class Novel(models.Model):
     Fixed point for wiqistack with methods for editing and listing history.
     Access to the stack must come from the reverse relationship..
     """
-    surl = models.CharField(max_length=32, blank=True, verbose_name="Short URL")
+    surl = models.CharField(max_length=16, unique=True, verbose_name="Short URL")
     title = models.CharField(blank=True, max_length=250, verbose_name="Title",
                              help_text="This may be used as a title, section or figure heading.")
     creator = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, related_name="%(class)s_creator")
     creator_ip = models.GenericIPAddressField(blank=True, null=True, default="255.255.255.255")
     created_on = models.DateTimeField(auto_now_add=True)
-    license = models.CharField(max_length=50, choices=LICENSE_CHOICE, default="All Rights Reserved",
+    licensing = models.CharField(max_length=50, choices=LICENSE_CHOICE, default="(c)",
                                verbose_name="Release License", help_text="What form of copyright do you offer?")
     jsonresponse = JSONField(load_kwargs={'object_pairs_hook': collections.OrderedDict}, blank=True, null=True)
     authors = models.CharField(max_length=250, blank=True,
@@ -109,12 +109,20 @@ class Novel(models.Model):
         return self.__class__.__name__.lower()
 
     def set(self, **kwargs):
+        shrtn.set_alphabet(settings.SURL_ALPHABET)
+        while True:
+            # the surl must be unique and the likelihood of clash is low, so try again
+            try:
+                self.surl = shrtn.ShortUUID().random(length=settings.SURL_LENGTH)
+                self.save()
+            except IntegrityError:
+                continue
+            else:
+                break
         self.title = BeautifulSoup(kwargs.get("title", "")[:250]).get_text().strip()
         self.creator = kwargs["creator"]
         self.creator_ip = kwargs.get("creator_ip",None)
-        self.license = kwargs.get("license","All Rights Reserved")
-        self.save()
-        self.surl = hashlib.md5(''.join((settings.NOVEL_SALT, str(self.id)))).hexdigest()
+        self.licensing = kwargs.get("licensing","(c)")
         self.save()
 
     def assign_all_perm(self, usr):

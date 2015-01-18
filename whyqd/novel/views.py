@@ -420,6 +420,7 @@ def price_novel(request, surl, template_name="novel/price_novel.html", permissio
     if not request.user.is_superuser:
         return Http404
     novel_object = get_object_or_404(Novel, surl=surl)
+    page_title = novel_object.title
     if not request.user.has_perm(permission, novel_object):
         raise Http404
     # https://docs.djangoproject.com/en/dev/topics/forms/modelforms/#model-formsets
@@ -428,7 +429,7 @@ def price_novel(request, surl, template_name="novel/price_novel.html", permissio
         formset = WiqiPriceFormSet(request.POST, queryset=novel_object.chapterlist.all())
         if formset.is_valid():
             formset.save()
-            return redirect(novel_object)
+            return redirect("issue_tokens", surl=novel_object.surl)
     else:
         formset = WiqiPriceFormSet(queryset=novel_object.chapterlist.all())
     return render(request, template_name, locals())

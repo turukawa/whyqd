@@ -2,19 +2,6 @@
 
 {% block content %}
 <div class="whyqd-absolute-top col-xs-12 col-md-10 col-md-offset-1">
-    {% if request.user.is_superuser %}
-    <div class="row">
-        <div class="col-sm-2 col-md-3">
-            <p class="text-center"><a id="create" href="{% url 'create_novel'  %}" class="btn btn-default" role="button">Create</a></p>
-        </div>
-        <div class="col-sm-2 col-md-3">
-            <p class="text-center"><a id="administer" href="{% url 'administer_novel' %}" class="btn btn-default" role="button">Manage</a></p>   
-        </div>
-        <div class="col-sm-2 col-md-3">
-            <p class="text-center"><a id="market" href="{{ user.manage_novel }}" class="btn btn-default" role="button">Market</a></p>   
-        </div>
-    </div>
-    {% endif %}
     <div class="row">
       <div class="col-sm-6 col-md-5">
         <div class="thumbnail">
@@ -51,8 +38,6 @@
 </div>
 {% endblock content %}
 
-
-
 {% block extrascripts %}
 <script>
     $(document).ready(function() {
@@ -78,18 +63,6 @@
                 case "read":
                     window.location.href = href;
                     break;
-                case "administer":
-                    window.location.href = $(this).attr('href');
-                    break;
-                case "market":
-                    window.location.href = $(this).attr('href');
-                    break;
-                case "upload":
-                    window.location.href = $(this).attr('href');
-                    break;
-                case "create":
-                    window.location.href = $(this).attr('href');
-                    break;       
                 default:
                     window.location.href = $(this).attr('href');
             }

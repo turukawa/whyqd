@@ -30,18 +30,16 @@
                     {% endif %}
                     </a></li>
                 {% else %}
-               <li id="nav-login" class="navinput-icon">
+                <li id="nav-login">
                     <form action="{% url 'facebook_connect' %}?next={{ request.path }}&facebook_login=1" method="post">
                         {% csrf_token %}
+                        <input type="hidden" value="1" name="connect" />
                         <input type="hidden" value="{{ request.path }}" name="next" />
                         <input type="hidden" value="{{ request.path }}" name="register_next" />
                         <input type="hidden" value="{{ request.path }}" name="error_next" />
-                        <div id="facebook_login_js">
-                        <label id="login" for="loginput" class="navbar-text"><span class="icon-cog"></span></label>
-                        <input id="loginput" type="hidden" onclick="F.connect(this.parentNode.parentNode); return false;" />
-                        </div>
-                    </form>        
-               </li>
+                    </form>
+                    <a onclick="F.connect(this.parentNode); return false;" href="javascript:void(0);">Login</a>
+                </li>
                 {% endif %}
             </ul>
         </div><!--/.nav-collapse -->

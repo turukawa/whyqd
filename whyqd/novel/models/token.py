@@ -1,9 +1,9 @@
-from django.db import models
+from django.db import models, IntegrityError
 from django.conf import settings
 from django.db.models.query import QuerySet
 from django.db.models import Q
 from django.core.urlresolvers import reverse
-import hashlib
+import shortuuid as shrtn
 import pytz
 from datetime import datetime, timedelta
 from whyqd.novel.models import Novel
@@ -47,7 +47,7 @@ class TokenManager(models.Manager):
         return self.get_queryset().valid_purchased(user, valid)
 
 class Token(models.Model):
-    surl = models.CharField(max_length=32, blank=True, verbose_name="Short URL")
+    surl = models.CharField(max_length=16, unique=True, verbose_name="Short URL")
     creator = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, related_name="%(class)s_creator")
     creator_ip = models.GenericIPAddressField(blank=True, null=True)
     created_on = models.DateTimeField(auto_now_add=True)
@@ -76,6 +76,16 @@ class Token(models.Model):
         :param kwargs:
         :return:
         """
+        shrtn.set_alphabet(settings.SURL_ALPHABET)
+        while True:
+            # the surl must be unique and the likelihood of clash is low, so try again
+            try:
+                self.surl = shrtn.ShortUUID().random(length=settings.SURL_LENGTH)
+                self.save()
+            except IntegrityError:
+                continue
+            else:
+                break
         self.creator = kwargs["creator"]
         self.creator_ip = kwargs.get("creator_ip", None)
         self.novel = kwargs["novel"]
@@ -90,8 +100,6 @@ class Token(models.Model):
             self.redeemer = kwargs["creator"]
             self.redeemer_ip = kwargs.get("creator_ip", None)
             self.redeemed_on = pytz.UTC.localize(datetime.now())
-        self.save()
-        self.surl = hashlib.md5(''.join((settings.TOKEN_SALT, str(self.id)))).hexdigest()
         self.save()
 
     def edit(self, recipient):

@@ -48,4 +48,4 @@ License
 
 Whyqd is copyright Gavin Chait and [Whythawk](http://www.whythawk.com). The software is released under the [GNU Affero General Public License](http://www.gnu.org/licenses/agpl-3.0.html).
 
-The **demand pricing** approach adopted here is in use by airlines, congestion charging in cities, and is documented extensively (cf. peak pricing, demand pricing, Pareto efficiency, etc.). It is not patented and this implementation serves as prior art for anyone wanting to implement such a system in their own publication platform.
+The **personal demand pricing** approach adopted here is similar to that in use by airlines, congestion charging in cities, and is documented extensively (cf. peak pricing, demand pricing, Pareto efficiency, etc.). It is not patented and this implementation serves as prior art for anyone wanting to implement such a system in their own publication platform.

@@ -35,7 +35,7 @@ Derived classes:
                 Wiqi -> Component(WiqiStack)
 """
 
-from django.db import models
+from django.db import models, IntegrityError
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
 from django.db.models.query import QuerySet
@@ -52,7 +52,7 @@ from bs4 import BeautifulSoup
 import pytz
 from jsonfield import JSONField
 import collections
-import hashlib
+import shortuuid as shrtn
 from decimal import Decimal
 # Google Diff Match Patch library
 # http://code.google.com/p/google-diff-match-patch
@@ -92,8 +92,7 @@ class Wiqi(models.Model):
     Fixed point for wiqistack with methods for editing and listing history.
     Access to the stack must come from the reverse relationship..
     """
-    surl = models.CharField(max_length=32, blank=True,
-                               verbose_name="Short URL")
+    surl = models.CharField(max_length=16, unique=True, verbose_name="Short URL")
     is_live_from = models.DateTimeField(blank=True, null=True, default=datetime.now, verbose_name="Publish from", 
                                         help_text="Leave blank to publish immediately, otherwise select a future publication date.")
     is_live_to = models.DateTimeField(blank=True, null=True, verbose_name="Publish until", 
@@ -224,13 +223,21 @@ class Wiqi(models.Model):
             return ""
 
     def set(self, **kwargs):
+        shrtn.set_alphabet(settings.SURL_ALPHABET)
+        while True:
+            # the surl must be unique and the likelihood of clash is low, so try again
+            try:
+                self.surl = shrtn.ShortUUID().random(length=settings.SURL_LENGTH)
+                self.save()
+            except IntegrityError:
+                continue
+            else:
+                break
         self.is_live_from = kwargs.get("is_live_from", pytz.UTC.localize(datetime.now()))
         self.is_live_to = kwargs.get("is_live_to",None)
         self.is_private = kwargs.get("is_private",False)
         self.next_wiqi = kwargs.get("next", None)
         self.previous_wiqi = kwargs.get("previous", None)
-        self.save()
-        self.surl = hashlib.md5(''.join((settings.WIQI_SALT, str(self.id)))).hexdigest()
         self.save()
         
     def update(self, **kwargs):
@@ -328,8 +335,7 @@ class WiqiStack(models.Model):
     The base wiqi class containing the common elements and functions for all
     the required wiqis.
     """
-    surl = models.CharField(max_length=32, blank=True,
-                               verbose_name="Short URL")
+    surl = models.CharField(max_length=16, unique=True, verbose_name="Short URL")
     title = models.CharField(blank=True, max_length=250, verbose_name="Title", 
                              help_text="This may be used as a title, section or figure heading.")
     description = models.TextField(blank=True, verbose_name="Description", 
@@ -416,6 +422,16 @@ class WiqiStack(models.Model):
         return self.wiqi
     
     def set(self, **kwargs):
+        shrtn.set_alphabet(settings.SURL_ALPHABET)
+        while True:
+            # the surl must be unique and the likelihood of clash is low, so try again
+            try:
+                self.surl = shrtn.ShortUUID().random(length=settings.SURL_LENGTH)
+                self.save()
+            except IntegrityError:
+                continue
+            else:
+                break
         self.title = kwargs["title"]
         self.creator = kwargs["creator"]
         self.creator_ip =kwargs.get("creator_ip",None)
@@ -424,8 +440,6 @@ class WiqiStack(models.Model):
         #self.original_creator = kwargs["original_creator"]
         self.reverted_from = kwargs.get("reverted_from", None)
         self.wiqi = kwargs["wiqi"]
-        self.save()
-        self.surl = hashlib.md5(''.join((settings.WIQI_SALT, str(self.id)))).hexdigest()
         self.save()
 
     def update(self, **kwargs):
@@ -442,16 +456,26 @@ class WiqiStack(models.Model):
 
     def copy(self, **kwargs):
         """
-        Provide a deep copy of itself for use in branchs
-        https://docs.djangoproject.com/en/1.5/topics/db/queries/
+        Provide a deep copy of itself for use in branches
+        https://docs.djangoproject.com/en/1.7/topics/db/queries/#copying-model-instances
         If new related objects created (other than default), inherit this class.
+        !!!! This is going to need review based on the unique surl attributes. !!!!!
+        !!!! This is NOT tested. !!!!!
         """
-        self.pk = None
-        self.id = None
+        shrtn.set_alphabet(settings.SURL_ALPHABET)
+        while True:
+            # the surl must be unique and the likelihood of clash is low, so try again
+            try:
+                self.surl = shrtn.ShortUUID().random(length=settings.SURL_LENGTH)
+                self.pk = None
+                self.id = None
+                self.save()
+            except IntegrityError:
+                continue
+            else:
+                break
         self.creator = kwargs.get("creator", self.creator)
         self.creator_ip = kwargs.get("creator_ip", self.creator_ip)
-        self.save()
-        self.surl = hashlib.md5(''.join((settings.WIQI_SALT, str(self.id)))).hexdigest()
         self.save()
         return self
         # Replace this entirely if you need additional related copies

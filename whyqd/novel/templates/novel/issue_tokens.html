@@ -4,12 +4,12 @@
 <div class="whyqd-absolute-top col-xs-12 col-md-10 col-md-offset-1">
     <div class="row">
         <h1>Share and Manage {{ novel_object.title }}</h1>
-        <p>Download ebook versions for yourself or share your copy with your friends.</p>
+        <p></p>
     </div>
     {% if not request.user.is_superuser %}
-    <p></p>
     <div class="row" id="download_ebook">
-        <div class="col-sm-2 col-md-3">
+        <p>Download ebook versions for yourself or share your copy with your friends.</p>
+        <div class="col-sm-3 col-md-4">
             {% if token_download.is_purchased %}
             <form action="{% url 'download_novel' token_download.surl %}" method="POST">
                 {% csrf_token %}
@@ -19,9 +19,13 @@
             {% endif %}
         </div>
     </div>
+    {% else %}
+    <div class"row" id="price_chapters">
+        <p>Set the pricing for <a href="{{ novel_object.get_prices_url }}">{{ novel_object.title }}</a></p>
+    </div>
     {% endif %}
-    <p></p>
     <div class="row">
+        <p></p>
         <ul id="share-tabs" class="nav nav-tabs" role="tablist">
             <li class="active"><a href="#tab-buy" data-toggle="tab">Buy</a></li>
             <li><a href="#tab-lend" data-toggle="tab">Lend</a></li>

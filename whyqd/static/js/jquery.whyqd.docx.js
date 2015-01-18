@@ -141,7 +141,7 @@
                         localStorage.removeItem('dlist');
                         localStorage.removeItem('bookstructure');
                         $.post('/my/organise/' + localStorage.getItem('book') + '/', bookstructure, function(data) {
-                            window.location.href = '/my/organise/' + localStorage.getItem('book') + '/';//data.wiqi.url;
+                            window.location.href = '/my/pricing/' + localStorage.getItem('book') + '/';//data.wiqi.url;
                         });
                     });
                     break;
