@@ -313,15 +313,20 @@ def download_novel(request, surl, template_name="novel/download_novel.html"):
         return HttpResponse(json.dumps(downloads), content_type="application/json")
     return render(request, template_name, locals())
 
-@login_required
 def refund_token(request, surl, template_name="novel/refund_token.html"):
     """
-    Refund a valid token (even where part of a bulk-buy)
+    Refund a valid token (even where part of a bulk-buy).
+    If the user is not logged in, then only refund if the creator is anonymous.
+    Users can't request refunds for tokens they didn't buy for themselves.
     """
     token_object = get_object_or_404(Token, surl=surl)
     page_title = token_object.novel.title
-    refund_response = {}
+    refund_response = {'response': 'failure'}
+    token_refund = False
     if token_object.is_valid and token_object.is_purchased:
+        if request.user.is_authenticated() or not token_object.creator:
+            token_refund = True
+    if token_refund:
         stripe_key = settings.STRIPE_PUBLISHABLE_KEY
         # Set your secret key: remember to change this to your live secret key in production
         stripe.api_key = settings.STRIPE_SECRET_KEY
