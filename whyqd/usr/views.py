@@ -1,12 +1,34 @@
 from django.shortcuts import get_object_or_404, get_list_or_404, render_to_response, redirect, render
 from django.contrib.auth.decorators import login_required
-from django.http import Http404
+from django.http import Http404, HttpResponse
 from django.contrib.auth import logout
 
+import json
+
 from whyqd.usr.forms import SubscribeForm
+from whyqd.snippets.diff2merge import xtractemail
 
 def logout(request, next_page="/"):
     logout(request)
+
+@login_required
+def usr_update(request):
+    """
+    Update the details for this user.
+    """
+    if request.method == "POST":
+        if request.is_ajax():
+            usr_response = {'response': 'failure'}
+            data = request.POST
+            # Process and test emails
+            usr_email = xtractemail(data["email"])[0]
+            if usr_email and usr_email != request.user.email:
+                request.user.email = usr_email
+                request.user.save()
+            usr_response = {'response': 'success'}
+            return HttpResponse(json.dumps(usr_response), content_type="application/json")
+    raise Http404 
+
 
 def register(request, template_name="usr/register.html"):
     """ view displaying customer registration form """

@@ -135,7 +135,8 @@
                 <form action="" method="POST" class="form-inline">
                     {% csrf_token %}
                     <div class="form-group">
-                      <input type="email" class="form-control" id="new_email" placeholder="Enter email"
+                        <input type="hidden" value="{% url 'usr_update' %}" name="user_update" id="user_update" />
+                      <input type="email" class="form-control" id="user_email" placeholder="Enter email"
                              value="{{ request.user.email }}"/>
                     </div>
                     <button type="submit" class="btn btn-default" name="change_email"
@@ -406,6 +407,18 @@
                 }
                 }).done(function(data) {
                     $("#market_list").val("");
+                });
+            e.preventDefault();
+            });
+        $('#change_email').on('click', function (e) {
+            var emails = getemaillist($('#user_email').val());
+            emails = emails.toString();
+            $.ajax({
+                url: $('#user_update').val(),
+                type: 'post',
+                data: {
+                    email: emails
+                }
                 });
             e.preventDefault();
             });
