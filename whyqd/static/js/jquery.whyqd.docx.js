@@ -1,7 +1,7 @@
 
 
     function getdocxreview(docxarray) {
-        var newaction = '<p>The table is sortable. Anything below a checked title will be grouped together as content, including sub-headings. If you wish to delete anything, now is the time. Note that a proper cover page will be created, so delete anything unrelated to chapters (like title, author, dedication) at this stage.</p><label id="process" for="inputprocess"><span class="icon-login"></span></label><input id="inputprocess" type="hidden" name="file"><hr />';
+        var newaction = '<p>The table is sortable. Anything below a checked title will be grouped together as content, including sub-headings. If you wish to delete anything, now is the time. Note that a proper cover page will be created, so delete anything unrelated to chapters (like title, author, dedication) at this stage.</p><span class="navinput-icon btn btn-default" role="button"><label id="process" for="inputprocess">Accept</label><input id="inputprocess" type="hidden" name="file"></span><hr />';
         var partlast = '<label><small>&nbsp; delete &nbsp;</small><input type="checkbox" name="delete" value="delete" /></label><label><small>chapter &nbsp;</small><input type="checkbox" name="chapter" value="chapter" /></label></li>';
         var partfirst = '<li data-value="-';
         var partmid = '"><span class="ui-icon ui-icon-arrowthick-2-n-s"></span>';

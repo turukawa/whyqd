@@ -1,4 +1,5 @@
 {% extends "wrapper.html" %}
+{% load widget_tweaks %}
 
 {% block content %}
 <div class="whyqd-absolute-top col-xs-12 col-md-10 col-md-offset-1">
@@ -20,7 +21,7 @@
         </div>
     </div>
     {% else %}
-    <div class"row" id="price_chapters">
+    <div class="row" id="price_chapters">
         <p>Set the pricing for <a href="{{ novel_object.get_prices_url }}">{{ novel_object.title }}</a></p>
     </div>
     {% endif %}
@@ -30,6 +31,7 @@
             <li class="active"><a href="#tab-buy" data-toggle="tab">Buy</a></li>
             <li><a href="#tab-lend" data-toggle="tab">Lend</a></li>
             <li><a href="#tab-refund" data-toggle="tab">Refund</a></li>
+            <li><a href="#tab-email" data-toggle="tab">Email</a></li>
             {% if request.user.is_superuser %}
             <li><a href="#tab-market" data-toggle="tab">Market</a></li>
             {% endif %}
@@ -41,7 +43,7 @@
                 We will email a redemption voucher for you.</p>
                 <form action="" method="POST">
                     {% csrf_token %}
-                    <textarea id="email_list" rows="3" cols="40" wrap="hard"></textarea>
+                    <textarea id="email_list" class="form-control" rows="3" cols="40" wrap="hard"></textarea>
                     <input type="hidden" value="{{ fxp }}" id="basePrice" name="basePrice" />
                     <input type="hidden" value="{{ fxp }}" id="stripePrice" name="stripePrice" />
                     <input type="hidden" value="{{ fxd }}" id="stripeCurrency" name="stripeCurrency" />
@@ -55,7 +57,7 @@
                 <div class="row">
                     <div class="col-sm-4">
                         <div class="btn-group">
-                            <button id="stripeButton" class="btn btn-default" >Buy 1 for &pound;
+                            <button id="stripeButton" class="btn btn-default" disabled >Buy 1 for &pound;
                             {{ novel_object.sentinal.price }}</button>
                             <button id="stripeCaret" type="button" data-toggle="dropdown" class="btn btn-default dropdown-toggle">
                                 <span class="caret"></span>
@@ -79,11 +81,19 @@
                 {% csrf_token %}
                     {{ issue_token_formset.management_form }}
                     {% for form in issue_token_formset %}
-                        <li>{{ form }}{% if form.instance.days_left %} Loaned for {{ form.instance.days_left }} more
-                    days.{% endif %}
-                        </li>
+                    <div class="form-group">
+                        <div class="row">
+                            {{ form.id }}
+                            <div class="col-xs-4">
+                            {{ form.recipient|add_class:"form-control input-sm"|attr:"placeholder:Email" }}
+                            </div>
+                            <div class="col-xs-4">
+                            {% if form.instance.days_left %} Loaned for {{ form.instance.days_left }} more days.{% endif %}
+                            </div>
+                        </div>
+                    </div>
                     {% endfor %}
-                    </ul>
+                    
                     <p></p>
                     <button type="submit" class="btn btn-default" name="issue_tokens" value="save">Send</button>
                 </form>
@@ -96,16 +106,40 @@
                     {% csrf_token %}
                     {{ refund_token_formset.management_form }}
                     {% for form in refund_token_formset %}
-                        <li>{{ form }}{% if form.instance.is_valid %}
-                            <button type="submit" class="btn btn-default btn-xs"
-                                    id="refundToken_{{forloop.counter0}}"
-                                    value={% url 'refund_token' form.instance.surl %}>Refund</button>
-                            <button type="submit" class="btn btn-default btn-xs"
-                                    id="resendToken_{{forloop.counter0}}"
-                                    value={% url 'resend_token' form.instance.surl %}>Resend</button>
-                        {% endif %}</li>
+                    <div class="form-group" id="refundForm_{{forloop.counter0}}">
+                        <div class="row">
+                            {{ form.id }}
+                            <div class="col-xs-4">
+                            {{ form.recipient|add_class:"form-control input-sm" }}
+                            </div>
+                            <div class="col-xs-4">
+                            {% if form.instance.is_valid %}
+                                <button type="submit" class="btn btn-default btn-sm"
+                                        id="refundToken_{{forloop.counter0}}"
+                                        value={% url 'refund_token' form.instance.surl %}>Refund</button>
+                                <button type="submit" class="btn btn-default btn-sm"
+                                        id="resendToken_{{forloop.counter0}}"
+                                        value={% url 'resend_token' form.instance.surl %}>Resend</button>
+                            {% endif %}
+                            </div>
+                        </div>
+                    </div>
                     {% endfor %}
                     </ul>
+                </form>
+            </div>
+            <div id="tab-email" class="tab-pane">
+                <p></p>
+                <p>We send confirmation of your purchases, refunds and loaned copies of {{ novel_object.title }} to this
+                email address. If it is wrong, or needs changing, please do so.</p>
+                <form action="" method="POST" class="form-inline">
+                    {% csrf_token %}
+                    <div class="form-group">
+                      <input type="email" class="form-control" id="new_email" placeholder="Enter email"
+                             value="{{ request.user.email }}"/>
+                    </div>
+                    <button type="submit" class="btn btn-default" name="change_email"
+                            id="change_email" value="change">Change</button>
                 </form>
             </div>
             {% if request.user.is_superuser %}
@@ -113,14 +147,12 @@
                 <p></p>
                 <form action="" method="POST">
                     {% csrf_token %}
-                    <textarea id="market_list" rows="3" cols="40" wrap="hard"></textarea>
+                    <textarea id="market_list" class="form-control" rows="3" cols="40" wrap="hard"></textarea>
                     <input type="hidden" value="{% url 'market_tokens' novel_object.surl %}" name="marketTokens" id="marketTokens" />
                     <p></p>
                     <button type="submit" class="btn btn-default" name="market_tokens"
                             id="market_tokens" value="save">Send</button>
                 </form>
-                
-                
             {% endif %}
         </div>
     </div>
@@ -155,7 +187,7 @@
                 bulk_price = bulk_price * (1 - discount);
             }
         }
-        $("#stripePrice").val(bulk_price);
+        $("#stripePrice").val(bulk_price.toFixed());
     }
     function getcurrencysymbol() {
         var forex_currency = $("#stripeCurrency").val();
@@ -173,6 +205,12 @@
     function setcount(volume, discount) {
         var emails = getemaillist(this.value)
         var count = emails.length > 1 ? emails.length : 1;
+        if (emails.length) {
+            $('#stripeButton').prop('disabled', false);
+        }
+        else {
+            $('#stripeButton').prop('disabled', true);
+        }
         $("#stripeCount").val(count);
         $("#stripeDiscount").val(discount);
         $("#stripeVolume").val(volume);
@@ -220,7 +258,7 @@
                 ns = data.settings;
                 var handler = StripeCheckout.configure({
                     key: ns.stripe_key,
-                    image: '/square-image.png',
+                    image: '/media/images/qwyre_42.png',
                     name: ns.novel_title,
                     email: ns.user_email,
                     token: function(token) {
@@ -311,11 +349,12 @@
             });
         $('[id^=refundToken_]').on('click', function (e) {
             var tid = this;
+            var rid = tid.id.replace("refundToken_", "");
             $.ajax({
                 url: tid.value
                 }).done(function(data) {
                     if (data.response == 'success') {
-                        $(tid).closest('li').remove();
+                        $('#refundForm_' + rid).remove();
                     }
                 });
             e.preventDefault();

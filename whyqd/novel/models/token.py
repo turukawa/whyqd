@@ -47,7 +47,7 @@ class TokenManager(models.Manager):
         return self.get_queryset().valid_purchased(user, valid)
 
 class Token(models.Model):
-    surl = models.CharField(max_length=16, unique=True, verbose_name="Short URL")
+    surl = models.CharField(max_length=25, unique=True, verbose_name="Short URL")
     creator = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, related_name="%(class)s_creator")
     creator_ip = models.GenericIPAddressField(blank=True, null=True)
     created_on = models.DateTimeField(auto_now_add=True)
@@ -80,7 +80,7 @@ class Token(models.Model):
         while True:
             # the surl must be unique and the likelihood of clash is low, so try again
             try:
-                self.surl = shrtn.ShortUUID().random(length=settings.SURL_LENGTH)
+                self.surl = shrtn.ShortUUID().random(length=settings.TOKEN_SURL_LENGTH)
                 self.save()
             except IntegrityError:
                 continue
@@ -143,7 +143,9 @@ class Token(models.Model):
     @property
     def days_left(self):
         try:
-            return (self.redeemed_on + timedelta(days=settings.TOKEN_DELTA) - pytz.UTC.localize(datetime.now())).days
+            return (self.redeemed_on.date()
+                    + timedelta(days=settings.TOKEN_DELTA)
+                    - pytz.UTC.localize(datetime.now()).date()).days
         except:
             return False
     

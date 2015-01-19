@@ -21,6 +21,7 @@ def index(request, template_name="wiqi/index.html", nav_type="view"):
         return redirect("create_novel")
     novel_object = novel_object[0]
     page_title = novel_object.title
+    page_subtitle = "Start Reading"
     nav_set = None
     if request.is_ajax():
         HttpResponse(json.dumps({}), content_type="application/json")
@@ -50,6 +51,7 @@ def view_wiqi(request, wiqi_surl, wiqi_type=None, template_name="wiqi/view.html"
             # It's from a wiqistack
             chapter_title = wiqi_object.title
             page_title = wiqi_object.wiqi.novel_chapterlist.all()[0].title
+            page_subtitle = chapter_title
             nav_title = "stack"
         # Prepare for viewing next_wiqi
         next_wiqi = wiqi_object.next_wiqi

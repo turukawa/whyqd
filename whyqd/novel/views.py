@@ -89,7 +89,9 @@ def buy_novel(request, surl=None, template_name="novel/buy_novel.html"):
                                         'website': request.META['HTTP_HOST']
                                         }
                             }
-            send_email(**email_kwargs)
+            if token_object.recipient:
+                # Not everyone has an email address...
+                send_email(**email_kwargs)
         # prepare ajax response
         buy_response = {'response': 'success',
                          'registered': False,
@@ -101,8 +103,9 @@ def buy_novel(request, surl=None, template_name="novel/buy_novel.html"):
             token_object.redeem(**kwargs)
             buy_response['registered'] = True
             buy_response['link'] = request.user.manage_novel()
-        # process send_list
-        if data['template'] == 'gift_purchase':
+        # process send_list for logged-in users with emails...
+        if request.user.is_authenticated() and data['template'] == 'gift_purchase' and request.user.email:
+            email_kwargs['to'] = request.user.email
             email_kwargs['subject'] = EMAIL_SUBJECT['issue_purchase'] + novel_object.title
             email_kwargs['template'] = 'issue_purchase'
             email_kwargs['context']['token_list'] = send_list
@@ -143,7 +146,7 @@ def resend_token(request, surl, template_name="novel/issue_tokens.html"):
             resend_response = {'response': 'success',
                                'recipient': data["recipient"]}
             email_kwargs = {'to': token_object.recipient,
-                            'subject': request.user.facebook_name + EMAIL_SUBJECT[data['template']] + novel_object.title,
+                            'subject': request.user.facebook_name + EMAIL_SUBJECT[data['template']] + token_object.novel.title,
                             'template': 'gift_purchase',
                             'context': {'token_object': token_object,
                                         'website': request.META['HTTP_HOST'],
@@ -167,6 +170,7 @@ def issue_tokens(request, surl, template_name="novel/issue_tokens.html"):
     if not request.user.can_read(novel_object) == "owns":
         return Http404
     page_title = novel_object.title
+    page_subtitle = "Share and Manage"
     # Where 'issue' is actually 'lent' ... 
     token_issued_list = Token.query.issued_list(request.user)
     token_refund_list = Token.query.valid_purchased(request.user, True)
@@ -260,6 +264,7 @@ def redeem_token(request, surl, template_name="novel/redeem_token.html"):
     else:
         expiry = settings.S3_TIMER
     page_title = token_object.novel.title
+    page_subtitle = "Redemption"
     return render(request, template_name, locals())
 
 def download_novel(request, surl, template_name="novel/download_novel.html"):
@@ -368,7 +373,7 @@ def create_novel(request, template_name="novel/create_novel.html"):
                 return HttpResponse(json.dumps({'novel': novel_object.surl}), content_type="application/json")
     else:
         novel_form = NovelForm()
-    page_title = "Qwyre Novel"
+    page_title = "Qwyre - Create Novel"
     return render(request, template_name, locals())
 
 @login_required
@@ -399,6 +404,7 @@ def organise_novel(request, surl, template_name="novel/create_novel.html", permi
         return Http404
     novel_object = get_object_or_404(Novel, surl=surl)
     page_title = novel_object.title
+    page_subtitle = "Organise"
     #if not request.user.has_perm(permission, novel_object):
     #    raise Http404
     if request.method == "POST":
@@ -421,6 +427,7 @@ def price_novel(request, surl, template_name="novel/price_novel.html", permissio
         return Http404
     novel_object = get_object_or_404(Novel, surl=surl)
     page_title = novel_object.title
+    page_subtitle = "Pricing"
     if not request.user.has_perm(permission, novel_object):
         raise Http404
     # https://docs.djangoproject.com/en/dev/topics/forms/modelforms/#model-formsets

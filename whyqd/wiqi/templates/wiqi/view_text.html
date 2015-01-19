@@ -87,7 +87,7 @@
                         <button id="stripeButton" class="btn btn-default" >Buy for &pound;
                                 {% if request.user.is_authenticated and request.user.current_price > wiqi_object.price %}
                                 {{ request.user.current_price }}{% else %}{{ wiqi_object.price }}{% endif %}</button>
-                        <button type="button" data-toggle="dropdown" class="btn btn-default dropdown-toggle">
+                        <button id="stripeCaret" type="button" data-toggle="dropdown" class="btn btn-default dropdown-toggle">
                             <span class="caret"></span>
                             <span class="sr-only">Toggle Dropdown</span>
                         </button>
@@ -117,7 +117,7 @@
                     ns = data.settings;
                     var handler = StripeCheckout.configure({
                         key: ns.stripe_key,
-                        image: '/square-image.png',
+                        image: '/media/images/qwyre_42.png',
                         name: ns.novel_title,
                         email: ns.user_email,
                         token: function(token) {
@@ -161,7 +161,7 @@
                                         }
                                     }
                                     else {
-                                        $('#stripeButton').after(
+                                        $('#stripeCaret').after(
                                             '<div class="alert alert-danger alert-dismissable">'+
                                                 '<button type="button" class="close" ' + 
                                                     'data-dismiss="alert" aria-hidden="true">' + '&times;' + 
@@ -172,7 +172,7 @@
                                     }
                                 },
                                 error: function(data) {
-                                    $('#stripeButton').after(
+                                    $('#stripeCaret').after(
                                         '<div class="alert alert-danger alert-dismissable">'+
                                             '<button type="button" class="close" ' + 
                                                 'data-dismiss="alert" aria-hidden="true">' + '&times;' + 
