@@ -1,37 +1,83 @@
 {% extends "wrapper.html" %}
+{% load humanize %}
+{% load mathfilters %}
 
 {% block content %}
 <div class="whyqd-absolute-top col-xs-12 col-md-10 col-md-offset-1">
     <div class="row">
+        <div class="col-sm-12 col-md-10">
+            <div class="thumbnail">
+                <div class="caption">
+                    <blockquote><div id="quote"></div></blockquote>
+                    <small class="text-right"><div id="source"></div></small>
+                    <p></p>
+                    <p>{{ novel_object.summary }}</p>
+                </div>
+          </div>
+        </div>
+    </div>
+    <div class="row">
       <div class="col-sm-6 col-md-5">
-        <div class="thumbnail">
-          <img src="http://placekitten.com/g/400/270" alt="..." width="400" height="270">
+        <div class="thumbnail" id="buyresponse" >
+            <img src="http://placekitten.com/g/400/200" alt="..." width="400" height="200">
+            <div class="caption" id="buynow" >
+                {% if show_buy %}
+                <form action="{% url 'buy_novel' %}" method="POST">
+                    {% csrf_token %}
+                    <input type="hidden"
+                           value="{% if request.user.is_authenticated and request.user.current_price > wiqi_object.price %}
+                                    {{ request.user.current_price|mul:100|floatformat:"0" }}
+                                {% else %}
+                                    {{ novel_object.sentinal.price|mul:100|floatformat:"0" }}
+                                {% endif %}"
+                            id="basePrice" name="basePrice" />
+                    <input type="hidden" value="{{ fxd }}" id="stripeCurrency" name="stripeCurrency" />
+                    <input type="hidden" value="{% if request.user.is_authenticated and request.user.current_price > wiqi_object.price %}
+                                    {{ request.user.current_price|mul:100|floatformat:"0" }}
+                                {% else %}
+                                    {{ novel_object.sentinal.price|mul:100|floatformat:"0" }}
+                                {% endif %}"
+                            id="stripePrice" name="stripePrice" />
+                    <input type="hidden" value="{% url 'novel_settings' novel_object.surl %}"
+                           name="stripeSettings" id="stripeSettings" />
+                    <input type="hidden" value="{% url 'buy_novel' %}" name="stripeBuy" id="stripeBuy" />
+                </form>
+                <div class="btn-group">
+                    <button id="stripeButton" class="btn btn-default" >Buy for &pound;
+                                {% if request.user.is_authenticated and request.user.current_price > wiqi_object.price %}
+                                    {{ request.user.current_price }}
+                                {% else %}
+                                    {{ novel_object.sentinal.price }}
+                                {% endif %}
+                    </button>
+                    <button id="stripeCaret" type="button" data-toggle="dropdown" class="btn btn-default dropdown-toggle">
+                        <span class="caret"></span>
+                        <span class="sr-only">Toggle Dropdown</span>
+                    </button>
+                    <ul class="dropdown-menu" role="menu">
+                        <li id="forex_usd" value={{ fx.usd }}><a href="#">USD</a></li>
+                        <li id="forex_gbp" value={{ fx.gbp }}><a href="#">GBP</a></li>
+                        <li id="forex_eur" value={{ fx.eur }}><a href="#">EUR</a></li>
+                    </ul>
+                    
+                    <p></p>
+                </div>
+                {% endif %}
+            </div>
         </div>
       </div>
       <div class="col-sm-6 col-md-5">
         <div class="thumbnail">
           <img src="http://placehold.it/400x200" alt="..." width="400" height="200">
           <div class="caption">
-            <p class="text-center"><a id="read" href="{{ novel_object.sentinal.get_url }}"
-                                      class="btn btn-default" role="button">Read</a>
-            {% if request.user.is_authenticated %}
-                <a id="read" href="{{ request.user.current_view }}"
-                   class="btn btn-default" role="button">Bookmark</a></p>
-            {% endif %}</p>
+            {% if request.user.is_authenticated and request.user.current_view %}
+            <a id="read" href="{{ request.user.current_view }}"
+               class="btn btn-default" role="button">Continue Reading</a>
+            {% else %}
+            <a id="read" href="{{ novel_object.sentinal.get_url }}"
+               class="btn btn-default" role="button">Start Reading</a>
+            {% endif %}
           </div>
-        </div>
-      </div>
-    </div>
-    <div class="row">
-      <div class="col-sm-12 col-md-10">
-        <blockquote><div id="quote"></div></blockquote>
-        <small class="text-right"><div id="source"></div></small>
-      </div>
-    </div>
-    <div class="row">
-      <div class="col-sm-12 col-md-10">
-        <div class="thumbnail">
-          <img src="http://placekitten.com/g/800/200" alt="..." width="800" height="200">
         </div>
       </div>
     </div>
@@ -39,12 +85,29 @@
 {% endblock content %}
 
 {% block extrascripts %}
+<script src="https://checkout.stripe.com/checkout.js"></script>
 <script>
+    function queryParameters () {
+        // http://stackoverflow.com/a/25440029
+        var result = {};
+        var params = window.location.search.split(/\?|\&/);
+        params.forEach( function(it) {
+            if (it) {
+                var param = it.split("=");
+                result[param[0]] = param[1];
+            }
+        });
+        return result;
+    } 
     $(document).ready(function() {
-        $.ajaxSetup({ scriptCharset: "utf-8" , contentType: "application/json; charset=utf-8"});
         $.getJSON("/media/tartarusquotes.txt",function(result){
             // return Math.floor(Math.random()*(max-min+1)+min);
-            var num = Math.floor(Math.random() * 10)+ '';
+            if (queryParameters().qt) {
+                var num = queryParameters().qt;
+            }
+            else {
+                var num = Math.floor(Math.random() * 9) + 1 + '';
+            }
             // Lots of help in this
             // Quotes: http://americanbookreview.org/100bestlines.asp
             // http://docs.python.org/2/library/re.html
@@ -54,6 +117,113 @@
             // http://stackoverflow.com/a/4960020 Math.floor
             $('#quote').html(result[num]['quote']);
             $('#source').html(result[num]['source']);
+        });
+        if ($('#stripeButton').length > 0) {
+            $.ajax({
+                url: $('#stripeSettings').val()
+                }).done(function(data) {
+                    ns = data.settings;
+                    var handler = StripeCheckout.configure({
+                        key: ns.stripe_key,
+                        image: '/media/images/qwyre_42.png',
+                        name: ns.novel_title,
+                        email: ns.user_email,
+                        token: function(token) {
+                            // http://stackoverflow.com/a/22461608
+                            // You can access the token ID with `token.id`
+                            if (!ns.user_email) {
+                                ns.user_email = token.email;
+                            }
+                            $.ajax({
+                                url: $('#stripeBuy').val(),
+                                type: 'post',
+                                data: {
+                                    stripeToken: token.id,
+                                    stripeDescription: ns.description,
+                                    stripePrice: ns.price,
+                                    stripeEmails: ns.user_email,
+                                    selfPurchase: true, // Buying for own use
+                                    template: 'purchase'
+                                },
+                                success: function(data) {
+                                    if (data.response == 'success') {
+                                        $('#buynow').remove();
+                                        if (data.registered) {
+                                            $('#buyresponse').after(
+                                                '<div class="alert alert-success alert-dismissable">'+
+                                                '<button type="button" class="close" ' + 
+                                                'data-dismiss="alert" aria-hidden="true">' + '&times;' + 
+                                                '</button>' + 
+                                                '<p><strong>Thank you</strong>, your purchase has been successful.</p>' +
+                                                '<p>You can continue reading ' + ns.novel_title + ' online, or ' +
+                                                '<a href="' + data.link + '" class="alert-link"> download an ebook ' +
+                                                'version</a>. You could even share a copy with your friends.</p>' +
+                                                '</div>');
+                                        }
+                                        else {
+                                            // http://stackoverflow.com/a/506004
+                                            window.location.href = data.link;
+                                        }
+                                    }
+                                    else {
+                                        $('#buyresponse').after(
+                                            '<div class="alert alert-danger alert-dismissable">'+
+                                                '<button type="button" class="close" ' + 
+                                                    'data-dismiss="alert" aria-hidden="true">' + '&times;' + 
+                                                '</button>' + 
+                                                '<strong>Sorry</strong>, something went wrong. ' +
+                                                'You have not been charged. Please try again.' +
+                                             '</div>');
+                                    }
+                                },
+                                error: function(data) {
+                                    $('#buyresponse').after(
+                                        '<div class="alert alert-danger alert-dismissable">'+
+                                            '<button type="button" class="close" ' + 
+                                                'data-dismiss="alert" aria-hidden="true">' + '&times;' + 
+                                            '</button>' + 
+                                            '<strong>Sorry</strong>, something went wrong. ' +
+                                            'You have not been charged. Please try again.' +
+                                         '</div>');
+                                }
+                              }); // end ajax call
+                        }
+                    });
+                    document.getElementById('stripeButton').addEventListener('click', function(e) {
+                        ns.price = $('#stripePrice').val().trim();
+                        ns.description = "Single purchase of " + ns.novel_title;
+                        ns.currency = $('#stripeCurrency').val();
+                        // Open Checkout with further options
+                        handler.open({
+                          description: ns.description,
+                          amount: ns.price,
+                          currency: ns.currency
+                        });
+                        e.preventDefault();
+                    });
+                });
+        }
+        $('[id^=forex_]').on('click', function (e) {
+            var forex = this;
+            var base_price = parseFloat($('#basePrice').attr('value').trim()).toFixed(2);
+            var select_price = parseFloat($(this).attr('value').trim()).toFixed(2);
+            var new_price = (select_price * base_price);
+            $("#stripePrice").val(new_price.toFixed());
+            switch (this.id) {
+                case 'forex_usd':
+                    $('#stripeButton').html("Buy for $ " + (new_price/100).toFixed(2));
+                    $("#stripeCurrency").val('USD');
+                    break;
+                case 'forex_gbp':
+                    $('#stripeButton').html("Buy for &pound; " + (new_price/100).toFixed(2));
+                    $("#stripeCurrency").val('GBP');
+                    break;
+                case 'forex_eur':
+                    $('#stripeButton').html("Buy for &euro; " + (new_price/100).toFixed(2));
+                    $("#stripeCurrency").val('EUR');
+                    break;
+            }
+            e.preventDefault();
         });
         // Text processing
         $(document).on('click', 'a', function(event){ 

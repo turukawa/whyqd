@@ -76,10 +76,10 @@ def get_wiqi_object_or_404(wiqi_surl, usr, wiqi_type=None, permission=None, nav_
         wiqi_object = get_object_or_404(WiqiStack, surl=wiqi_surl)
     else:
         wiqi_object = get_object_or_404(Wiqi, surl=wiqi_surl)
-        if nav_type == "view":
-            return get_user_view_rights(usr, wiqi_object)
+    if nav_type == "view":
+        return get_user_view_rights(usr, wiqi_object)
     if not has_permission(wiqi_object, usr, permission):
-        raise Http404
+        return False
     return wiqi_object
 
 def get_wiqi_kwargs(request, wiqi_type, WiqiStackForm, **kwargs):

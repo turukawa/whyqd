@@ -79,7 +79,8 @@
                         {% else %}
                             {{ wiqi_object.price|mul:100|floatformat:"0" }}{% endif %}"
                                 id="stripePrice" name="stripePrice" />
-                        <input type="hidden" value="{% url 'novel_settings' %}" name="stripeSettings" id="stripeSettings" />
+                        <input type="hidden" value="{% url 'novel_settings_pro' %}"
+                               name="stripeSettings" id="stripeSettings" />
                         <input type="hidden" value="{% url 'buy_novel' %}" name="stripeBuy" id="stripeBuy" />
                         <input type="hidden" value="{{ next_wiqi.get_url }}" name="stripeNext" id="stripeNext" />
                     </form>
@@ -166,7 +167,7 @@
                                                 '<button type="button" class="close" ' + 
                                                     'data-dismiss="alert" aria-hidden="true">' + '&times;' + 
                                                 '</button>' + 
-                                                '<strong>Sorry</strong>, something went wrong.' +
+                                                '<strong>Sorry</strong>, something went wrong. ' +
                                                 'You have not been charged. Please try again.' +
                                              '</div>');
                                     }
@@ -177,7 +178,7 @@
                                             '<button type="button" class="close" ' + 
                                                 'data-dismiss="alert" aria-hidden="true">' + '&times;' + 
                                             '</button>' + 
-                                            '<strong>Sorry</strong>, something went wrong.' +
+                                            '<strong>Sorry</strong>, something went wrong. ' +
                                             'You have not been charged. Please try again.' +
                                          '</div>');
                                 }

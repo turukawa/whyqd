@@ -1,0 +1,25 @@
+{% extends "wrapper.html" %}
+
+{% load novel_tags %}
+
+{% block content %}
+<div class="whyqd-absolute-top col-xs-12 col-md-10 col-md-offset-1">
+    <div class="row">
+        <h1>{{ novel_object.title }} - Chapters</h1>
+        <p></p>
+    </div>
+    <div class="row">
+        {% for key, chapter in chapter_objects.chapters.items|sort %}
+            {% if chapter.is_section %}
+                <h3><a href="{{ chapter.url }}">{{ chapter.title }}</a></h3>
+                <p>|
+            {% elif chapter.is_callout %}
+                </p><blockquote><a href="{{ chapter.url }}">{{ chapter.title }}</a></blockquote>
+                <p>|
+            {% else %}
+              <a href="{{ chapter.url }}">{{ chapter.title }}</a> | 
+            {% endif %}
+        {% endfor %}</p>
+    </div>
+</div>
+{% endblock content %}

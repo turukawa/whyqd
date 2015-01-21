@@ -32,6 +32,13 @@ def view_novel(request, surl, template_name="novel/view_novel.html"):
     page_title = novel_object.title
     return render(request, template_name, locals())
 
+def view_chapters(request, surl, template_name="novel/view_chapters.html"):
+    novel_object = get_object_or_404(Novel, surl=surl)
+    page_title = novel_object.title
+    page_subtitle = "Chapters"
+    chapter_objects = json.loads(novel_object.chapterformat)
+    return render(request, template_name, locals())
+
 def buy_novel(request, surl=None, template_name="novel/buy_novel.html"):
     if surl:
         novel_object = get_object_or_404(Novel, surl=surl)
@@ -114,9 +121,12 @@ def buy_novel(request, surl=None, template_name="novel/buy_novel.html"):
         return HttpResponse(json.dumps(buy_response), content_type="application/json")
     return render(request, template_name, locals())
 
-def novel_settings(request):
+def novel_settings(request, surl=None):
     if request.is_ajax():
-        novel_object = get_list_or_404(Novel)[0]
+        if surl:
+            novel_object = get_object_or_404(Novel, surl=surl)
+        else:
+            novel_object = get_list_or_404(Novel)[0]
         response_dict = {'settings': {
             'stripe_key': settings.STRIPE_PUBLISHABLE_KEY,
             'bulk_discount': settings.BULK_DISCOUNT,
@@ -132,6 +142,22 @@ def novel_settings(request):
         return HttpResponse(json.dumps(response_dict), content_type="application/json")
     return Http404
 
+def set_chapters(request, surl):
+    if request.is_ajax():
+        novel_object = get_object_or_404(Novel, surl=surl)
+        chapter_response = {'response': 'failed'}
+        if request.method == "POST":
+            if request.user.is_authenticated():
+                data = request.POST
+                novel_object.chapterformat = data['chapterformat']
+                novel_object.save()
+                chapter_response = {'response': 'success'}
+        else:
+            chapter_response = {'response': 'success',
+                                'chapterformat': novel_object.chapterformat}
+        return HttpResponse(json.dumps(chapter_response), content_type="application/json")
+    return Http404
+
 @login_required
 def resend_token(request, surl, template_name="novel/issue_tokens.html"):
     """
@@ -143,17 +169,20 @@ def resend_token(request, surl, template_name="novel/issue_tokens.html"):
         page_title = token_object.novel.title
         data = request.POST
         if token_object.edit(data["recipient"]):
-            resend_response = {'response': 'success',
-                               'recipient': data["recipient"]}
-            email_kwargs = {'to': token_object.recipient,
-                            'subject': request.user.facebook_name + EMAIL_SUBJECT[data['template']] + token_object.novel.title,
-                            'template': 'gift_purchase',
-                            'context': {'token_object': token_object,
-                                        'website': request.META['HTTP_HOST'],
-                                        'days': settings.TOKEN_DELTA
-                                        }
-                            }
-            send_email(**email_kwargs)
+            try:    
+                resend_response = {'response': 'success',
+                                   'recipient': data["recipient"]}
+                email_kwargs = {'to': token_object.recipient,
+                                'subject': request.user.facebook_name + EMAIL_SUBJECT[data['template']] + token_object.novel.title,
+                                'template': 'gift_purchase',
+                                'context': {'token_object': token_object,
+                                            'website': request.META['HTTP_HOST'],
+                                            'days': settings.TOKEN_DELTA
+                                            }
+                                }
+                send_email(**email_kwargs)
+            except Exception:
+                resend_response = {'response': 'failed'}
     if request.is_ajax():
         return HttpResponse(json.dumps(resend_response), content_type="application/json")
     return render(request, template_name, locals())
@@ -167,8 +196,10 @@ def issue_tokens(request, surl, template_name="novel/issue_tokens.html"):
         - Resend, reallocate and rename valid tokens;
     """
     novel_object = get_object_or_404(Novel, surl=surl)
+    if request.user.is_superuser:
+        return redirect('price_novel', surl=novel_object.surl)
     if not request.user.can_read(novel_object) == "owns":
-        return Http404
+        return render(request, '404.html', status=403)
     page_title = novel_object.title
     page_subtitle = "Share and Manage"
     # Where 'issue' is actually 'lent' ... 
@@ -176,9 +207,7 @@ def issue_tokens(request, surl, template_name="novel/issue_tokens.html"):
     token_refund_list = Token.query.valid_purchased(request.user, True)
     token_purchased_list = Token.query.valid_purchased(request.user, False).all()
     # only need one if intend to download, doesn't matter which since they did buy
-    # and only if not superuser (who won't purchase anyway)
-    if not request.user.is_superuser:
-        token_download = request.user.current_token(purchased=True)
+    token_download = request.user.current_token(purchased=True)
     tokens_remaining = settings.TOKEN_LIMIT - len(token_issued_list)
     total_duration = settings.TOKEN_DELTA
     total_tokens = settings.TOKEN_LIMIT
@@ -224,18 +253,22 @@ def issue_tokens(request, surl, template_name="novel/issue_tokens.html"):
                             send_list.append(token_object)
                             do_send = True
                         if do_send:
-                            email_kwargs = {'to': token_object.recipient,
-                                            'subject': request.user.facebook_name + EMAIL_SUBJECT['gift_lend'] +
-                                            novel_object.title,
-                                            'template': 'gift_lend',
-                                            'context': {'token_object': token_object,
-                                                        'website': request.META['HTTP_HOST'],
-                                                        'days': total_duration
-                                                        }
-                                            }
-                            send_email(**email_kwargs)
+                            try:
+                                email_kwargs = {'to': token_object.recipient,
+                                                'subject': request.user.facebook_name + EMAIL_SUBJECT['gift_lend'] +
+                                                novel_object.title,
+                                                'template': 'gift_lend',
+                                                'context': {'token_object': token_object,
+                                                            'website': request.META['HTTP_HOST'],
+                                                            'days': total_duration
+                                                            }
+                                                }
+                                send_email(**email_kwargs)
+                            except Exception:
+                                continue # without sending, obviously
         # process the send_list to the account manager
-        if send_list:
+        if send_list and request.user.email:
+            email_kwargs['to'] = request.user.email
             email_kwargs['subject'] = EMAIL_SUBJECT['issue_lend'] + novel_object.title
             email_kwargs['template'] = 'issue_lend'
             email_kwargs['context']['token_list'] = send_list
@@ -364,7 +397,7 @@ def create_novel(request, template_name="novel/create_novel.html"):
     Create the novel but does not yet populate the chapters.
     """
     if not request.user.is_superuser:
-        return Http404
+        return render(request, '404.html', status=403)
     if request.method == "POST":
         novel_form = NovelForm(request.POST)
         if novel_form.is_valid():
@@ -387,7 +420,7 @@ def upload_docx(request, template_name="novel/create_novel.html"):
     Receive a file and return the components necessary for the user to organise and save it.
     """
     if not request.user.is_superuser:
-        return Http404
+        return render(request, '404.html', status=403)
     usr_ip = wiqid.get_user_ip(request)
     if request.is_ajax():
         # http://stackoverflow.com/questions/1208067/wheres-my-json-data-in-my-incoming-django-request
@@ -406,7 +439,7 @@ def organise_novel(request, surl, template_name="novel/create_novel.html", permi
     extended to the other wiqis...
     """
     if not request.user.is_superuser:
-        return Http404
+        return render(request, '404.html', status=403)
     novel_object = get_object_or_404(Novel, surl=surl)
     page_title = novel_object.title
     page_subtitle = "Organise"
@@ -429,19 +462,18 @@ def price_novel(request, surl, template_name="novel/price_novel.html", permissio
     Set the price and view permissions required for each chapter.
     """
     if not request.user.is_superuser:
-        return Http404
+        return render(request, '404.html', status=403)
     novel_object = get_object_or_404(Novel, surl=surl)
     page_title = novel_object.title
-    page_subtitle = "Pricing"
+    page_subtitle = "Pricing and Management"
     if not request.user.has_perm(permission, novel_object):
-        raise Http404
+        return render(request, '404.html', status=403)
     # https://docs.djangoproject.com/en/dev/topics/forms/modelforms/#model-formsets
     WiqiPriceFormSet = modelformset_factory(Wiqi, form=WiqiPriceForm, extra=0)
     if request.method == "POST":
         formset = WiqiPriceFormSet(request.POST, queryset=novel_object.chapterlist.all())
         if formset.is_valid():
             formset.save()
-            return redirect("issue_tokens", surl=novel_object.surl)
     else:
         formset = WiqiPriceFormSet(queryset=novel_object.chapterlist.all())
     return render(request, template_name, locals())
@@ -453,7 +485,7 @@ def market_tokens(request, surl):
     These will be both valid and purchased.
     """
     if not request.user.is_superuser:
-        return Http404
+        return render(request, '404.html', status=403)
     novel_object = get_object_or_404(Novel, surl=surl)  
     if request.method == "POST":
         if request.is_ajax():

@@ -1,9 +1,21 @@
-{% extends "whyqd.html" %}
+{% extends "wrapper.html" %}
+
+{% block title %}Page not found{% endblock %}
+
+{% block navigation %}
+<div id="navigation" class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+        <div class="navbar-header">
+            <a class="navbar-brand" href="/">{{ page_title }}</a>
+        </div>
+    </div>
+</div>    
+{% endblock navigation %}
 
 {% block content %}
-
+<div class="whyqd-content col-xs-12 col-md-10 col-md-offset-1">
   <p>The page or resource you requested was not found.</p>
   <p>We apologise for the inconvenience.</p>
   <p>Please go back and check to make sure you typed in the URL correctly.</p>
-
+</div>
 {% endblock %}

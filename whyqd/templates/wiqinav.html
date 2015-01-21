@@ -18,9 +18,10 @@
         </div>
         <div class="navbar-collapse collapse">
             <ul id="nav-user" class="nav navbar-nav navbar-right">
+                <li><a href="{% url 'view_chapters' novel_object.surl %}">Chapters</a></li>
                 {% if user.is_authenticated %}
                 {% if user.manage_novel %}
-                <li><a href="{{ user.manage_novel }}">manage</a></li>
+                <li><a href="{{ user.manage_novel }}">Share & Manage</a></li>
                 {% endif %}
                 <li><a href="{% url 'usr_logout' %}">
                     {% if user.first_name or user.last_name %}

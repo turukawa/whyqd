@@ -22,7 +22,14 @@ def index(request, template_name="wiqi/index.html", nav_type="view"):
     novel_object = novel_object[0]
     page_title = novel_object.title
     page_subtitle = "Start Reading"
+    show_buy = True
+    if request.user.is_authenticated():
+        if request.user.can_read(novel_object) == "owns":
+            show_buy = False
     nav_set = None
+    # forex settings
+    fx = get_forex()
+    fxd = settings.DEFAULT_CURRENCY
     if request.is_ajax():
         HttpResponse(json.dumps({}), content_type="application/json")
     return render(request, template_name, locals())
@@ -46,13 +53,14 @@ def view_wiqi(request, wiqi_surl, wiqi_type=None, template_name="wiqi/view.html"
         try:
             chapter_title = wiqi_object.stack.title
             # Kludge for novel title
-            page_title = wiqi_object.stack.wiqi.novel_chapterlist.all()[0].title
+            novel_object = wiqi_object.stack.wiqi.novel_chapterlist.all()[0]
         except AttributeError:
             # It's from a wiqistack
             chapter_title = wiqi_object.title
-            page_title = wiqi_object.wiqi.novel_chapterlist.all()[0].title
-            page_subtitle = chapter_title
+            novel_object = wiqi_object.wiqi.novel_chapterlist.all()[0]
             nav_title = "stack"
+        page_title = novel_object.title
+        page_subtitle = chapter_title
         # Prepare for viewing next_wiqi
         next_wiqi = wiqi_object.next_wiqi
         if next_wiqi:
@@ -64,6 +72,8 @@ def view_wiqi(request, wiqi_surl, wiqi_type=None, template_name="wiqi/view.html"
         # forex settings
         fx = get_forex()
         fxd = settings.DEFAULT_CURRENCY
+    else:
+        return redirect('index')
     if request.is_ajax():
         return HttpResponse(json.dumps(nav_set), content_type="application/json")
     else:

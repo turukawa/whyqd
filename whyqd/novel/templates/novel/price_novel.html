@@ -1,20 +1,180 @@
 {% extends "wrapper.html" %}
 
 {% load novel_tags %}
+{% load widget_tweaks %}
 
 {% block content %}
 <div class="whyqd-absolute-top col-xs-12 col-md-10 col-md-offset-1">
     <div class="row">
-        <form action="" method="POST" class="inline">
-        {% csrf_token %}
-            <ul>
-            {{ formset.management_form }}
-            {% for form in formset|orderchapters %}
-                <li>{{ form.instance.stack.title }} - {{ form }}</li>
-            {% endfor %}
-            </ul>
-        <button type="submit" class="btn btn-default" name="set_pricing" value="save">save</button>
-        </form>
+        <p></p>
+        <p>Prepare {{ novel_object.title }} for publication.</p>
+        <p></p>
+        <ul id="share-tabs" class="nav nav-tabs" role="tablist">
+            <li class="active"><a href="#tab-price" data-toggle="tab">Price</a></li>
+            <li><a href="#tab-structure" data-toggle="tab">Structure</a></li>
+            <li><a href="#tab-market" data-toggle="tab">Market</a></li>
+        </ul>
+        <div id="share-tab-content" class="tab-content">
+            <div id="tab-price" class="tab-pane active">
+                <p></p>
+                <form action="" method="POST" class="inline">
+                    {% csrf_token %}
+                    {{ formset.management_form }}
+                    {% for form in formset|orderchapters %}
+                    <div class="form-group">
+                        <div class="row">
+                            {{ form.id }}
+                            <div class="col-md-2">
+                            <small>{{ form.instance.stack.title }}</small>
+                            </div>
+                            <div class="col-md-2">
+                            {{ form.price|add_class:"form-control input-sm" }}
+                            </div>
+                            <div class="col-md-2">
+                            {{ form.read_if|add_class:"form-control input-sm" }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                <button type="submit" class="btn btn-default" name="set_pricing" value="save">Save</button>
+                </form>
+            </div>
+            <div id="tab-structure" class="tab-pane">
+                <p></p>
+                <small>
+                <form action="" method="POST" class="inline">
+                    {% csrf_token %}
+                    <input type="hidden" value="{% url 'set_chapters' novel_object.surl %}"
+                           name="chapterFormat" id="chapterFormat" />
+                    {% for form in formset|orderchapters %}
+                    <div class="form-group"  id="structureForm_{{forloop.counter0}}">
+                        <div class="row">
+                            <input type="hidden" value="{{ form.instance.get_url }}"
+                                   id="structureURL_{{forloop.counter0}}"
+                                   name="structureURL_{{forloop.counter0}}"/>
+                            <input type="hidden" value="{{ form.instance.stack.title }}"
+                                   id="structureTitle_{{forloop.counter0}}"
+                                   name="structureTitle_{{forloop.counter0}}"/>
+                            <input type="hidden" value="{{ form.instance.stack.read_if }}"
+                                   id="structureReadIf_{{forloop.counter0}}"
+                                   name="structureReadIf_{{forloop.counter0}}"/>
+                            <div class="col-xs-3">
+                                <p>{{ form.instance.stack.title }}</p>
+                            </div>
+                            <div class="checkbox-inline">
+                                <label>
+                                    <input type="checkbox" id="structureSection_{{forloop.counter0}}"
+                                           value="0">Section
+                                </label>
+                            </div>
+                            <div class="checkbox-inline">
+                                <label>
+                                    <input type="checkbox" id="structureCallOut_{{forloop.counter0}}"
+                                           value="0">CallOut
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    {% if forloop.last %}
+                        <input type="hidden" value="{{forloop.counter0}}" id="structureLength" name="structureLength"/>
+                    {% endif %}
+                    {% endfor %}</small>
+                <button type="submit" class="btn btn-default" name="set_structure"
+                        id="set_structure" value="save">Save</button>
+                </form>
+            </div>
+            <div id="tab-market" class="tab-pane">
+                <p></p>
+                <form action="" method="POST">
+                    {% csrf_token %}
+                    <textarea id="market_list" class="form-control" rows="3" cols="40" wrap="hard"></textarea>
+                    <input type="hidden" value="{% url 'market_tokens' novel_object.surl %}"
+                           name="marketTokens" id="marketTokens" />
+                    <p></p>
+                    <button type="submit" class="btn btn-default" name="market_tokens"
+                            id="market_tokens" value="save">Send</button>
+                </form>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock content %}
+
+{% block extrascripts %}
+<script>
+    function getemaillist(form_text) {
+        // http://scottdowne.wordpress.com/2010/07/13/javascript-array-split-on-multiple-characters/
+        var textlist = form_text ? form_text.split(/[\s,;]+/) : 0;
+        // http://stackoverflow.com/a/2507043 and http://www.w3.org/TR/html5/forms.html#valid-e-mail-address
+        var regex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+        // http://stackoverflow.com/questions/4964456/make-javascript-do-list-comprehension
+        var emails = jQuery.map(textlist, function(e) { if (regex.test(e)) { return e; } });
+        return emails;
+    }
+    function setchapterstructure() {
+            $.ajax({
+                url: $('#chapterFormat').val(),
+                }).done(function(data) {
+                    var chapterformat = $.parseJSON(data.chapterformat);
+                    for (var c = 0; c < chapterformat.len; c++) {
+                        var i = chapterformat.chapters[c].id;
+                        if (chapterformat.chapters[c].is_section) {
+                            $('#structureSection_'+i).prop('checked', true);
+                        }
+                        if (chapterformat.chapters[c].is_callout) {
+                            $('#structureCallOut_'+i).prop('checked', true);
+                        }
+                    }
+                });        
+    }
+    $(document).ready(function() {
+        setchapterstructure();
+        $('#market_tokens').on('click', function (e) {
+            var emails = getemaillist($('#market_list').val());
+            emails = emails.toString();
+            $.ajax({
+                url: $('#marketTokens').val(),
+                type: 'post',
+                data: {
+                    recipients: emails
+                }
+                }).done(function(data) {
+                    $("#market_list").val("");
+                });
+            e.preventDefault();
+            });
+        $('#set_structure').on('click', function (e) {
+            var len = $('#structureLength').val();
+            var response = {
+                len: 0,
+                chapters: {}
+            };
+            for (var i = 0; i <= len; i++) {
+                // http://stackoverflow.com/a/2204253
+                var is_section = $('#structureSection_'+i).is(":checked");
+                var is_callout = $('#structureCallOut_'+i).is(":checked");
+                response.chapters[response.len] = {
+                    title: $('#structureTitle_'+i).val(),
+                    url: $('#structureURL_'+i).val(),
+                    read: $('#structureReadIf_'+i).val(),
+                    id: i,
+                    is_section: is_section,
+                    is_callout: is_callout,
+                }
+                response.len++;
+            }
+            console.log(JSON.stringify(response));
+            $.ajax({
+                url: $('#chapterFormat').val(),
+                type: 'post',
+                data: {
+                    chapterformat: JSON.stringify(response)
+                }
+                }).done(function(data) {
+                    console.log(data);
+                });
+            e.preventDefault();
+        });
+    });
+</script>
+{% endblock extrascripts %}

@@ -9,6 +9,10 @@ urlpatterns = patterns("whyqd.novel.views",
                        url(r"^organise/(?P<surl>[-\w]+)/", "organise_novel",
                            {"template_name": "novel/create_novel.html", "permission":"can_edit"},
                            name="organise_novel"),
+                       # View the chapters
+                       url(r"^chapters/(?P<surl>[-\w]+)/", "view_chapters",
+                           {"template_name": "novel/view_chapters.html"},
+                           name="view_chapters"),
                        # Set novel chapter pricing
                        url(r"^pricing/(?P<surl>[-\w]+)/", "price_novel",
                            {"template_name": "novel/price_novel.html", "permission":"can_edit"},
@@ -39,7 +43,11 @@ urlpatterns = patterns("whyqd.novel.views",
                            name="download_novel"),
                        # JSONResponse settings
                        url(r"^settings/", "novel_settings",
+                           name="novel_settings_pro"),
+                       url(r"^settings/(?P<surl>[-\w]+)/", "novel_settings",
                            name="novel_settings"),
+                       url(r"^setchapters/(?P<surl>[-\w]+)/", "set_chapters",
+                           name="set_chapters"),
                        # Upload Docx
                        url(r"^docxtract/", "upload_docx",
                            {"template_name": "novel/docxtract.html"},

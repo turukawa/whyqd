@@ -7,6 +7,7 @@ from guardian.shortcuts import assign_perm
 
 from bs4 import BeautifulSoup
 from jsonfield import JSONField
+from decimal import Decimal
 import collections
 import shortuuid as shrtn
 import re
@@ -19,6 +20,11 @@ LICENSE_CHOICE = (("(c)","All Rights Reserved"),
                   ("CC BY-NC","CC Attribution + Noncommercial"),
                   ("CC BY-NC-ND","CC Attribution + Noncommercial + NoDerivatives"),
                   ("CC BY-NC-SA","CC Attribution + Noncommercial + ShareAlike"))
+
+#http://character-code.com/currency-html-codes.php
+CURRENCY_CHOICE = (("gbp","&pound;"),
+    ("usd","$"),
+    ("eur","&euro;"))
 
 #http://stackoverflow.com/a/1190866
 def get_covername(self, filename):
@@ -65,6 +71,7 @@ class Novel(models.Model):
                             help_text="Enter the 13-digit ISBN for your book. Can include dashes or spaces.")
     cover_image = models.ImageField(upload_to=get_covername, blank=True)
     chapterlist = models.ManyToManyField(Wiqi, related_name="%(class)s_chapterlist", blank=True, null=True)
+    chapterformat = JSONField(load_kwargs={'object_pairs_hook': collections.OrderedDict}, blank=True, null=True)
     sentinal = models.OneToOneField(Wiqi, related_name="%(class)s_sentinal", blank=True, null=True)
     word_count = models.IntegerField(blank=True, null=True)
     cover_banner = models.ImageField(upload_to=get_covername, blank=True)
@@ -73,6 +80,12 @@ class Novel(models.Model):
     ebook_mobi = models.FileField(upload_to=get_ebookname, blank=True)
     ebook_pdf = models.FileField(upload_to=get_ebookname, blank=True)
     ebook_azw = models.FileField(upload_to=get_ebookname, blank=True)
+    defaultcurrency = models.CharField(max_length=7, choices=CURRENCY_CHOICE, default="gbp")
+    defaultprice = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
+    discountvolume = models.IntegerField(blank=True, null=True)
+    discountpercent = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
+    lendnumber = models.IntegerField(blank=True, null=True)
+    lenddays = models.IntegerField(blank=True, null=True)
 
     class Meta:
         # http://www.nomadjourney.com/2009/11/splitting-up-django-models/
@@ -153,8 +166,8 @@ class Novel(models.Model):
                                                     'subtitle': wiqi_object.stack.subtitle,
                                                     'url': wiqi_object.get_absolute_url(),
                                                     'surl': wiqi_object.surl,
-                                                    #'price': wiqi_object.price,
-                                                    #'read_if': wiqi_object.read_if,
+                                                    'price': wiqi_object.price,
+                                                    'read_if': wiqi_object.read_if,
                                                     }
             if wiqi_object.next_wiqi:
                 next_wiqi = wiqi_object.next_wiqi.surl
