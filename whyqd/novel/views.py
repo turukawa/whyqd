@@ -42,6 +42,7 @@ def view_chapters(request, surl, template_name="novel/view_chapters.html"):
     fxd = settings.DEFAULT_CURRENCY
     page_price = novel_object.sentinal.price
     show_buy = True
+    can_read = False
     if request.user.is_authenticated():
         can_read = request.user.can_read(novel_object)
         if can_read == "owns":
