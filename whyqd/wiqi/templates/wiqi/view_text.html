@@ -30,14 +30,23 @@
     <p>&nbsp;</p>
     <p>&nbsp;</p>
     <div class="row" id="pagenav">
-        <div class="col-sm-2 col-md-3">
+        <div class="col-sm-2 col-md-2">
             {% if wiqi_object.previous_wiqi %}
                 <a href="{{ wiqi_object.previous_wiqi.get_url }}" class="btn btn-default" role="button">Previous</a>
+            {% endif %}
+        </div>
+        <div class="col-sm-3 col-md-3">
+            {% if show_buy %}
+            {% block buynovel %}
+                {% include 'novel/buy_novel.html' %}
+            {% endblock buynovel %}
             {% endif %}
         </div>
         <div class="col-sm-4 col-md-6">
             {% if wiqi_object.next_wiqi %}
                 <div class="row" id="nextpage">
+                    <input type="hidden" value="false" id="buytrigger"/>
+                    <input type="hidden" value="{{ next_wiqi.get_url }}" id="nextpagelink"/>
                 {% if can_read_next == "open" %}
                     <p><a href="{{ next_wiqi.get_url }}" class="btn btn-default" role="button">Next chapter</a></p>
                 {% elif not request.user.is_authenticated %}
@@ -49,56 +58,25 @@
                         <input type="hidden" value="{{ request.path }}" name="error_next" />
                         <a onclick="F.connect(this.parentNode); return false;" href="javascript:void(0);"
                            class="btn btn-default" role="button">
-                            Login to read next chapter</a>{% if next_wiqi.price %} (purchase price increases to
-                            {% if request.user.is_authenticated and request.user.current_price > next_wiqi.price %}
-                            {{ request.user.current_price }}{% else %}{{ next_wiqi.price }}{% endif %}{% endif %})
+                            Login to read next chapter</a>
+                        {% if next_price %}
+                            <p><small id="nextPriceText">Price increases to &pound; {{ next_price }}</small></p>
+                        {% endif %}
                     </form>
                 {% else %}
-                    <p>{% if can_read_next != "own" %}<a href="{{ next_wiqi.get_url }}" class="btn btn-default"
-                                                         role="button">Next chapter</a>{% endif %}
+                    {# Subtlety here ... if "owns" then owns the book, if "own" then still has to buy #}
+                    {% if can_read_next != "own" %}<p><a href="{{ next_wiqi.get_url }}" class="btn btn-default"
+                                                         role="button">Next chapter</a></p>{% endif %}
                     {% if can_read_next == "login" %}
-                        {% if wiqi_object.price %}{% if request.user.is_authenticated and request.user.current_price < next_wiqi.price %}
-                        (purchase price increases to &pound;{{ next_wiqi.price }}){% endif %}{% endif %}
-                    {% elif can_read_next == "borrowed" %} before {{ request.user.deadline|naturalday:"l j E Y" }}.
-                    {% elif can_read_next == "own" %}This isn't the end. {{ page_title }} continues for owners.
-                    {% endif %}</p>
-                {% endif %}
-                </div>
-                <div class="row" id="buynow">
-                    {% if wiqi_object.price and can_read_next != "owns" and can_read_next != "borrowed" %}
-                    <form action="{% url 'buy_novel' %}" method="POST">
-                        {% csrf_token %}
-                        <input type="hidden" value="{% if request.user.is_authenticated and request.user.current_price > wiqi_object.price %}
-                            {{ request.user.current_price|mul:100|floatformat:"0" }}
-                        {% else %}
-                            {{ wiqi_object.price|mul:100|floatformat:"0" }}{% endif %}"
-                                id="basePrice" name="basePrice" />
-                        <input type="hidden" value="{{ fxd }}" id="stripeCurrency" name="stripeCurrency" />
-                        <input type="hidden" value="{% if request.user.is_authenticated and request.user.current_price > wiqi_object.price %}
-                            {{ request.user.current_price|mul:100|floatformat:"0" }}
-                        {% else %}
-                            {{ wiqi_object.price|mul:100|floatformat:"0" }}{% endif %}"
-                                id="stripePrice" name="stripePrice" />
-                        <input type="hidden" value="{% url 'novel_settings_pro' %}"
-                               name="stripeSettings" id="stripeSettings" />
-                        <input type="hidden" value="{% url 'buy_novel' %}" name="stripeBuy" id="stripeBuy" />
-                        <input type="hidden" value="{{ next_wiqi.get_url }}" name="stripeNext" id="stripeNext" />
-                    </form>
-                    <div class="btn-group">
-                        <button id="stripeButton" class="btn btn-default" >Buy for &pound;
-                                {% if request.user.is_authenticated and request.user.current_price > wiqi_object.price %}
-                                {{ request.user.current_price }}{% else %}{{ wiqi_object.price }}{% endif %}</button>
-                        <button id="stripeCaret" type="button" data-toggle="dropdown" class="btn btn-default dropdown-toggle">
-                            <span class="caret"></span>
-                            <span class="sr-only">Toggle Dropdown</span>
-                        </button>
-                        <ul class="dropdown-menu" role="menu">
-                            <li id="forex_usd" value={{ fx.usd }}><a href="#">USD</a></li>
-                            <li id="forex_gbp" value={{ fx.gbp }}><a href="#">GBP</a></li>
-                            <li id="forex_eur" value={{ fx.eur }}><a href="#">EUR</a></li>
-                        </ul>
-                    </div>
+                        {% if next_price %}
+                            <p><small id="nextPriceText">Price increases to &pound; {{ next_price }}</small></p>
+                        {% endif %}
+                    {% elif can_read_next == "borrowed" %}
+                        <p><small>Loaned until {{ request.user.deadline|naturalday:"l j E Y" }}.</small></p>
+                    {% elif can_read_next == "own" %}<p>This isn't the end.</p>
+                        <p>Buy {{ page_title }} and keep reading.</p>
                     {% endif %}
+                {% endif %}
                 </div>
             {% endif %}
         </div>
@@ -108,119 +86,17 @@
 
 {% block extrascripts %}
 <script src="{% static 'js/jquery.whyqd.view.js' %}"></script>
+{% if show_buy %}
 <script src="https://checkout.stripe.com/checkout.js"></script>
+<script src="{% static 'js/jquery.whyqd.buy.js' %}"></script>
 <script>
     $(document).ready(function() {
-        if ($('#stripeButton').length > 0) {
-            $.ajax({
-                url: $('#stripeSettings').val()
-                }).done(function(data) {
-                    ns = data.settings;
-                    var handler = StripeCheckout.configure({
-                        key: ns.stripe_key,
-                        image: '/media/images/qwyre_42.png',
-                        name: ns.novel_title,
-                        email: ns.user_email,
-                        token: function(token) {
-                            // http://stackoverflow.com/a/22461608
-                            // You can access the token ID with `token.id`
-                            if (!ns.user_email) {
-                                ns.user_email = token.email;
-                            }
-                            $.ajax({
-                                url: $('#stripeBuy').val(),
-                                type: 'post',
-                                data: {
-                                    stripeToken: token.id,
-                                    stripeDescription: ns.description,
-                                    stripePrice: ns.price,
-                                    stripeEmails: ns.user_email,
-                                    selfPurchase: true, // Buying for own use
-                                    template: 'purchase'
-                                },
-                                success: function(data) {
-                                    if (data.response == 'success') {
-                                        var next_page = '<p><a href="' + $('#stripeNext').val() +
-                                                        '">Next chapter</a></p>';
-                                        $('#nextpage').html(next_page);
-                                        $('#buynow').remove();
-                                        if (data.registered) {
-                                            $('#nextpage').after(
-                                                '<div class="alert alert-success alert-dismissable">'+
-                                                '<button type="button" class="close" ' + 
-                                                'data-dismiss="alert" aria-hidden="true">' + '&times;' + 
-                                                '</button>' + 
-                                                '<p><strong>Thank you</strong>, your purchase has been successful.</p>' +
-                                                '<p>You can continue reading ' + ns.novel_title + ' online, or ' +
-                                                '<a href="' + data.link + '" class="alert-link"> download an ebook ' +
-                                                'version</a>. You could even share a copy with your friends.</p>' +
-                                                '</div>');
-                                        }
-                                        else {
-                                            // http://stackoverflow.com/a/506004
-                                            window.location.href = data.link;
-                                        }
-                                    }
-                                    else {
-                                        $('#stripeCaret').after(
-                                            '<div class="alert alert-danger alert-dismissable">'+
-                                                '<button type="button" class="close" ' + 
-                                                    'data-dismiss="alert" aria-hidden="true">' + '&times;' + 
-                                                '</button>' + 
-                                                '<strong>Sorry</strong>, something went wrong. ' +
-                                                'You have not been charged. Please try again.' +
-                                             '</div>');
-                                    }
-                                },
-                                error: function(data) {
-                                    $('#stripeCaret').after(
-                                        '<div class="alert alert-danger alert-dismissable">'+
-                                            '<button type="button" class="close" ' + 
-                                                'data-dismiss="alert" aria-hidden="true">' + '&times;' + 
-                                            '</button>' + 
-                                            '<strong>Sorry</strong>, something went wrong. ' +
-                                            'You have not been charged. Please try again.' +
-                                         '</div>');
-                                }
-                              }); // end ajax call
-                        }
-                    });
-                    document.getElementById('stripeButton').addEventListener('click', function(e) {
-                        ns.price = $('#stripePrice').val().trim();
-                        ns.description = "Single purchase of " + ns.novel_title;
-                        ns.currency = $('#stripeCurrency').val();
-                        // Open Checkout with further options
-                        handler.open({
-                          description: ns.description,
-                          amount: ns.price,
-                          currency: ns.currency
-                        });
-                        e.preventDefault();
-                    });
-                });
-        }
-        $('[id^=forex_]').on('click', function (e) {
-            var forex = this;
-            var base_price = parseFloat($('#basePrice').attr('value').trim()).toFixed(2);
-            var select_price = parseFloat($(this).attr('value').trim()).toFixed(2);
-            var new_price = (select_price * base_price);
-            $("#stripePrice").val(new_price.toFixed());
-            switch (this.id) {
-                case 'forex_usd':
-                    $('#stripeButton').html("Buy for $ " + (new_price/100).toFixed(2));
-                    $("#stripeCurrency").val('USD');
-                    break;
-                case 'forex_gbp':
-                    $('#stripeButton').html("Buy for &pound; " + (new_price/100).toFixed(2));
-                    $("#stripeCurrency").val('GBP');
-                    break;
-                case 'forex_eur':
-                    $('#stripeButton').html("Buy for &euro; " + (new_price/100).toFixed(2));
-                    $("#stripeCurrency").val('EUR');
-                    break;
-            }
-            e.preventDefault();
-            });
+        $("#buytrigger").change(function () {
+            var next_page = '<p><a href="' + $('#nextpagelink').val()
+                + '" class="btn btn-default" >Next chapter</a></p>';
+            $('#nextpage').html(next_page);
+        });
     });
 </script>
+{% endif %}
 {% endblock extrascripts %}

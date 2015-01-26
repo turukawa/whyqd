@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 from django.template.defaultfilters import slugify
 from django.http import Http404
 from django.core.urlresolvers import reverse
+from django.conf import settings
 
 from guardian.shortcuts import assign_perm, get_objects_for_user, get_perms
 
@@ -11,8 +12,11 @@ from whyqd.wiqi.models import Wiqi, Text, WIQI_TYPE_DICT, DEFAULT_WIQISTACK_TYPE
 from whyqd.wiqi.forms import TextForm, WIQI_FORM_TYPE_DICT#, GeomapForm, ImageForm
 from whyqd.snippets import html2text 
 from whyqd.snippets.diff_match_patch import diff_match_patch
+from whyqd.snippets.forex import get_forex
 
 import markdown2
+import math
+from decimal import Decimal
 
 def get_user_ip(request):
     x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
@@ -53,9 +57,11 @@ def get_user_view_rights(usr, wiqi_object):
     if wiqi_object.read_if == "open":
         return wiqi_object
     if usr.is_authenticated():
+        can_read = usr.can_read(wiqi_object)
         if wiqi_object.read_if == "login" \
-                or (wiqi_object.read_if == "own" and usr.can_read(wiqi_object)):
-            if wiqi_object.price > usr.current_price:
+                or (wiqi_object.read_if == "own" and can_read):
+            if wiqi_object.price > usr.current_price and can_read != "borrowed":
+                # Leave the price as is if borrowed.
                 usr.current_price = wiqi_object.price
             usr.current_view = wiqi_object.surl
             usr.save()
@@ -213,3 +219,41 @@ def compare_wiqis(wiqi1, wiqi2):
         elif op == dmp.DIFF_EQUAL:
             html.append("%s" % text)
     return markdown2.markdown("".join(html))
+
+def closeness(a, b):
+    """
+    Returns measure of equality, in unit of decimal significant figures.
+    http://stackoverflow.com/a/564086
+    """
+    a = float(a)
+    b = float(b)
+    if a == b:
+        return float("infinity")
+    difference = abs(a - b)
+    avg = (a + b)/2
+    return math.log10( avg / difference )
+
+def check_fraud(user, novel_object, data_object, data_length):
+    """
+    Very basic fraud protection / detection.
+    Anyone who wants to spend time defrauding me of 2 pounds
+    is clearly insane and not much I can do about it.
+    data_object is the data received from the user
+    """
+    try:
+        check_price = novel_object.sentinal.price * 100
+        if data_object.get("selfPurchase", False) and user.is_authenticated():
+            if user.current_price > novel_object.sentinal.price:
+                check_price = user.current_price * 100
+        fx = get_forex().get(data_object["stripeCurrency"].lower(), False)
+        if not fx:
+            return True
+        check_price = check_price * Decimal(str(fx)) * data_length
+        if data_length >= settings.BULK_VOLUME:
+            check_price = check_price * (1 - Decimal(str(settings.BULK_DISCOUNT)))
+        if closeness(int(check_price), int(data_object["stripePrice"])) < 1.8:
+            return True
+        return False
+    except Exception:
+        # If anything goes wrong, this throws an exception and returns "fraud".
+        return False

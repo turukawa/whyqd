@@ -22,14 +22,18 @@ def index(request, template_name="wiqi/index.html", nav_type="view"):
     novel_object = novel_object[0]
     page_title = novel_object.title
     page_subtitle = "Start Reading"
-    show_buy = True
-    if request.user.is_authenticated():
-        if request.user.can_read(novel_object) == "owns":
-            show_buy = False
     nav_set = None
-    # forex settings
+    # forex and pricing settings
     fx = get_forex()
     fxd = settings.DEFAULT_CURRENCY
+    page_price = novel_object.sentinal.price
+    show_buy = True
+    if request.user.is_authenticated():
+        can_read = request.user.can_read(novel_object)
+        if can_read == "owns":
+            show_buy = False
+        elif can_read != "borrowed" and request.user.current_price > page_price:
+            page_price = request.user.current_price
     if request.is_ajax():
         HttpResponse(json.dumps({}), content_type="application/json")
     return render(request, template_name, locals())
@@ -69,9 +73,22 @@ def view_wiqi(request, wiqi_surl, wiqi_type=None, template_name="wiqi/view.html"
                 can_read_next = request.user.can_read(next_wiqi)
             if not can_read_next:
                 can_read_next = next_wiqi.read_if
-        # forex settings
+        # forex and pricing settings
         fx = get_forex()
         fxd = settings.DEFAULT_CURRENCY
+        page_price = wiqi_object.price
+        show_buy = True
+        if request.user.is_authenticated():
+            can_read = request.user.can_read(novel_object)
+            if can_read == "owns":
+                show_buy = False
+            elif can_read == "borrowed":
+                page_price = novel_object.sentinal.price
+            elif request.user.current_price > page_price:
+                page_price = request.user.current_price
+        if show_buy and next_wiqi and page_price < next_wiqi.price:
+            # Only appears if the next page price > than user current price
+            next_price = next_wiqi.price
     else:
         return redirect('index')
     if request.is_ajax():

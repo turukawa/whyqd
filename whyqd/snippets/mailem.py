@@ -18,6 +18,16 @@ def send_email(*args, **kwargs):
         email.html('{0}/mail/{1}.html'.format(
             settings.TEMPLATE_DIRS[0], kwargs.get('template')), kwargs.get('context'))
     email.send()
+    
+#def send_email_text(*args, **kwargs):
+#    from django.template import Context, Template
+#    from django.shortcuts import render
+#    t = Template(kwargs.get('template_text'))
+#    c = Context(kwargs.get('context'))
+#    print render_to_string(t, c)
+#    #email = Emailer(to=kwargs.get('to'), subject=kwargs.get('subject'))
+#    #email.text(Template(kwargs.get('template_text')), kwargs.get('context'))
+#    #print email.text
 
 class Emailer():
     """

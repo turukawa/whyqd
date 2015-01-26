@@ -3,6 +3,10 @@ Whyqd
 
 Whyqd is an extensible object-based wiki bringing revision control, content presentation, branching and embedding to any type of digital object.
 
+Whyqd allows content creators to publish and sell via a personal demand pricing model (e.g. the further a user reads into your novel, the more the final price will cost them), and allow users to remix and republish the content after they've bought it.
+
+Remixing means that users could translate a novel, write their own fan-fiction, or expand on existing work all without having to do more than start editing.
+
 Whyqd is written in Python and Django, with Jquery for the client side.
 
 The current simplified implementation was developed to present and distribute my science-fiction novel, [Tartarus Falls](https://tartarusfalls.com).

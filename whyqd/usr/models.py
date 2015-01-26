@@ -62,7 +62,7 @@ class User(AbstractUser, FacebookModel):
         remove_perm("borrowed", self, novel_object)
         for chapter in novel_object.chapterlist.all():
             remove_perm("borrowed", self, chapter)
-        token_object.delete()       
+        token_object.delete()
 
     def can_read(self, novel_object):
         """

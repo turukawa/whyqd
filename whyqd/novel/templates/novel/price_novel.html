@@ -55,7 +55,7 @@
                             <input type="hidden" value="{{ form.instance.stack.title }}"
                                    id="structureTitle_{{forloop.counter0}}"
                                    name="structureTitle_{{forloop.counter0}}"/>
-                            <input type="hidden" value="{{ form.instance.stack.read_if }}"
+                            <input type="hidden" value="{{ form.instance.read_if }}"
                                    id="structureReadIf_{{forloop.counter0}}"
                                    name="structureReadIf_{{forloop.counter0}}"/>
                             <div class="col-xs-3">
@@ -87,9 +87,22 @@
                 <p></p>
                 <form action="" method="POST">
                     {% csrf_token %}
-                    <textarea id="market_list" class="form-control" rows="3" cols="40" wrap="hard"></textarea>
+                    <textarea id="market_list" class="form-control"
+                              placeholder="Email addresses"
+                              rows="3" cols="40" wrap="hard"></textarea>
                     <input type="hidden" value="{% url 'market_tokens' novel_object.surl %}"
                            name="marketTokens" id="marketTokens" />
+                    <div class="checkbox">
+                      <label>
+                        <input id="send_individual" type="checkbox"> Send individual emails
+                      </label>
+                    </div>
+                    <p></p>
+                    <input type="text" id="custom_subject" class="form-control"
+                           placeholder="Custom subject" />
+                    <p></p>
+                    <input type="text" id="custom_email" class="form-control"
+                           placeholder="Custom email template name" />
                     <p></p>
                     <button type="submit" class="btn btn-default" name="market_tokens"
                             id="market_tokens" value="save">Send</button>
@@ -132,14 +145,24 @@
         $('#market_tokens').on('click', function (e) {
             var emails = getemaillist($('#market_list').val());
             emails = emails.toString();
+            var custom_email = "";
+            var custom_subject = "";
+            if ($('#send_individual').is(':checked')) {
+                custom_email = $('#custom_email').val();
+                custom_subject = $('#custom_subject').val();
+            }
             $.ajax({
                 url: $('#marketTokens').val(),
                 type: 'post',
                 data: {
-                    recipients: emails
+                    recipients: emails,
+                    subject: custom_subject,
+                    custom: custom_email
                 }
                 }).done(function(data) {
                     $("#market_list").val("");
+                    $('#custom_email').val("");
+                    $('#custom_subject').val("");
                 });
             e.preventDefault();
             });

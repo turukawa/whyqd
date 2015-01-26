@@ -1,6 +1,8 @@
 {% extends "wrapper.html" %}
 
+{% load humanize %}
 {% load novel_tags %}
+{% load staticfiles %}
 
 {% block content %}
 <div class="whyqd-absolute-top col-xs-12 col-md-10 col-md-offset-1">
@@ -8,18 +10,76 @@
         <h1>{{ novel_object.title }} - Chapters</h1>
         <p></p>
     </div>
+    {% if show_buy %}
     <div class="row">
-        {% for key, chapter in chapter_objects.chapters.items|sort %}
-            {% if chapter.is_section %}
-                <h3><a href="{{ chapter.url }}">{{ chapter.title }}</a></h3>
-                <p>|
-            {% elif chapter.is_callout %}
-                </p><blockquote><a href="{{ chapter.url }}">{{ chapter.title }}</a></blockquote>
-                <p>|
+        <p></p>
+        <div id="buynowtext">
+            
+            {% if request.user.is_authenticated %}
+            {% if can_read == "borrowed" %}
+            <p>You have until {{ request.user.deadline|naturalday:"l j E Y" }} to read {{ novel_object.title }} online. You
+            will need to purchase a copy if you wish to download an ereader version.</p>
             {% else %}
-              <a href="{{ chapter.url }}">{{ chapter.title }}</a> | 
+            <p>You'll need to purchase {{ novel_object.title }} to read the chapters highlighted in red, and the final price
+            will rise with every orange highlighted chapter you read.</p>
             {% endif %}
+            {% else %}
+            <p>Once you login you can read the chapters highlighted in red for free. You'll need to buy
+            {{ novel_object.title }} to read the unlinked chapters, and every free chapter you read will raise the final
+            price you pay.</p>                
+            {% endif %}
+            <p></p>
+        </div>
+        {% block buynovel %}
+        {% include 'novel/buy_novel.html' %}
+        {% endblock buynovel %}
+    </div>
+    {% endif %}
+    <div class="row">
+        <input type="hidden" value="{{ can_read }}" id="can_read"/>
+        <input type="hidden" value="false" id="buytrigger"/>
+        {% for key, chapter in chapter_objects.chapters.items|sort %}
+            {% if request.user.is_authenticated or chapter.read != "own" %}
+                <a href="{{ chapter.url }}" id="{{ chapter.read }}_{{ forloop.counter }}">
+            {% endif %}
+            {% if chapter.is_section %}
+                <h3>{{ chapter.title }}</h3>
+                <p>
+            {% elif chapter.is_callout %}
+                </p><blockquote>{{ chapter.title }}</blockquote>
+                <p>
+            {% else %}
+              {{ chapter.title }}
+            {% endif %}
+            {% if request.user.is_authenticated or chapter.read != "own" %}
+                </a>
+            {% endif %} |
         {% endfor %}</p>
     </div>
 </div>
 {% endblock content %}
+
+{% block extrascripts %}
+{% if show_buy %}
+<script src="https://checkout.stripe.com/checkout.js"></script>
+<script src="{% static 'js/jquery.whyqd.buy.js' %}"></script>
+{% endif %}
+<script>
+    $(document).ready(function() {
+        var can_read = $('#can_read').val();
+        if (can_read == 'False') {
+            // Only if the user hasn't borrowed or already owns
+            if ($('[id^=own_]').length) {
+                $('[id^=own_]').addClass("text-danger");
+                $('[id^=login_]').addClass("text-warning");
+            }
+            else {
+                $('[id^=login_]').addClass("text-danger");
+            }
+        }
+        $("#buytrigger").change(function () {
+            $('#buynowtext').remove();
+        });
+    });
+</script>
+{% endblock extrascripts %}

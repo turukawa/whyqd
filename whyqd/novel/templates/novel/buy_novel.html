@@ -1,0 +1,44 @@
+{% load mathfilters %}
+
+{% comment %}
+    Must provide:
+        page_price for the current pricing (user price vs page price)
+        fxd for foreign exchange default currency
+        fx for exchange rates
+        novel_object for the novel this refers to
+    Optional:
+        next_price for next page price beneath the button (means we're on a view page)
+        <input type="hidden" value="false" id="buytrigger"/> will be set true and can
+        triggger a jquery .change() event - put this somewhere on your view page
+{% endcomment %}
+
+<div id="buynow">
+    <form action="{% url 'buy_novel' %}" method="POST">
+        {% csrf_token %}
+        <input type="hidden" value="{{ page_price|mul:100|floatformat:"0" }}"
+               id="basePrice" name="basePrice" />
+        <input type="hidden"
+               value="{% if next_price %}{{ next_price|mul:100|floatformat:"0" }}{% endif %}"
+               id="nextPrice" name="nextPrice" />
+        <input type="hidden" value="{{ fxd }}"
+               id="stripeCurrency" name="stripeCurrency" />
+        <input type="hidden"  value="{{ page_price|mul:100|floatformat:"0" }}"
+               id="stripePrice" name="stripePrice" />
+        <input type="hidden" value="{% url 'novel_settings' novel_object.surl %}"
+               id="stripeSettings" name="stripeSettings" />
+        <input type="hidden" value="{% url 'buy_novel' %}" name="stripeBuy" id="stripeBuy" />
+    </form>
+    <div class="btn-group">
+        <button id="stripeButton" class="btn btn-primary btn-lg" >Buy for &pound; {{ page_price }}</button>
+        <button id="stripeCaret" type="button" data-toggle="dropdown" class="btn btn-primary btn-lg dropdown-toggle">
+            <span class="caret"></span>
+            <span class="sr-only">Toggle Dropdown</span>
+        </button>
+        <ul class="dropdown-menu" role="menu">
+            <li id="forex_usd" value={{ fx.usd }}><a href="#">USD</a></li>
+            <li id="forex_gbp" value={{ fx.gbp }}><a href="#">GBP</a></li>
+            <li id="forex_eur" value={{ fx.eur }}><a href="#">EUR</a></li>
+        </ul>
+        <p></p>
+    </div>
+</div>

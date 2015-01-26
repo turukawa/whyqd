@@ -37,6 +37,17 @@ def view_chapters(request, surl, template_name="novel/view_chapters.html"):
     page_title = novel_object.title
     page_subtitle = "Chapters"
     chapter_objects = json.loads(novel_object.chapterformat)
+    # forex and pricing settings
+    fx = get_forex()
+    fxd = settings.DEFAULT_CURRENCY
+    page_price = novel_object.sentinal.price
+    show_buy = True
+    if request.user.is_authenticated():
+        can_read = request.user.can_read(novel_object)
+        if can_read == "owns":
+            show_buy = False
+        elif can_read != "borrowed" and request.user.current_price > page_price:
+            page_price = request.user.current_price
     return render(request, template_name, locals())
 
 def buy_novel(request, surl=None, template_name="novel/buy_novel.html"):
@@ -54,11 +65,14 @@ def buy_novel(request, surl=None, template_name="novel/buy_novel.html"):
         data = request.POST
         # Process and test emails
         stripe_emails = xtractemail(data["stripeEmails"])
+        if wiqid.check_fraud(request.user, novel_object, data, len(stripe_emails)):
+            # Fraudulent or a problem
+            return HttpResponse(json.dumps(buy_response), content_type="application/json")
         # Create the charge on Stripe's servers - this will charge the user's card
         try:
             charge = stripe.Charge.create(
                 amount=data["stripePrice"], # amount in pence
-                currency="gbp",
+                currency=data["stripeCurrency"],
                 card=data["stripeToken"],
                 description=data["stripeDescription"],
                 statement_description=novel_object.title,
@@ -84,7 +98,7 @@ def buy_novel(request, surl=None, template_name="novel/buy_novel.html"):
             send_subject = request.user.facebook_name + send_subject
         for e in stripe_emails:
             kwargs["recipient"] = e
-            kwargs["price"] = Decimal(float(data["stripePrice"])/len(stripe_emails)/100)
+            kwargs["price"] = Decimal(str(data["stripePrice"]))/len(stripe_emails)/100
             token_object = Token()
             token_object.issue(**kwargs)
             send_list.append(token_object)
@@ -104,7 +118,7 @@ def buy_novel(request, surl=None, template_name="novel/buy_novel.html"):
                          'registered': False,
                          'link': token_object.get_token_redemption_url()}
         # if logged in and buying for self (and we, therefore, know there is only one token)
-        if request.user.is_authenticated() and data.get("selfPurchase", False):
+        if request.user.is_authenticated() and data.get("selfPurchase", False) == "true":
             kwargs["redeemer"] = request.user
             kwargs["redeemer_ip"] = wiqid.get_user_ip(request)
             token_object.redeem(**kwargs)
@@ -286,17 +300,20 @@ def redeem_token(request, surl, template_name="novel/redeem_token.html"):
         days = settings.TOKEN_DELTA
     if request.user.is_authenticated():
         # check if user already owns this item and ignore redemption if they do
-        if request.user.can_read(token_object.novel) != "owns":
+        if request.user.can_read(token_object.novel) == "owns":
             return redirect("issue_tokens", surl=token_object.novel.surl)
         if token_object.is_valid:
             kwargs = request.POST.dict()
             kwargs["redeemer"] = request.user
             kwargs["redeemer_ip"] = wiqid.get_user_ip(request)
             token_object.redeem(**kwargs)
-            return redirect("index")
+            if token_object.is_purchased:
+                return redirect("issue_tokens", surl=token_object.novel.surl)
+            return redirect("view_wiqi", wiqi_surl=token_object.novel.sentinal.surl)
     else:
         expiry = settings.S3_TIMER
     page_title = token_object.novel.title
+    novel_object = token_object.novel
     page_subtitle = "Redemption"
     return render(request, template_name, locals())
 
@@ -504,17 +521,27 @@ def market_tokens(request, surl):
                 token_object = Token()
                 token_object.issue(**kwargs)
                 send_list.append(token_object)
-            email_kwargs = {'to': request.user.email,
-                            'subject': EMAIL_SUBJECT['issue_purchase'] + novel_object.title,
-                            'template': 'issue_purchase',
-                            'context': {'token_object': token_object,
-                                        # https://docs.djangoproject.com/en/1.7/ref/request-response/#django.http.HttpRequest.get_host
-                                        'website': request.META['HTTP_HOST'],
-                                        'token_list': send_list
-                                        }
-                            }
-            send_email(**email_kwargs)
-            market_response = {'response': 'success'}
+                if data["custom"] and data["subject"]:
+                    email_kwargs = {'to': token_object.recipient,
+                                    'subject': data['subject'],
+                                    'template': data['custom'],
+                                    'context': {'token_object': token_object,
+                                                'website': request.META['HTTP_HOST']
+                                                }
+                                    }
+                    #send_email(**email_kwargs)
+            if send_list:
+                email_kwargs = {'to': request.user.email,
+                                'subject': EMAIL_SUBJECT['issue_purchase'] + novel_object.title,
+                                'template': 'issue_purchase',
+                                'context': {'token_object': token_object,
+                                            # https://docs.djangoproject.com/en/1.7/ref/request-response/#django.http.HttpRequest.get_host
+                                            'website': request.META['HTTP_HOST'],
+                                            'token_list': send_list
+                                            }
+                                }
+                send_email(**email_kwargs)
+                market_response = {'response': 'success'}
             return HttpResponse(json.dumps(market_response), content_type="application/json")
     raise Http404 
 

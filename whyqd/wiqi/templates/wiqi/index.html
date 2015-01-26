@@ -1,6 +1,6 @@
 {% extends "wrapper.html" %}
 {% load humanize %}
-{% load mathfilters %}
+{% load staticfiles %}
 
 {% block content %}
 <div class="whyqd-absolute-top col-xs-12 col-md-10 col-md-offset-1">
@@ -20,48 +20,11 @@
       <div class="col-sm-6 col-md-5">
         <div class="thumbnail" id="buyresponse" >
             <img src="http://placekitten.com/g/400/200" alt="..." width="400" height="200">
-            <div class="caption" id="buynow" >
+            <div class="caption" >
                 {% if show_buy %}
-                <form action="{% url 'buy_novel' %}" method="POST">
-                    {% csrf_token %}
-                    <input type="hidden"
-                           value="{% if request.user.is_authenticated and request.user.current_price > wiqi_object.price %}
-                                    {{ request.user.current_price|mul:100|floatformat:"0" }}
-                                {% else %}
-                                    {{ novel_object.sentinal.price|mul:100|floatformat:"0" }}
-                                {% endif %}"
-                            id="basePrice" name="basePrice" />
-                    <input type="hidden" value="{{ fxd }}" id="stripeCurrency" name="stripeCurrency" />
-                    <input type="hidden" value="{% if request.user.is_authenticated and request.user.current_price > wiqi_object.price %}
-                                    {{ request.user.current_price|mul:100|floatformat:"0" }}
-                                {% else %}
-                                    {{ novel_object.sentinal.price|mul:100|floatformat:"0" }}
-                                {% endif %}"
-                            id="stripePrice" name="stripePrice" />
-                    <input type="hidden" value="{% url 'novel_settings' novel_object.surl %}"
-                           name="stripeSettings" id="stripeSettings" />
-                    <input type="hidden" value="{% url 'buy_novel' %}" name="stripeBuy" id="stripeBuy" />
-                </form>
-                <div class="btn-group">
-                    <button id="stripeButton" class="btn btn-default" >Buy for &pound;
-                                {% if request.user.is_authenticated and request.user.current_price > wiqi_object.price %}
-                                    {{ request.user.current_price }}
-                                {% else %}
-                                    {{ novel_object.sentinal.price }}
-                                {% endif %}
-                    </button>
-                    <button id="stripeCaret" type="button" data-toggle="dropdown" class="btn btn-default dropdown-toggle">
-                        <span class="caret"></span>
-                        <span class="sr-only">Toggle Dropdown</span>
-                    </button>
-                    <ul class="dropdown-menu" role="menu">
-                        <li id="forex_usd" value={{ fx.usd }}><a href="#">USD</a></li>
-                        <li id="forex_gbp" value={{ fx.gbp }}><a href="#">GBP</a></li>
-                        <li id="forex_eur" value={{ fx.eur }}><a href="#">EUR</a></li>
-                    </ul>
-                    
-                    <p></p>
-                </div>
+                {% block buynovel %}
+                    {% include 'novel/buy_novel.html' %}
+                {% endblock buynovel %}
                 {% endif %}
             </div>
         </div>
@@ -85,7 +48,10 @@
 {% endblock content %}
 
 {% block extrascripts %}
+{% if show_buy %}
 <script src="https://checkout.stripe.com/checkout.js"></script>
+<script src="{% static 'js/jquery.whyqd.buy.js' %}"></script>
+{% endif %}
 <script>
     function queryParameters () {
         // http://stackoverflow.com/a/25440029
@@ -117,113 +83,6 @@
             // http://stackoverflow.com/a/4960020 Math.floor
             $('#quote').html(result[num]['quote']);
             $('#source').html(result[num]['source']);
-        });
-        if ($('#stripeButton').length > 0) {
-            $.ajax({
-                url: $('#stripeSettings').val()
-                }).done(function(data) {
-                    ns = data.settings;
-                    var handler = StripeCheckout.configure({
-                        key: ns.stripe_key,
-                        image: '/media/images/qwyre_42.png',
-                        name: ns.novel_title,
-                        email: ns.user_email,
-                        token: function(token) {
-                            // http://stackoverflow.com/a/22461608
-                            // You can access the token ID with `token.id`
-                            if (!ns.user_email) {
-                                ns.user_email = token.email;
-                            }
-                            $.ajax({
-                                url: $('#stripeBuy').val(),
-                                type: 'post',
-                                data: {
-                                    stripeToken: token.id,
-                                    stripeDescription: ns.description,
-                                    stripePrice: ns.price,
-                                    stripeEmails: ns.user_email,
-                                    selfPurchase: true, // Buying for own use
-                                    template: 'purchase'
-                                },
-                                success: function(data) {
-                                    if (data.response == 'success') {
-                                        $('#buynow').remove();
-                                        if (data.registered) {
-                                            $('#buyresponse').after(
-                                                '<div class="alert alert-success alert-dismissable">'+
-                                                '<button type="button" class="close" ' + 
-                                                'data-dismiss="alert" aria-hidden="true">' + '&times;' + 
-                                                '</button>' + 
-                                                '<p><strong>Thank you</strong>, your purchase has been successful.</p>' +
-                                                '<p>You can continue reading ' + ns.novel_title + ' online, or ' +
-                                                '<a href="' + data.link + '" class="alert-link"> download an ebook ' +
-                                                'version</a>. You could even share a copy with your friends.</p>' +
-                                                '</div>');
-                                        }
-                                        else {
-                                            // http://stackoverflow.com/a/506004
-                                            window.location.href = data.link;
-                                        }
-                                    }
-                                    else {
-                                        $('#buyresponse').after(
-                                            '<div class="alert alert-danger alert-dismissable">'+
-                                                '<button type="button" class="close" ' + 
-                                                    'data-dismiss="alert" aria-hidden="true">' + '&times;' + 
-                                                '</button>' + 
-                                                '<strong>Sorry</strong>, something went wrong. ' +
-                                                'You have not been charged. Please try again.' +
-                                             '</div>');
-                                    }
-                                },
-                                error: function(data) {
-                                    $('#buyresponse').after(
-                                        '<div class="alert alert-danger alert-dismissable">'+
-                                            '<button type="button" class="close" ' + 
-                                                'data-dismiss="alert" aria-hidden="true">' + '&times;' + 
-                                            '</button>' + 
-                                            '<strong>Sorry</strong>, something went wrong. ' +
-                                            'You have not been charged. Please try again.' +
-                                         '</div>');
-                                }
-                              }); // end ajax call
-                        }
-                    });
-                    document.getElementById('stripeButton').addEventListener('click', function(e) {
-                        ns.price = $('#stripePrice').val().trim();
-                        ns.description = "Single purchase of " + ns.novel_title;
-                        ns.currency = $('#stripeCurrency').val();
-                        // Open Checkout with further options
-                        handler.open({
-                          description: ns.description,
-                          amount: ns.price,
-                          currency: ns.currency
-                        });
-                        e.preventDefault();
-                    });
-                });
-        }
-        $('[id^=forex_]').on('click', function (e) {
-            var forex = this;
-            var base_price = parseFloat($('#basePrice').attr('value').trim()).toFixed(2);
-            var select_price = parseFloat($(this).attr('value').trim()).toFixed(2);
-            var new_price = (select_price * base_price);
-            $("#stripePrice").val(new_price.toFixed());
-            switch (this.id) {
-                case 'forex_usd':
-                    $('#stripeButton').html("Buy for $ " + (new_price/100).toFixed(2));
-                    $("#stripeCurrency").val('USD');
-                    break;
-                case 'forex_gbp':
-                    $('#stripeButton').html("Buy for &pound; " + (new_price/100).toFixed(2));
-                    $("#stripeCurrency").val('GBP');
-                    break;
-                case 'forex_eur':
-                    $('#stripeButton').html("Buy for &euro; " + (new_price/100).toFixed(2));
-                    $("#stripeCurrency").val('EUR');
-                    break;
-            }
-            e.preventDefault();
         });
         // Text processing
         $(document).on('click', 'a', function(event){ 

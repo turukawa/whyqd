@@ -251,7 +251,9 @@
                                 stripeToken: token.id,
                                 stripeDescription: ns.description,
                                 stripePrice: ns.price,
+                                stripeCurrency: ns.currency,
                                 stripeEmails: ns.emails,
+                                selfPurchase: false,
                                 template: 'gift_purchase'
                             },
                             success: function(data) {
