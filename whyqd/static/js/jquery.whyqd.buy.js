@@ -90,11 +90,13 @@ $(document).ready(function() {
     $('[id^=forex_]').on('click', function (e) {
         var forex = this;
         var base_price = parseFloat($('#basePrice').attr('value').trim()).toFixed(2);
-        var next_price = $('#nextPrice').attr('value');
-        var select_price = parseFloat($(this).attr('value').trim()).toFixed(2);
+        var next_price = $('#nextPrice').attr('value').trim();
+        var select_price = parseFloat($(this).attr('data-value').trim()).toFixed(2);
+        console.log(base_price);
+        console.log($('#'+this.id).val());
         var new_price = (select_price * base_price);
         if (next_price) {
-            next_price = (parseFloat(next_price.trim()).toFixed(2) * select_price/100).toFixed(2);
+            next_price = (parseFloat(next_price).toFixed(2) * select_price/100).toFixed(2);
         }
         $("#stripePrice").val(new_price.toFixed());
         switch (this.id) {
