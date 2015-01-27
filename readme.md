@@ -3,7 +3,7 @@ Whyqd
 
 Whyqd is an extensible object-based wiki bringing revision control, content presentation, branching and embedding to any type of digital object.
 
-Whyqd allows content creators to publish and sell via a personal demand pricing model (e.g. the further a user reads into your novel, the more the final price will cost them), and allow users to remix and republish the content after they've bought it.
+Whyqd allows content creators to publish and sell via a personal demand pricing model (e.g. the further a user reads into your novel, the higher the final price will be), and allow users to remix and republish the content after they've bought it.
 
 Remixing means that users could translate a novel, write their own fan-fiction, or expand on existing work all without having to do more than start editing.
 
@@ -17,12 +17,14 @@ Roadmap
 ##### Current version (0.1):
 
  - The following wiqi objects are supported: Text, Images (not live), Maps (not live, handlers still to be written)
- - Facebook auth system along with per-object permissions;
+ - [Facebook auth system](https://github.com/tschellenbach/Django-facebook) along with per-object permissions;
  - A "book" model so that individual texts can be arranged as a single work;
  - Book management system (shuffling order of chapters);
  - Integration of python-docx for upload of Docx files;
- - Stripe integration to support author sales of books;
- - AWS Boto integration for S3 time-limited download of books;
+ - [Stripe](https://stripe.com/gb) integration to support author sales of books;
+ - [AWS Boto](https://github.com/boto/boto) integration for S3 time-limited download of books;
+ - [Open Exchange Rates](https://openexchangerates.org/) for currency conversion;
+ - [Mandrill](https://mandrill.com/) integration for distributed mail;
 
 ##### Next steps:
 
