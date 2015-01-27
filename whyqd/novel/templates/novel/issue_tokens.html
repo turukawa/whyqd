@@ -56,9 +56,9 @@
                                 <span class="sr-only">Toggle Dropdown</span>
                             </button>
                             <ul class="dropdown-menu" role="menu">
-                                <li id="forex_usd" value={{ fx.usd }}><a href="#">USD</a></li>
-                                <li id="forex_gbp" value={{ fx.gbp }}><a href="#">GBP</a></li>
-                                <li id="forex_eur" value={{ fx.eur }}><a href="#">EUR</a></li>
+                                <li id="forex_usd" data-value={{ fx.usd }}><a href="#">USD</a></li>
+                                <li id="forex_gbp" data-value={{ fx.gbp }}><a href="#">GBP</a></li>
+                                <li id="forex_eur" data-value={{ fx.eur }}><a href="#">EUR</a></li>
                             </ul>
                         </div>
                     </div>
@@ -158,7 +158,7 @@
         var discount = $("#stripeDiscount").val();
         var volume = $("#stripeVolume").val();
         var fx_currency = $("#stripeCurrency").val().toLowerCase();
-        var fx_price = parseFloat($('#forex_' + fx_currency).attr('value').trim()).toFixed(2);
+        var fx_price = parseFloat($('#forex_' + fx_currency).attr('data-value').trim()).toFixed(2);
         var base_price = parseFloat($('#basePrice').attr('value').trim()).toFixed(2);
         var bulk_price = base_price * fx_price;
         if (count) {

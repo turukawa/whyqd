@@ -34,10 +34,10 @@
             <span class="caret"></span>
             <span class="sr-only">Toggle Dropdown</span>
         </button>
-        <ul class="dropdown-menu" role="menu">
-            <li id="forex_usd" value={{ fx.usd }}><a href="#">USD</a></li>
-            <li id="forex_gbp" value={{ fx.gbp }}><a href="#">GBP</a></li>
-            <li id="forex_eur" value={{ fx.eur }}><a href="#">EUR</a></li>
+        <ul class="dropdown-menu" role="menu">{# http://stackoverflow.com/a/24654441 #}
+            <li id="forex_usd" data-value="{{ fx.usd }}"><a href="#">USD</a></li>
+            <li id="forex_gbp" data-value="{{ fx.gbp }}"><a href="#">GBP</a></li>
+            <li id="forex_eur" data-value="{{ fx.eur }}"><a href="#">EUR</a></li>
         </ul>
         <p></p>
     </div>

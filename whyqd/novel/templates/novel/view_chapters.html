@@ -14,7 +14,6 @@
     <div class="row">
         <p></p>
         <div id="buynowtext">
-            
             {% if request.user.is_authenticated %}
             {% if can_read == "borrowed" %}
             <p>You have until {{ request.user.deadline|naturalday:"l j E Y" }} to read {{ novel_object.title }} online. You
@@ -38,6 +37,7 @@
     <div class="row">
         <input type="hidden" value="{{ can_read }}" id="can_read"/>
         <input type="hidden" value="false" id="buytrigger"/>
+        <p></p>
         {% for key, chapter in chapter_objects.chapters.items|sort %}
             {% if request.user.is_authenticated or chapter.read != "own" %}
                 <a href="{{ chapter.url }}" id="{{ chapter.read }}_{{ forloop.counter }}">
