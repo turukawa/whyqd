@@ -5,36 +5,30 @@
 {% load staticfiles %}
 
 {% block content %}
-<div class="whyqd-absolute-top col-xs-12 col-md-10 col-md-offset-1">
-    <div class="row">
-        <h1>{{ novel_object.title }} - Chapters</h1>
-        <p></p>
-    </div>
-    {% if show_buy %}
-    <div class="row">
-        <p></p>
-        <div id="buynowtext">
-            {% if request.user.is_authenticated %}
-            {% if can_read == "borrowed" %}
-            <p>You have until {{ request.user.deadline|naturalday:"l j E Y" }} to read {{ novel_object.title }} online. You
-            will need to purchase a copy if you wish to download an ereader version.</p>
-            {% else %}
-            <p>You'll need to purchase {{ novel_object.title }} to read the chapters highlighted in red, and the final price
-            will rise with every orange highlighted chapter you read.</p>
+<div class="container">
+    <div class="col-md-10 col-md-push-1">
+        <div class="row text-center">
+            <h1>{{ novel_object.title }} - Chapters</h1>
+            {% if show_buy %}
+            <div id="buynowtext">
+                {% if request.user.is_authenticated %}
+                {% if can_read == "borrowed" %}
+                <p>You have until {{ request.user.deadline|naturalday:"l j E Y" }} to read {{ novel_object.title }} online. You
+                will need to purchase a copy if you wish to download an ereader version.</p>
+                {% else %}
+                <p>You'll need to purchase {{ novel_object.title }} to read the chapters highlighted in red, and the final price
+                will rise with every orange highlighted chapter you read.</p>
+                {% endif %}
+                {% else %}
+                <p>Once you login you can read the chapters highlighted in red for free. You'll need to buy
+                {{ novel_object.title }} to read the unlinked chapters, and every free chapter you read will raise the final
+                price you pay.</p>                
+                {% endif %}
+            </div>
             {% endif %}
-            {% else %}
-            <p>Once you login you can read the chapters highlighted in red for free. You'll need to buy
-            {{ novel_object.title }} to read the unlinked chapters, and every free chapter you read will raise the final
-            price you pay.</p>                
-            {% endif %}
-            <p></p>
         </div>
-        {% block buynovel %}
-        {% include 'novel/buy_novel.html' %}
-        {% endblock buynovel %}
     </div>
-    {% endif %}
-    <div class="row">
+    <div class="row col-md-8 col-md-push-2 whyqd-content chapter content text-center">
         <input type="hidden" value="{{ can_read }}" id="can_read"/>
         <input type="hidden" value="false" id="buytrigger"/>
         <p></p>
@@ -56,6 +50,13 @@
             {% endif %} |
         {% endfor %}</p>
     </div>
+    {% if show_buy %}
+    <div class="col-xs-12 text-center">
+    {% block buynovel %}
+    {% include 'novel/buy_novel.html' %}
+    {% endblock buynovel %}
+    </div>
+    {% endif %}
 </div>
 {% endblock content %}
 

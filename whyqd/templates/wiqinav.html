@@ -1,36 +1,27 @@
-<div id="navigation" class="navbar navbar-default navbar-fixed-top" role="navigation">
+<div id="navigation" class="nav navbar navbar-default navbar-fixed-top" role="navigation">
     <div class="container">
-        <div class="navbar-header">
-            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
+        <div class="navbar-header text-left col-sm-10 col-sm-push-1">
+            <button class="navbar-toggle" data-target=".navbar-collapse" data-toggle="collapse" type="button">
+                <span class="sm-only">
+                    <img id="" src="/static/images/Qwyre_Logo_30px.png">
+                </span>
             </button>
-            <a class="navbar-brand" href="/">{{ page_title }}</a>
-            <ul id="nav-novel" class="nav navbar-nav">
-                <li id="working-on" data-surl="{% if wiqi_object.jsonresponse.bookurl %}{{ wiqi_object.jsonresponse.bookurl  }}
-                                                {% else %}{{ linked_wiqi.surl }}{% endif %}" class="navbar-text text-center">
-                    {% if wiqi_object.jsonresponse.booktitle %}{{ wiqi_object.jsonresponse.booktitle  }}
-                    {% else %}{{ linked_wiqi.stack.title }}{% endif %}
-                </li>
-            </ul>
         </div>
-        <div class="navbar-collapse collapse">
+        <div class="navbar-collapse collapse col-sm-10 col-sm-push-1">
             {% if not user.is_authenticated %}
                 <form action="{% url 'facebook_connect' %}?next={{ request.path }}&facebook_login=1"
-                      class="nav navbar-form navbar-right" method="post">
+                      class="nav navbar-form pull-right" method="post">
                     {% csrf_token %}
                     <input type="hidden" value="1" name="connect" />
                     <input type="hidden" value="{{ request.path }}" name="next" />
                     <input type="hidden" value="{{ request.path }}" name="register_next" />
                     <input type="hidden" value="{{ request.path }}" name="error_next" />
-                    <a onclick="F.connect(this.parentNode); return false;"
-                       class="navbar-link navbar-right" style="margin-top: 7px; text-decoration: none;"
-                       href="javascript:void(0);">Login</a>
+                    <li><a onclick="F.connect(this.parentNode); return false;"
+                       style="margin-top: -11px; text-decoration: none;"
+                       href="javascript:void(0);"><span class="icon-facebook-square"></span> Login</a></li>
                 </form>
             {% else %}
-                <ul id="nav-login" class="nav navbar-nav navbar-right">
+                <ul id="nav-login" class="nav navbar-nav pull-right">
                 <li><a href="{% url 'usr_logout' %}">
                     {% if user.first_name or user.last_name %}
                         {{ user.first_name }} {{ user.last_name }}
@@ -40,7 +31,7 @@
                     </a></li>
                 </ul>
             {% endif %}
-            <ul id="nav-user" class="nav navbar-nav navbar-right">
+            <ul id="nav-user" class="nav navbar-nav">
                 <li><a href="{% url 'view_chapters' novel_object.surl %}">Chapters</a></li>
                 {% if user.is_authenticated and user.manage_novel %}
                 <li><a href="{{ user.manage_novel }}">Share & Manage</a></li>

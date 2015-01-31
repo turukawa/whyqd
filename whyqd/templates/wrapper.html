@@ -3,7 +3,7 @@
     {% block wrapper %}
     <nav>
     {% block navigation %}
-	{% include 'wiqinav.html' %}
+    {% include 'wiqinav.html' %}
     {% endblock navigation %}
     </nav>
     <header>
@@ -11,9 +11,7 @@
    {% endblock heading %}
     </header>
     <section>
-	<div class="container">
-	{% block content %}
-	{% endblock content %}
-	</div>
+    {% block content %}
+    {% endblock content %}
     </section>
     {% endblock wrapper %}
