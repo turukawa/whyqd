@@ -13,6 +13,7 @@ from decimal import Decimal
 class User(AbstractUser, FacebookModel):
     current_view = models.CharField(max_length=32, blank=True, verbose_name="Current chapter view.")
     current_price = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
+    optout = models.BooleanField(default=False)
     
     @property
     def get_logout_url(self):

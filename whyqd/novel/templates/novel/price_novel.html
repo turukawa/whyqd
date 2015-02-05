@@ -4,109 +4,111 @@
 {% load widget_tweaks %}
 
 {% block content %}
-<div class="whyqd-absolute-top col-xs-12 col-md-10 col-md-offset-1">
-    <div class="row">
-        <p></p>
-        <p>Prepare {{ novel_object.title }} for publication.</p>
-        <p></p>
-        <ul id="share-tabs" class="nav nav-tabs" role="tablist">
-            <li class="active"><a href="#tab-price" data-toggle="tab">Price</a></li>
-            <li><a href="#tab-structure" data-toggle="tab">Structure</a></li>
-            <li><a href="#tab-market" data-toggle="tab">Market</a></li>
-        </ul>
-        <div id="share-tab-content" class="tab-content">
-            <div id="tab-price" class="tab-pane active">
-                <p></p>
-                <form action="" method="POST" class="inline">
-                    {% csrf_token %}
-                    {{ formset.management_form }}
-                    {% for form in formset|orderchapters %}
-                    <div class="form-group">
-                        <div class="row">
-                            {{ form.id }}
-                            <div class="col-md-2">
-                            <small>{{ form.instance.stack.title }}</small>
-                            </div>
-                            <div class="col-md-2">
-                            {{ form.price|add_class:"form-control input-sm" }}
-                            </div>
-                            <div class="col-md-2">
-                            {{ form.read_if|add_class:"form-control input-sm" }}
+<div class="container share-manage">
+    <div class="col-xs-12">
+        <div class="row text-center col-md-10 col-md-push-1">
+            <p>Prepare {{ novel_object.title }} for publication.</p>
+        </div>
+        <div class="row col-md-10 col-md-push-1 xcentered-tabs">
+            <ul id="share-tabs" class="nav nav-tabs" role="tablist">
+                <li class="active"><a href="#tab-price" data-toggle="tab">Price</a></li>
+                <li><a href="#tab-structure" data-toggle="tab">Structure</a></li>
+                <li><a href="#tab-market" data-toggle="tab">Market</a></li>
+            </ul>
+            <div id="share-tab-content" class="tab-content">
+                <div id="tab-price" class="tab-pane active">
+                    <p></p>
+                    <form action="" method="POST" class="inline">
+                        {% csrf_token %}
+                        {{ formset.management_form }}
+                        {% for form in formset|orderchapters %}
+                        <div class="form-group">
+                            <div class="row">
+                                {{ form.id }}
+                                <div class="col-md-2">
+                                <small>{{ form.instance.stack.title }}</small>
+                                </div>
+                                <div class="col-md-2">
+                                {{ form.price|add_class:"form-control input-sm" }}
+                                </div>
+                                <div class="col-md-2">
+                                {{ form.read_if|add_class:"form-control input-sm" }}
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    {% endfor %}
-                <button type="submit" class="btn btn-default" name="set_pricing" value="save">Save</button>
-                </form>
-            </div>
-            <div id="tab-structure" class="tab-pane">
-                <p></p>
-                <small>
-                <form action="" method="POST" class="inline">
-                    {% csrf_token %}
-                    <input type="hidden" value="{% url 'set_chapters' novel_object.surl %}"
-                           name="chapterFormat" id="chapterFormat" />
-                    {% for form in formset|orderchapters %}
-                    <div class="form-group"  id="structureForm_{{forloop.counter0}}">
-                        <div class="row">
-                            <input type="hidden" value="{{ form.instance.get_url }}"
-                                   id="structureURL_{{forloop.counter0}}"
-                                   name="structureURL_{{forloop.counter0}}"/>
-                            <input type="hidden" value="{{ form.instance.stack.title }}"
-                                   id="structureTitle_{{forloop.counter0}}"
-                                   name="structureTitle_{{forloop.counter0}}"/>
-                            <input type="hidden" value="{{ form.instance.read_if }}"
-                                   id="structureReadIf_{{forloop.counter0}}"
-                                   name="structureReadIf_{{forloop.counter0}}"/>
-                            <div class="col-xs-3">
-                                <p>{{ form.instance.stack.title }}</p>
-                            </div>
-                            <div class="checkbox-inline">
-                                <label>
-                                    <input type="checkbox" id="structureSection_{{forloop.counter0}}"
-                                           value="0">Section
-                                </label>
-                            </div>
-                            <div class="checkbox-inline">
-                                <label>
-                                    <input type="checkbox" id="structureCallOut_{{forloop.counter0}}"
-                                           value="0">CallOut
-                                </label>
+                        {% endfor %}
+                    <button type="submit" class="btn btn-default" name="set_pricing" value="save">Save</button>
+                    </form>
+                </div>
+                <div id="tab-structure" class="tab-pane">
+                    <p></p>
+                    <small>
+                    <form action="" method="POST" class="inline">
+                        {% csrf_token %}
+                        <input type="hidden" value="{% url 'set_chapters' novel_object.surl %}"
+                               name="chapterFormat" id="chapterFormat" />
+                        {% for form in formset|orderchapters %}
+                        <div class="form-group"  id="structureForm_{{forloop.counter0}}">
+                            <div class="row">
+                                <input type="hidden" value="{{ form.instance.get_url }}"
+                                       id="structureURL_{{forloop.counter0}}"
+                                       name="structureURL_{{forloop.counter0}}"/>
+                                <input type="hidden" value="{{ form.instance.stack.title }}"
+                                       id="structureTitle_{{forloop.counter0}}"
+                                       name="structureTitle_{{forloop.counter0}}"/>
+                                <input type="hidden" value="{{ form.instance.read_if }}"
+                                       id="structureReadIf_{{forloop.counter0}}"
+                                       name="structureReadIf_{{forloop.counter0}}"/>
+                                <div class="checkbox-inline">
+                                    <label>{{ form.instance.stack.title }}</label>
+                                </div>
+                                <div class="checkbox-inline">
+                                    <label>
+                                        <input type="checkbox" id="structureSection_{{forloop.counter0}}"
+                                               value="0">Section
+                                    </label>
+                                </div>
+                                <div class="checkbox-inline">
+                                    <label>
+                                        <input type="checkbox" id="structureCallOut_{{forloop.counter0}}"
+                                               value="0">CallOut
+                                    </label>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    {% if forloop.last %}
-                        <input type="hidden" value="{{forloop.counter0}}" id="structureLength" name="structureLength"/>
-                    {% endif %}
-                    {% endfor %}</small>
-                <button type="submit" class="btn btn-default" name="set_structure"
-                        id="set_structure" value="save">Save</button>
-                </form>
-            </div>
-            <div id="tab-market" class="tab-pane">
-                <p></p>
-                <form action="" method="POST">
-                    {% csrf_token %}
-                    <textarea id="market_list" class="form-control"
-                              placeholder="Email addresses"
-                              rows="3" cols="40" wrap="hard"></textarea>
-                    <input type="hidden" value="{% url 'market_tokens' novel_object.surl %}"
-                           name="marketTokens" id="marketTokens" />
-                    <div class="checkbox">
-                      <label>
-                        <input id="send_individual" type="checkbox"> Send individual emails
-                      </label>
-                    </div>
+                        {% if forloop.last %}
+                            <input type="hidden" value="{{forloop.counter0}}" id="structureLength" name="structureLength"/>
+                        {% endif %}
+                        {% endfor %}</small>
+                    <button type="submit" class="btn btn-default" name="set_structure"
+                            id="set_structure" value="save">Save</button>
+                    </form>
+                </div>
+                <div id="tab-market" class="tab-pane">
                     <p></p>
-                    <input type="text" id="custom_subject" class="form-control"
-                           placeholder="Custom subject" />
-                    <p></p>
-                    <input type="text" id="custom_email" class="form-control"
-                           placeholder="Custom email template name" />
-                    <p></p>
-                    <button type="submit" class="btn btn-default" name="market_tokens"
-                            id="market_tokens" value="save">Send</button>
-                </form>
+                    <form action="" method="POST">
+                        {% csrf_token %}
+                        <textarea id="market_list" class="form-control"
+                                  placeholder="Email addresses"
+                                  rows="3" cols="40" wrap="hard"></textarea>
+                        <input type="hidden" value="{% url 'market_tokens' novel_object.surl %}"
+                               name="marketTokens" id="marketTokens" />
+                        <div class="checkbox">
+                          <label>
+                            <input id="send_individual" type="checkbox"> Send individual emails
+                          </label>
+                        </div>
+                        <p></p>
+                        <input type="text" id="custom_subject" class="form-control"
+                               placeholder="Custom subject" />
+                        <p></p>
+                        <input type="text" id="custom_email" class="form-control"
+                               placeholder="Custom email template name" />
+                        <p></p>
+                        <button type="submit" class="btn btn-default" name="market_tokens"
+                                id="market_tokens" value="save">Send</button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>

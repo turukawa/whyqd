@@ -22,8 +22,13 @@ def usr_update(request):
             data = request.POST
             # Process and test emails
             usr_email = xtractemail(data["email"])[0]
-            if usr_email and usr_email != request.user.email:
+            usr_name = data["name"]
+            if usr_email and usr_name:
                 request.user.email = usr_email
+                request.user.facebook_name = usr_name
+                request.user.optout = False
+                if data["optout"] == "true":
+                    request.user.optout = True
                 request.user.save()
             usr_response = {'response': 'success'}
             return HttpResponse(json.dumps(usr_response), content_type="application/json")

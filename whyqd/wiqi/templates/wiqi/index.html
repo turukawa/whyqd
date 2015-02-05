@@ -3,46 +3,44 @@
 {% load staticfiles %}
 
 {% block content %}
-<div class="whyqd-absolute-top col-xs-12 col-md-10 col-md-offset-1">
-    <div class="row">
-        <div class="col-sm-12 col-md-10">
-            <div class="thumbnail">
-                <div class="caption">
-                    <blockquote><div id="quote"></div></blockquote>
-                    <small class="text-right"><div id="source"></div></small>
-                    <p></p>
-                    <p>{{ novel_object.summary }}</p>
+<div class="container-fluid page-background">
+    <div class="container home">
+        <div class="col-xs-12">
+            <div class="row">
+                <div class="col-md-10 col-md-push-1">
+                    <div class="content">
+                        <blockquote class="blockquote-reverse">
+                            <div id="quote"></div>
+                            <footer><small><div id="source"></div></small></footer>
+                        </blockquote>
+                        <p></p>
+                        <p>{{ novel_object.summary }}</p>
+                    </div>
                 </div>
-          </div>
-        </div>
-    </div>
-    <div class="row">
-      <div class="col-sm-6 col-md-5">
-        <div class="thumbnail" id="buyresponse" >
-            <img src="http://placekitten.com/g/400/200" alt="..." width="400" height="200">
-            <div class="caption" >
-                {% if show_buy %}
-                {% block buynovel %}
-                    {% include 'novel/buy_novel.html' %}
-                {% endblock buynovel %}
-                {% endif %}
+            </div>
+            <div class="row">
+                <div class="col-md-6 col-md-push-3">
+                    <div id="buyresponse" >
+                        <div class="col-md-6 col-md-push-3">
+                            {% if request.user.is_authenticated and request.user.current_view %}
+                            <a id="read" href="{{ request.user.current_view }}"
+                               class="btn btn-md btn-block btn-read" role="button">Continue Reading for Free</a>
+                            {% else %}
+                            <a id="read" href="{{ novel_object.sentinal.get_url }}"
+                               class="btn btn-md btn-block btn-read" role="button">Start Reading for Free</a>
+                            {% endif %}
+                        </div>
+                        <div class="col-xs-12 text-center">
+                            {% if show_buy %}
+                            {% block buynovel %}
+                                {% include 'novel/buy_novel.html' %}
+                            {% endblock buynovel %}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-      </div>
-      <div class="col-sm-6 col-md-5">
-        <div class="thumbnail">
-          <img src="http://placehold.it/400x200" alt="..." width="400" height="200">
-          <div class="caption">
-            {% if request.user.is_authenticated and request.user.current_view %}
-            <a id="read" href="{{ request.user.current_view }}"
-               class="btn btn-default" role="button">Continue Reading</a>
-            {% else %}
-            <a id="read" href="{{ novel_object.sentinal.get_url }}"
-               class="btn btn-default" role="button">Start Reading</a>
-            {% endif %}
-          </div>
-        </div>
-      </div>
     </div>
 </div>
 {% endblock content %}
@@ -72,7 +70,7 @@
                 var num = queryParameters().qt;
             }
             else {
-                var num = Math.floor(Math.random() * 9) + 1 + '';
+                var num = Math.floor(Math.random() * 7) + 1 + '';
             }
             // Lots of help in this
             // Quotes: http://americanbookreview.org/100bestlines.asp
@@ -83,18 +81,6 @@
             // http://stackoverflow.com/a/4960020 Math.floor
             $('#quote').html(result[num]['quote']);
             $('#source').html(result[num]['source']);
-        });
-        // Text processing
-        $(document).on('click', 'a', function(event){ 
-            event.preventDefault(); 
-            var href = this.href;
-            switch($(this).attr('id')) {
-                case "read":
-                    window.location.href = href;
-                    break;
-                default:
-                    window.location.href = $(this).attr('href');
-            }
         });
     });
 </script>

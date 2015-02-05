@@ -3,52 +3,38 @@
 {% load staticfiles %}
 {% load mathfilters %}
 
-{% block extrastyles %}
-<!--<link rel="stylesheet" href="{{ STATIC_URL }}css/medium-editor.css">-->
-{% endblock extrastyles %}
-
-{% block heading %}
-<div class="whyqd-header">
-    <div class="whyqd-text-black">
-        <div class="col-xs-12 col-md-10 col-md-offset-2 whyqd-header-text">
-            <h1><div id="title">
-            {% if chapter_title %}{{ chapter_title|safe }}{% endif %}
-            </div></h1>
-            <h2><small><div id="subtitle">
-            {% if wiqi_object.stack %}{{ wiqi_object.stack.subtitle|safe }}{% else %}{{ wiqi_object.subtitle|safe }}{% endif %}
-            </div></small></h2>
-        </div>
-    </div>
-</div>
-{% endblock heading %}
-
 {% block content %}
-<div class="whyqd-content col-xs-12 col-md-10 col-md-offset-1">
-    <div class="row" id="content">
-    {% if diff_wiqis %}{{ diff_wiqis|safe }}{% else %}{{ wiqi_object.htmlresponse|safe }}{% endif %}
-    </div>
-    <p>&nbsp;</p>
-    <p>&nbsp;</p>
-    <div class="row" id="pagenav">
-        <div class="col-sm-2 col-md-2">
+<div class="container">
+    <div class="col-xs-12 col-md-8 col-md-push-2 whyqd-content reading content">
+        <div class="whyqd-header">
+            <div class="whyqd-text-black">
+                <div class="col-xs-12 text-center">
+                <h1><div id="title">
+                {% if chapter_title %}{{ chapter_title|safe }}{% endif %}
+                </div></h1>
+                <h1><small><div id="subtitle">
+                {% if wiqi_object.stack %}{{ wiqi_object.stack.subtitle|safe }}{% else %}{{ wiqi_object.subtitle|safe }}{% endif %}
+                </div></small></h1>
+                </div>
+            </div>
+        </div>
+        <div class="row col-xs-12 col-lg-10 col-lg-push-1" id="content">
+        {% if diff_wiqis %}{{ diff_wiqis|safe }}{% else %}{{ wiqi_object.htmlresponse|safe }}{% endif %}
+        </div>
+        <div class="row" id="pagenav">
+            <div class="col-xs-12 col-lg-6" id="previouspage">
             {% if wiqi_object.previous_wiqi %}
-                <a href="{{ wiqi_object.previous_wiqi.get_url }}" class="btn btn-default" role="button">Previous</a>
+                <a href="{{ wiqi_object.previous_wiqi.get_url }}" class="btn btn-md btn-read"
+                   role="button">Previous</a>
             {% endif %}
-        </div>
-        <div class="col-sm-3 col-md-3">
-            {% if show_buy %}
-            {% block buynovel %}
-                {% include 'novel/buy_novel.html' %}
-            {% endblock buynovel %}
-            {% endif %}
-        </div>
-        <div class="col-sm-4 col-md-6">
+            </div>
             {% if wiqi_object.next_wiqi %}
-                <div class="row" id="nextpage">
+                <div class="col-xs-12 col-lg-6" id="nextpage">
                     <input type="hidden" value="false" id="buytrigger"/>
                     <input type="hidden" value="{{ next_wiqi.get_url }}" id="nextpagelink"/>
                 {% if can_read_next == "open" %}
-                    <p><a href="{{ next_wiqi.get_url }}" class="btn btn-default" role="button">Next chapter</a></p>
+                    <a href="{{ next_wiqi.get_url }}" class="btn btn-md btn-read pull-right"
+                              role="button">Next chapter</a>
                 {% elif not request.user.is_authenticated %}
                     <form action="{% url 'facebook_connect' %}?next={{ next_wiqi.get_url }}&facebook_login=1" method="post">
                         {% csrf_token %}
@@ -57,27 +43,34 @@
                         <input type="hidden" value="{{ next_wiqi.get_url }}" name="register_next" />
                         <input type="hidden" value="{{ request.path }}" name="error_next" />
                         <a onclick="F.connect(this.parentNode); return false;" href="javascript:void(0);"
-                           class="btn btn-default" role="button">
-                            Login to read next chapter</a>
-                        {% if next_price %}
-                            <p><small id="nextPriceText">Price increases to &pound; {{ next_price }}</small></p>
-                        {% endif %}
+                           class="btn btn-md btn-read pull-right" id="nextbutton" role="button">Login to read next
+                           chapter{% if next_price %}<br/><small id="nextPriceText">Price increases to
+                           &pound; {{ next_price }}</small>{% endif %}</a>
                     </form>
                 {% else %}
                     {# Subtlety here ... if "owns" then owns the book, if "own" then still has to buy #}
-                    {% if can_read_next != "own" %}<p><a href="{{ next_wiqi.get_url }}" class="btn btn-default"
-                                                         role="button">Next chapter</a></p>{% endif %}
-                    {% if can_read_next == "login" %}
-                        {% if next_price %}
-                            <p><small id="nextPriceText">Price increases to &pound; {{ next_price }}</small></p>
-                        {% endif %}
-                    {% elif can_read_next == "borrowed" %}
-                        <p><small>Loaned until {{ request.user.deadline|naturalday:"l j E Y" }}.</small></p>
-                    {% elif can_read_next == "own" %}<p>This isn't the end.</p>
-                        <p>Buy {{ page_title }} and keep reading.</p>
+                    {% if can_read_next != "own" %}<a id="nextbutton" href="{{ next_wiqi.get_url }}"
+                                                      class="btn btn-md btn-read pull-right"
+                                                      role="button">Next chapter
+                        {% if can_read_next == "login" and next_price %}<br/><small id="nextPriceText">Price increases to
+                           &pound; {{ next_price }}</small>
+                        {% elif can_read_next == "borrowed" %}
+                        <br/><small id="two-line">Loaned until {{ request.user.deadline|naturalday:"l j E Y" }}</small>
+                        {% endif %}</a>
+                    {% elif can_read_next == "own" %}<button class="btn btn-md btn-read pull-right"
+                                                             id="two-line" disabled>This isn't
+                                                    the end.<br/><small>Buy {{ page_title }} and keep
+                                                    reading.</small></button>
                     {% endif %}
                 {% endif %}
                 </div>
+            {% endif %}
+        </div>
+        <div class="text-center">
+            {% if show_buy %}
+            {% block buynovel %}
+                {% include 'novel/buy_novel.html' %}
+            {% endblock buynovel %}
             {% endif %}
         </div>
     </div>
@@ -92,10 +85,20 @@
 <script>
     $(document).ready(function() {
         $("#buytrigger").change(function () {
-            var next_page = '<p><a href="' + $('#nextpagelink').val()
-                + '" class="btn btn-default" >Next chapter</a></p>';
+            var next_page = '<a href="' + $('#nextpagelink').val()
+                + '" class="btn btn-md btn-read nextchapter pull-right" >Next chapter</a>';
             $('#nextpage').html(next_page);
         });
+        if ($('#nextPriceText').length) {
+            $('#nextbutton').addClass("two-line");
+        }
+        if ($('#two-line').length) {
+            if ($('#nextbutton').length) {
+                $('#nextbutton').addClass("two-line");
+            } else {
+                $('#two-line').addClass("two-line");
+            }
+        }
     });
 </script>
 {% endif %}

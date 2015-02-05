@@ -1,0 +1,71 @@
+{% extends "wrapper.html" %}
+{% load humanize %}
+{% load staticfiles %}
+
+{% block content %}
+<div class="container-fluid page-background">
+    <div class="container home">
+        <div class="col-xs-12">
+            <div class="row">
+                <div class="col-md-10 col-md-push-1">
+                    <div class="content">
+                        <blockquote class="blockquote-reverse"><small>{{ novel_object.summary }}</small></blockquote>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 col-md-push-3">
+                    <div id="buyresponse" >
+                        <div class="col-md-6">
+                            <a id="github" href="https://github.com/turukawa/whyqd"
+                               class="btn btn-md btn-block btn-read" role="button">Fork on Github</a>
+                        </div>
+                        <div class="col-md-6">
+                            {% if request.user.is_authenticated and request.user.current_view %}
+                            <a id="read" href="{{ request.user.current_view }}"
+                               class="btn btn-md btn-block btn-read" role="button">Continue Reading for Free</a>
+                            {% else %}
+                            <a id="read" href="{{ novel_object.sentinal.get_url }}"
+                               class="btn btn-md btn-block btn-read" role="button">Start Reading for Free</a>
+                            {% endif %}
+                        </div>
+                        <div class="col-xs-12 text-center">
+                            {% if show_buy %}
+                            {% block buynovel %}
+                                {% include 'novel/buy_novel.html' %}
+                            {% endblock buynovel %}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-10 col-md-push-1">
+                    <div class="content">
+                        <p>Self-published novelists are about as common and delightful as flies in the Serengeti, but
+                        here's an additional hook for you.</p>
+                        <p>Besides the novel, I also developed this website to publish and sell it. The software
+                        was written with the Django web framework and is released as open source on Github.</p>
+                        <p>Readers can choose to buy instantly and anonymously with Stripe, or read the first 60% of the
+                        novel for free... with one catch. Each chapter they read adds to the eventual purchase price.</p>
+                        <p>This "personal demand pricing" gives people the opportunity to read a significant chunk of
+                        {{ novel_object.title }}before they decide to buy, but charging them for the convenience of
+                        doing so.</p>
+                        <p><img id="" src="/media/images/GavinChait_250x250.jpg" alt="Gavin Chait Photo">I am an open
+                        data software consultant in the UK. I have written professionally for ten years, including a
+                        stint at the business desk for the Cape Argus newspaper in South Africa. I write for numerous
+                        business- and technical periodicals, and this is my first novel.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+{% block extrascripts %}
+{% if show_buy %}
+<script src="https://checkout.stripe.com/checkout.js"></script>
+<script src="{% static 'js/jquery.whyqd.buy.js' %}"></script>
+{% endif %}
+{% endblock extrascripts %}

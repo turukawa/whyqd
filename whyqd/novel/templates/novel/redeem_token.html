@@ -1,8 +1,19 @@
 {% extends "wrapper.html" %}
 
+{% load mathfilters %}
+
 {% block content %}
-<div class="whyqd-absolute-top col-xs-12 col-md-10 col-md-offset-1">
-    <div class="row">
+<div class="container-fluid page-background">
+    <div class="container home">
+        <div class="col-xs-12">
+            <div class="row">
+                <div class="col-md-10 col-md-push-1">
+                    <div class="content">
+                        <blockquote class="blockquote-reverse"><small>{{ novel_object.summary }}</small></blockquote>
+                    </div>
+                </div>
+            </div>
+        <div class="row text-center col-md-10 col-md-push-1">
         {% if not token_object.is_valid and not request.user.is_authenticated %}
             <p>This token has already been redeemed.</p>
         {% elif request.user.is_authenticated %}
@@ -12,110 +23,110 @@
             <p>{{ token_object.creator.facebook_name }} has {% if token_object.is_purchased %}purchased
             {{ token_object.novel.title }} for you.{% else %}loaned you a copy of {{ token_object.novel.title }} for
             {{ days }} days.{% endif %}</p>
-            <p></p>
-            <blockquote>{{ token_object.novel.summary | safe }}</blockquote>
-            <p></p>
         {% elif token_object.is_purchased  %}
             <p>Thank you for your purchase of {{ token_object.novel.title }} (or, if someone bought it for you, they
             have chosen to remain anonymous).</p>
-            {% endif %}
-            <form action="{% url 'facebook_connect' %}?next={{ request.path }}&facebook_login=1" method="post">
-                {% csrf_token %}
-                <input type="hidden" value="1" name="connect" />
-                <input type="hidden" value="{{ request.path }}" name="next" />
-                <input type="hidden" value="{{ request.path }}" name="register_next" />
-                <input type="hidden" value="{{ request.path }}" name="error_next" />
-                You will need to<a onclick="F.connect(this.parentNode); return false;" href="javascript:void(0);">
-                login with Facebook</a> in order to redeem this token{% if token_object.is_purchased %}, or you can
-                click the button below. Read the fine-print before you do so because you only get one chance to
-                download{% endif %}.
-            </form>
-    </div>
-    <p></p>
-    <div class="row" id="download_ebook">
-        <div class="col-sm-2 col-md-3">
-            <form action="{% url 'facebook_connect' %}?next={{ request.path }}&facebook_login=1" method="post">
-                {% csrf_token %}
-                <input type="hidden" value="1" name="connect" />
-                <input type="hidden" value="{{ request.path }}" name="next" />
-                <input type="hidden" value="{{ request.path }}" name="register_next" />
-                <input type="hidden" value="{{ request.path }}" name="error_next" />
-                <button id="facebookButton" class="btn btn-default" onclick="F.connect(this.parentNode);
-                return false;" href="javascript:void(0);">{% if token_object.is_purchased %}Own{% else %}Read{% endif %}
-                    with Facebook</button> 
-            </form>
-        </div>
-        {% if token_object.is_purchased %}
-        <div class="col-sm-2 col-md-3">
-            <strong>or</strong> (please read the fine-print)
-        </div>
-        <div class="col-sm-2 col-md-3">
-            {% if token_object.is_purchased %}
-            <form action="{% url 'download_novel' token_object.surl %}" method="POST">
-                {% csrf_token %}
-                <input type="hidden" value="{% url 'download_novel' token_object.surl %}" name="downloadURL" id="downloadURL" />
-            </form>
-            <button id="downloadButton" class="btn btn-default" >One-Time Download</button>
-            {% endif %}
-        </div>
         {% endif %}
-    </div>
-    <p></p>
-    <div class="row">
-        <small>
-        <dl><dt><strong>How this works (the fine print):</strong></dt>
-        <dd>
-        <ul>
-            <li>Facebook dedicates tremendous resources to ensuring the majority of their users are real people.
-            This is a good thing for small sites like this one. Unfortunately, this does mean that - if you don't
-            have a Facebook account - you will need to create one in order to manage your copy of 
-            {{ token_object.novel.title }}.</li>
-            <li>The only information we require from your Facebook account is your email address. We don't ask
-            for any other rights or content.</li>
+        </div>
+        <div id="download_ebook">
+            <div class="row text-center col-md-10 col-md-push-1">
+                <form action="{% url 'facebook_connect' %}?next={{ request.path }}&facebook_login=1" method="post">
+                    {% csrf_token %}
+                    <input type="hidden" value="1" name="connect" />
+                    <input type="hidden" value="{{ request.path }}" name="next" />
+                    <input type="hidden" value="{{ request.path }}" name="register_next" />
+                    <input type="hidden" value="{{ request.path }}" name="error_next" />
+                    <button id="facebookButton" class="btn btn-lg btn-buy-dropdown inverse"
+                            onclick="F.connect(this.parentNode);
+                    return false;" href="javascript:void(0);">{% if token_object.is_purchased %}Own{% else %}Read{% endif %}
+                        with Facebook</button> 
+                </form>
+            </div>
             {% if token_object.is_purchased %}
-            <li><strong>Bonuses for creating an account to manage your copy of {{ token_object.novel.title }}:</strong>
-                <ul>
-                    <li>Download different ebook versions whenever you want;</li>
-                    <li>Read the complete ebook online in any modern web browser;</li>
-                    <li>Lend out copies to friends for free whenever you like;</li>
-                    <li>Bulk-buy copies for friends at discounted rates;</li>
-                    <li>Long-term, this site will offer more features and I will write more novels. You get to be
-                    part of that.</li>
-                </ul>
-            </li>
-            {% else %}
-            <li>You will have full access to the whole online book for {{ days }} days after which you can ask
-            {{ token_object.creator.facebook_name }} to lend it to you again. Or you could just buy it.</li>
-            {% endif %}
-            {% if not token_object.creator and not request.user.is_authenticated %}
-            <li><strong>Should you choose not to create a Facebook account</strong> (and I certainly don't blame
-            you) then, after you click the "Download" button:
-                <ul>
-                    <li>A set of links will be generated;</li>
-                    <li>Your token will be disabled;</li>
-                    <li><strong>The links will expire after {{ expiry }} seconds;</strong></li>
-                    <li>You accept that you will have no further recourse as we will have no way of knowing whether you
-                    downloaded the files or simply picked up a token randomly.</li>
-                </ul>
-            <li>For as long as this token is valid you will be able to visit this page.</li>
-            {% endif %}
-        </ul>
-        </dd></dl>
-        {% if token_object.is_valid and token_object.is_purchased and not token_object.creator and not request.user.is_authenticated %}
-        <form class="form-horizontal" id="refundForm">
-            <div class="form-group">
-                <label for="refundToken" class="col-sm-5 control-label">This is also your last chance for an immediate
-                refund:</label>
-                <div class="col-sm-2">
-                    <button type="submit" class="btn btn-default btn-xs"
-                            id="refundToken"
-                            value={% url 'refund_token' token_object.surl %}>Refund</button>
+            <div class="row text-center col-md-10 col-md-push-1">
+                <p></p>
+                <div class="panel panel-default text-center col-md-3">
+                    <div class="panel-body">
+                        Bulk-buy for {{ pro_disc|mul:100|floatformat:"0" }}% off on {{ pro_bulk }} or more copies
+                    </div>
+                </div>
+                <div class="panel panel-default text-center col-md-3 col-md-push-1">
+                    <div class="panel-body">
+                        Lend {{ pro_lend }} copies at a time for {{ pro_days }} days 
+                    </div>
+                </div>
+                <div class="panel panel-default text-center col-md-3 col-md-push-2">
+                    <div class="panel-body">
+                        Download ebooks and updates any time
+                    </div>
                 </div>
             </div>
-        </form>
-        {% endif %}
-        </small>
-        {% endif %}
+            <div class="row text-center col-md-10 col-md-push-1">
+                <p><strong>or</strong> (please read the fine-print)</p>
+                <form action="{% url 'download_novel' token_object.surl %}" method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" value="{% url 'download_novel' token_object.surl %}"
+                           name="downloadURL" id="downloadURL" />
+                </form>
+                <button id="downloadButton" class="btn btn-lg btn-buy-dropdown inverse" >One-Time Download</button>
+            </div>
+            {% endif %}
+        </div>
+        <div class="row col-md-10 col-md-push-1">
+            <small>
+            <dl><dt><strong>How this works (the fine print):</strong></dt>
+            <dd>
+            <ul>
+                <li>Facebook dedicates tremendous resources to ensuring the majority of their users are real people.
+                This is a good thing for small sites like this one. Unfortunately, this does mean that - if you don't
+                have a Facebook account - you will need to create one in order to manage your copy of 
+                {{ token_object.novel.title }}.</li>
+                <li>The only information we require from your Facebook account is your email address. We don't ask
+                for any other rights or content.</li>
+                {% if token_object.is_purchased  and not request.user.is_authenticated %}
+                <li><strong>Should you choose "One-Time Download" and not create an account</strong> then, after you
+                click the "Download" button:
+                    <ul>
+                        <li>A set of links will be generated;</li>
+                        <li>Your token will be invalidated and considered redeemed;</li>
+                        <li><strong>The download links will expire after {{ expiry }} seconds;</strong></li>
+                        <li>You accept that you will have no recourse for a refund or further downloads.</li>
+                    </ul>
+                <li>For as long as this token is valid you will be able to visit this page.</li>
+                {% endif %}
+                {% if token_object.is_purchased %}
+                <li><strong>Bonuses for creating an account to manage your copy of {{ token_object.novel.title }}:</strong>
+                    <ul>
+                        <li>Download different ebook versions whenever you want;</li>
+                        <li>Read the complete ebook online in any modern web browser;</li>
+                        <li>Lend out copies to friends for free whenever you like;</li>
+                        <li>Bulk-buy copies for friends at discounted rates;</li>
+                        <li>Long-term, this site will offer more features and I will write more novels. You get to be
+                        part of that.</li>
+                    </ul>
+                </li>
+                {% else %}
+                <li>You will have full access to the whole online book for {{ days }} days after which you can ask
+                {{ token_object.creator.facebook_name }} to lend it to you again. Or you could just buy it.</li>
+                {% endif %}
+            </ul>
+            </dd></dl>
+            {% if token_object.is_valid and token_object.is_purchased and not token_object.creator and not request.user.is_authenticated %}
+            <form class="form-horizontal" id="refundForm">
+                <div class="form-group">
+                    <label for="refundToken" class="col-sm-5 control-label">This is also your last chance for an immediate
+                    refund:</label>
+                    <div class="col-sm-2">
+                        <button type="submit" class="btn btn-default btn-xs"
+                                id="refundToken"
+                                value={% url 'refund_token' token_object.surl %}>Refund</button>
+                    </div>
+                </div>
+            </form>
+            {% endif %}
+            </small>
+            {% endif %}
+        </div>
     </div>
 </div>
 {% endblock content %}

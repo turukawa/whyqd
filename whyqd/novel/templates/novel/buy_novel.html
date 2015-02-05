@@ -29,8 +29,9 @@
         <input type="hidden" value="{% url 'buy_novel' %}" name="stripeBuy" id="stripeBuy" />
     </form>
     <div class="btn-group">
-        <button id="stripeButton" class="btn btn-primary btn-lg" >Buy for &pound; {{ page_price }}</button>
-        <button id="stripeCaret" type="button" data-toggle="dropdown" class="btn btn-primary btn-lg dropdown-toggle">
+        <button id="stripeButton" class="btn btn-lg btn-buy-dropdown inverse" >Buy for &pound; {{ page_price }}</button>
+        <button id="stripeCaret" type="button" data-toggle="dropdown"
+                class="btn btn-lg dropdown-toggle btn-buy-dropdown">
             <span class="caret"></span>
             <span class="sr-only">Toggle Dropdown</span>
         </button>
@@ -39,6 +40,8 @@
             <li id="forex_gbp" data-value="{{ fx.gbp }}"><a href="#">GBP</a></li>
             <li id="forex_eur" data-value="{{ fx.eur }}"><a href="#">EUR</a></li>
         </ul>
-        <p></p>
     </div>
+    <p></p>
+    <div class="row col-xs-12 text-center"><span class="smallprint">Payments are securely processed by Stripe.
+    This site never has access to your credit card number.</span></div>
 </div>
