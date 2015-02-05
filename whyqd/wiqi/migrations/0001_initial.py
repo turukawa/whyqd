@@ -20,7 +20,7 @@ class Migration(migrations.Migration):
             name='Text',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('surl', models.CharField(max_length=32, verbose_name=b'Short URL', blank=True)),
+                ('surl', models.CharField(unique=True, max_length=16, verbose_name=b'Short URL')),
                 ('title', models.CharField(help_text=b'This may be used as a title, section or figure heading.', max_length=250, verbose_name=b'Title', blank=True)),
                 ('description', models.TextField(help_text=b'May only be necessary where the content may not provide sufficient context.', verbose_name=b'Description', blank=True)),
                 ('creator_ip', models.GenericIPAddressField(default=b'255.255.255.255', null=True, blank=True)),
@@ -48,7 +48,7 @@ class Migration(migrations.Migration):
             name='Wiqi',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('surl', models.CharField(max_length=32, verbose_name=b'Short URL', blank=True)),
+                ('surl', models.CharField(unique=True, max_length=16, verbose_name=b'Short URL')),
                 ('is_live_from', models.DateTimeField(default=datetime.datetime.now, help_text=b'Leave blank to publish immediately, otherwise select a future publication date.', null=True, verbose_name=b'Publish from', blank=True)),
                 ('is_live_to', models.DateTimeField(help_text=b'Leave blank for permanent publication, otherwise select a date to end publication.', null=True, verbose_name=b'Publish until', blank=True)),
                 ('is_private', models.BooleanField(default=False, help_text=b'If unselected, the wiqi will be public.', verbose_name=b'Private')),
@@ -58,7 +58,8 @@ class Migration(migrations.Migration):
                 ('stack_object_id', models.PositiveIntegerField(null=True)),
                 ('branched_object_id', models.PositiveIntegerField(null=True)),
                 ('merged_object_id', models.PositiveIntegerField(null=True)),
-                ('read_if', models.CharField(default=b'Open', max_length=5, choices=[(b'open', b'Open'), (b'login', b'Login'), (b'own', b'Own')])),
+                ('currency', models.CharField(default=b'gbp', max_length=7, choices=[(b'gbp', b'&pound;'), (b'usd', b'$'), (b'eur', b'&euro;')])),
+                ('read_if', models.CharField(default=b'open', max_length=5, choices=[(b'open', b'Open'), (b'login', b'Login'), (b'own', b'Own')])),
                 ('price', models.DecimalField(default=Decimal('0.00'), max_digits=10, decimal_places=2)),
                 ('branched_content_type', models.ForeignKey(related_name='wiqi_wiqi_branched', to='contenttypes.ContentType', null=True)),
                 ('branchlist', models.ManyToManyField(related_name='branchlist_rel_+', to='wiqi.Wiqi', blank=True)),

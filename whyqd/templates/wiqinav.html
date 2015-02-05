@@ -33,6 +33,7 @@
                         </a></li>
                 </ul>
             {% endif %}
+            {% if novel_object %}
             <ul id="nav-user" class="nav navbar-nav">
                 <li><a href="{% url 'index' %}">Cover</a></li>
                 <li><a href="{% url 'view_chapters' novel_object.surl %}">Contents</a></li>
@@ -41,6 +42,7 @@
                 <li><a href="{{ user.manage_novel }}">Share & Manage</a></li>
                 {% endif %}
             </ul>
+            {% endif %}
         </div><!--/.nav-collapse -->
     </div>
 </div>

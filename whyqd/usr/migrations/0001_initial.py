@@ -43,6 +43,7 @@ class Migration(migrations.Migration):
                 ('image', models.ImageField(max_length=255, null=True, upload_to='images\\facebook_profiles/%Y/%m/%d', blank=True)),
                 ('current_view', models.CharField(max_length=32, verbose_name=b'Current chapter view.', blank=True)),
                 ('current_price', models.DecimalField(default=Decimal('0.00'), max_digits=10, decimal_places=2)),
+                ('optout', models.BooleanField(default=False)),
                 ('groups', models.ManyToManyField(related_query_name='user', related_name='user_set', to='auth.Group', blank=True, help_text='The groups this user belongs to. A user will get all permissions granted to each of his/her group.', verbose_name='groups')),
                 ('user_permissions', models.ManyToManyField(related_query_name='user', related_name='user_set', to='auth.Permission', blank=True, help_text='Specific permissions for this user.', verbose_name='user permissions')),
             ],
