@@ -2,7 +2,10 @@ from django.conf.urls import patterns, include, url
 
 urlpatterns = patterns("whyqd.wiqi.views",
                        # General
-                       url(r'^$', 'index', {"template_name": "wiqi/index.html", "nav_type":"view"}, name='index'),
+                       url(r'^$', 'index', {"template_name": "wiqi/index.html", "nav_type":"view"},
+                           name='index'),
+                       url(r"^about/", "index", {"template_name": "wiqi/about.html", "nav_type":"view"},
+                           name="about"),
                        url(r"^nav/(?P<nav_type>[-\w]+)/(?P<wiqi_surl>[-\w]+)/", "view_nav",
                            {"template_name": "wiqi/view.html", "permission":"can_view"},
                            name="view_nav"),

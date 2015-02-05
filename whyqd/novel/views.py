@@ -316,6 +316,7 @@ def redeem_token(request, surl, template_name="novel/redeem_token.html"):
     page_title = token_object.novel.title
     novel_object = token_object.novel
     page_subtitle = "Redemption"
+    page_class = "home"
     pro_disc = settings.BULK_DISCOUNT
     pro_bulk = settings.BULK_VOLUME
     pro_lend = settings.TOKEN_LIMIT

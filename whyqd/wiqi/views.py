@@ -22,6 +22,9 @@ def index(request, template_name="wiqi/index.html", nav_type="view"):
     novel_object = novel_object[0]
     page_title = novel_object.title
     page_subtitle = "Start Reading"
+    if template_name != "wiqi/index.html":
+        page_subtitle = "Bio & Software"
+    page_class = "home"
     nav_set = None
     # forex and pricing settings
     fx = get_forex()
