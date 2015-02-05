@@ -476,7 +476,7 @@ def organise_novel(request, surl, template_name="novel/create_novel.html", permi
                                 "WiqiStack": wiqid.get_wiqi_or_404('text')
                                 }
             novel_object = novel_object.add_chapters(**kwargs)
-            return HttpResponse(json.dumps(novel_object.jsonresponse), content_type="application/json")
+            return HttpResponse(json.dumps({'response': 'success'}), content_type="application/json")
     return render(request, template_name, locals())
 
 @login_required
