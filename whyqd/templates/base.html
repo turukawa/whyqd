@@ -10,7 +10,8 @@
         <link type="text/css" rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
         <link type="text/css" rel="stylesheet" href="{% static 'django_facebook/css/facebook.css' %}" media="all" />
 	<link type="text/css" rel="stylesheet" href="{% static 'css/icomoon.css' %}">
-        <link type="text/css" rel="stylesheet" href="{% static 'css/whyqd_styles.css' %}">
+        <!--<link type="text/css" rel="stylesheet" href="{% static 'css/whyqd_styles.css' %}">-->
+	<link type="text/css" rel="stylesheet" href="https://dl.dropboxusercontent.com/u/18971970/Whythawk/Tartarus/HTML/static/css/whyqd_theme.css">
         {% endblock styles %}
     	{% block extrastyles %}{% endblock extrastyles %}
     	{% block mapstyles %}{% endblock mapstyles %}
@@ -26,7 +27,7 @@
 	  <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
 	<![endif]-->
     </head>
-    <body>
+    <body {% if page_class %}class="{{ page_class }}"{% endif %}>
     	{% block wrapper %}
     	{% endblock wrapper %}
     	{% block scripts %}

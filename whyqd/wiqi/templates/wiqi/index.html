@@ -6,7 +6,6 @@
 <div class="container-fluid page-background">
     <div class="container home">
         <div class="col-xs-12">
-            <img class="img-responsive book-title" src="{% static 'images/TartarusTitle_100pc_450x325px.png' %}">
             <div class="row">
                 <div class="col-md-10 col-md-push-1">
                     <div class="content">
@@ -25,10 +24,10 @@
                         <div class="col-md-6 col-md-push-3">
                             {% if request.user.is_authenticated and request.user.current_view %}
                             <a id="read" href="{{ request.user.current_view }}"
-                               class="btn btn-md btn-block btn-continue-read" role="button">Continue Reading for Free</a>
+                               class="btn btn-md btn-block btn-read" role="button">Continue Reading for Free</a>
                             {% else %}
                             <a id="read" href="{{ novel_object.sentinal.get_url }}"
-                               class="btn btn-md btn-block btn-continue-read" role="button">Start Reading for Free</a>
+                               class="btn btn-md btn-block btn-read" role="button">Start Reading for Free</a>
                             {% endif %}
                         </div>
                         <div class="col-xs-12 text-center">
@@ -71,7 +70,7 @@
                 var num = queryParameters().qt;
             }
             else {
-                var num = Math.floor(Math.random() * 9) + 1 + '';
+                var num = Math.floor(Math.random() * 7) + 1 + '';
             }
             // Lots of help in this
             // Quotes: http://americanbookreview.org/100bestlines.asp

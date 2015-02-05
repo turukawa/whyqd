@@ -3,11 +3,16 @@
 {% load mathfilters %}
 
 {% block content %}
-<div class="container share-manage">
-    <div class="col-xs-12">
-        <div class="row text-center col-md-10 col-md-push-1">
-            <h1>{{ novel_object.title }} Token Redemption</h1>
-        </div>
+<div class="container-fluid page-background">
+    <div class="container home">
+        <div class="col-xs-12">
+            <div class="row">
+                <div class="col-md-10 col-md-push-1">
+                    <div class="content">
+                        <blockquote class="blockquote-reverse"><small>{{ novel_object.summary }}</small></blockquote>
+                    </div>
+                </div>
+            </div>
         <div class="row text-center col-md-10 col-md-push-1">
         {% if not token_object.is_valid and not request.user.is_authenticated %}
             <p>This token has already been redeemed.</p>
@@ -18,9 +23,6 @@
             <p>{{ token_object.creator.facebook_name }} has {% if token_object.is_purchased %}purchased
             {{ token_object.novel.title }} for you.{% else %}loaned you a copy of {{ token_object.novel.title }} for
             {{ days }} days.{% endif %}</p>
-            <p></p>
-            <blockquote>{{ token_object.novel.summary | safe }}</blockquote>
-            <p></p>
         {% elif token_object.is_purchased  %}
             <p>Thank you for your purchase of {{ token_object.novel.title }} (or, if someone bought it for you, they
             have chosen to remain anonymous).</p>

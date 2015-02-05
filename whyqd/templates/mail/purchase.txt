@@ -9,11 +9,11 @@ Price: {{ token_object.currency.upper }} {{ token_object.price }}
 Thank you for buying a copy of {{ token_object.novel.title }}.
 
 The link below will take you to the redemption page for you to download an ebook
-version, and manage your access.
+version (Kindle, ePub and PDF), and manage your access.
 
 https://{{ website }}{{ token_object.get_token_redemption_url }}
 
-Your online access allows you to:
+If you choose to login with Facebook, your online access allows you to:
 
 - Download different ebook versions whenever you want;
 - Read the complete ebook online in any modern web browser;
