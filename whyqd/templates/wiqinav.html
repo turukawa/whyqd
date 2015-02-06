@@ -8,41 +8,38 @@
             </button>
         </div>
         <div class="row navbar-collapse collapse">
-            {% if not user.is_authenticated %}
-                <ul id="nav-login" class="nav navbar-nav pull-right">
-                    <li><form action="{% url 'facebook_connect' %}?next={{ request.path }}&facebook_login=1"
-                              class="nav navbar-form pull-right" method="post">
-                        {% csrf_token %}
-                        <input type="hidden" value="1" name="connect" />
-                        <input type="hidden" value="{{ request.path }}" name="next" />
-                        <input type="hidden" value="{{ request.path }}" name="register_next" />
-                        <input type="hidden" value="{{ request.path }}" name="error_next" />
-                        <a onclick="F.connect(this.parentNode); return false;"
-                           style="margin-top: -11px; text-decoration: none;"
-                           href="javascript:void(0);"><span class="icon-facebook-square"></span> Login</a>
-                    </form></li>
-                </ul>
-            {% else %}
-                <ul id="nav-login" class="nav navbar-nav pull-right">
-                    <li><a href="{% url 'usr_logout' %}">
-                        {% if user.first_name or user.last_name %}
-                            {{ user.first_name }} {{ user.last_name }}
-                        {% else %}
-                            {{ user }}
-                        {% endif %}
-                        </a></li>
-                </ul>
-            {% endif %}
-            {% if novel_object %}
             <ul id="nav-user" class="nav navbar-nav">
+            {% if novel_object %}
                 <li><a href="{% url 'index' %}">Cover</a></li>
                 <li><a href="{% url 'view_chapters' novel_object.surl %}">Contents</a></li>
                 <li><a href="{% url 'about' %}">Bio & Software</a></li>
                 {% if user.is_authenticated and user.manage_novel %}
                 <li><a href="{{ user.manage_novel }}">Share & Manage</a></li>
                 {% endif %}
-            </ul>
             {% endif %}
+            </ul>
+            <ul id="nav-login" class="nav navbar-nav pull-right">
+            {% if not user.is_authenticated %}
+                <li><form action="{% url 'facebook_connect' %}?next={{ request.path }}&facebook_login=1"
+                          class="navbar-form" method="post">
+                    {% csrf_token %}
+                    <input type="hidden" value="1" name="connect" />
+                    <input type="hidden" value="{{ request.path }}" name="next" />
+                    <input type="hidden" value="{{ request.path }}" name="register_next" />
+                    <input type="hidden" value="{{ request.path }}" name="error_next" />
+                    <a onclick="F.connect(this.parentNode); return false;"
+                       href="javascript:void(0);"><span class="icon-facebook-square"></span> Login</a>
+                </form></li>
+            {% else %}
+                <li><a href="{% url 'usr_logout' %}">
+                    {% if user.first_name or user.last_name %}
+                        {{ user.first_name }} {{ user.last_name }}
+                    {% else %}
+                        {{ user }}
+                    {% endif %}
+                    </a></li>
+            {% endif %}
+            </ul>
         </div><!--/.nav-collapse -->
     </div>
 </div>

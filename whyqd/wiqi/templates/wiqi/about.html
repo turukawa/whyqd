@@ -22,7 +22,7 @@
                         </div>
                         <div class="col-md-6">
                             {% if request.user.is_authenticated and request.user.current_view %}
-                            <a id="read" href="{{ request.user.current_view }}"
+                            <a id="read" href="/{{ request.user.current_view }}"
                                class="btn btn-md btn-block btn-read" role="button">Continue Reading for Free</a>
                             {% else %}
                             <a id="read" href="{{ novel_object.sentinal.get_url }}"

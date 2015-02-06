@@ -36,10 +36,10 @@
                     <input type="hidden" value="{{ request.path }}" name="next" />
                     <input type="hidden" value="{{ request.path }}" name="register_next" />
                     <input type="hidden" value="{{ request.path }}" name="error_next" />
-                    <button id="facebookButton" class="btn btn-lg btn-buy-dropdown inverse"
-                            onclick="F.connect(this.parentNode);
-                    return false;" href="javascript:void(0);">{% if token_object.is_purchased %}Own{% else %}Read{% endif %}
-                        with Facebook</button> 
+                    <a onclick="F.connect(this.parentNode); return false;" href="javascript:void(0);"
+                           id="facebookButton" class="btn btn-lg btn-buy-dropdown inverse"
+                           role="button">{% if token_object.is_purchased %}Own{% else %}Read{% endif %}
+                        with Facebook</a> 
                 </form>
             </div>
             {% if token_object.is_purchased %}
@@ -93,8 +93,10 @@
                         <li>You accept that you will have no recourse for a refund or further downloads.</li>
                     </ul>
                 <li>For as long as this token is valid you will be able to visit this page.</li>
-                {% endif %}
+            {% endif %}
                 {% if token_object.is_purchased %}
+                <li>Guidance for reading <a href="https://www.amazon.com/gp/sendtokindle">Kindle/.mobi</a> and
+                <a href="http://www.kobobooks.com/ade">Kobo/Nook/.epub</a>.</li>
                 <li><strong>Bonuses for creating an account to manage your copy of {{ token_object.novel.title }}:</strong>
                     <ul>
                         <li>Download different ebook versions whenever you want;</li>

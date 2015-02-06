@@ -94,7 +94,7 @@ class Token(models.Model):
         self.charge = kwargs.get("charge", None)
         self.price = kwargs.get("price", Decimal("0.00"))
         # if purchased, and the creator and recipient are the same, then the person is buying this themselves
-        # (i.e.) not a gift - and the book is being automatically sent...
+        # (i.e.) not a gift, the person is logged in and they will automatically take ownership...
         if kwargs["creator"] and kwargs.get("is_purchased", False) and kwargs["creator"].email == kwargs["recipient"]:
             self.is_valid = False
             self.redeemer = kwargs["creator"]

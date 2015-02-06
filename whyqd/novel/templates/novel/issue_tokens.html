@@ -8,7 +8,7 @@
             <h1>Share and Manage {{ novel_object.title }}</h1>
         </div>
         <div class="row text-center col-md-10 col-md-push-1" id="download_ebook">
-            <p>Download ebook versions for yourself or share your copy with your friends.</p>
+            <p>Download DRM-free ebook versions for yourself or share your copy with your friends.</p>
             <div class="col-md-6 col-md-push-3">
                 {% if token_download.is_purchased %}
                 <form action="{% url 'download_novel' token_download.surl %}" method="POST">
@@ -31,7 +31,7 @@
                 <div id="tab-buy" class="tab-pane active">
                     <p></p>
                     <p>Provide a comma separated list of email addresses and buy in bulk.
-                    We will email a redemption voucher for you.</p>
+                    We will email a redemption voucher to each person for you.</p>
                     <form action="" method="POST">
                         {% csrf_token %}
                         <textarea id="email_list" class="form-control" rows="3" cols="40" wrap="hard"></textarea>
@@ -70,7 +70,7 @@
                 </div>
                 <div id="tab-lend" class="tab-pane">
                     <p></p>
-                    <p>Send up to {{ total_tokens }} copies to friends for {{ total_duration }} days.
+                    <p>Send up to {{ total_tokens }} copies to friends for {{ total_duration }} days each.
                     Simply provide their email addresses and send.</p>
                     <form action="" method="POST" class="inline">
                         {% csrf_token %}
@@ -88,7 +88,6 @@
                             </div>
                         </div>
                         {% endfor %}
-                        <p></p>
                         <button type="submit" class="btn btn-default" name="issue_tokens" value="save">Send</button>
                     </form>
                 </div>
@@ -125,17 +124,15 @@
                 <div id="tab-email" class="tab-pane">
                     <p></p>
                     <p>We send confirmation of your purchases, refunds and loaned copies of {{ novel_object.title }}
-                    using these details. If wrong, or need changing, please do so. You can also opt-out of marketing
-                    mail.</p>
+                    using these details. If they're wrong, or need changing, please fix. You can also opt-out of
+                    marketing mail (which will probably be about the next book).</p>
                     <form action="" method="POST" class="form-inline">
                         {% csrf_token %}
                         <input type="hidden" value="{% url 'usr_update' %}" name="user_update" id="user_update" />
                         <input type="text" id="facebookname" class="form-control"
                                placeholder="Enter name" value="{{ request.user.facebook_name }}"/>
-                        <br/>
                         <input type="email" class="form-control" id="user_email" placeholder="Enter email"
                                value="{{ request.user.email }}"/>
-                        <br/>
                         <div class="checkbox">
                           <label>
                             <input id="optout" type="checkbox"
@@ -243,6 +240,9 @@
             dlist = dlist + '<li><a href=' + l + '>' + k + '</a></li>';
         });
         dlist = instruct + dlist + '</ul>';
+        dlist += '<p>Guidance for reading ' +
+        '<a href="https://www.amazon.com/gp/sendtokindle">Kindle/.mobi</a> ' +
+        'and <a href="http://www.kobobooks.com/ade">Kobo/Nook/.epub</a>.</p>';
         return dlist;
     }
     $(document).ready(function() {

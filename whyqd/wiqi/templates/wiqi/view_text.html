@@ -43,7 +43,9 @@
                         <input type="hidden" value="{{ next_wiqi.get_url }}" name="register_next" />
                         <input type="hidden" value="{{ request.path }}" name="error_next" />
                         <a onclick="F.connect(this.parentNode); return false;" href="javascript:void(0);"
-                           class="btn btn-md btn-read pull-right" id="nextbutton" role="button">Login to read next
+                           class="btn btn-md btn-read pull-right"
+                           id="nextbutton" role="button"><span class="icon-facebook-square"></span>
+                            Login to read next
                            chapter{% if next_price %}<br/><small id="nextPriceText">Price increases to
                            &pound; {{ next_price }}</small>{% endif %}</a>
                     </form>

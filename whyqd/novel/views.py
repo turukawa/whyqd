@@ -535,7 +535,7 @@ def market_tokens(request, surl):
                                                 'website': request.META['HTTP_HOST']
                                                 }
                                     }
-                    #send_email(**email_kwargs)
+                    send_email(**email_kwargs)
             if send_list:
                 email_kwargs = {'to': request.user.email,
                                 'subject': EMAIL_SUBJECT['issue_purchase'] + novel_object.title,
