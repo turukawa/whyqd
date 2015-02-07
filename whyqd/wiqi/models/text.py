@@ -59,6 +59,7 @@ class Text(WiqiStack):
             kwargs = self.preprocess(**kwargs)
         self.subtitle = kwargs["subtitle"]
         self.content = kwargs["content"]
+        self.word_count = 0
         if self.content:
             words = BeautifulSoup(self.content).get_text()
             self.word_count = len(words.split())

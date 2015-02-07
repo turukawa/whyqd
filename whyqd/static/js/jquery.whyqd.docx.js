@@ -3,11 +3,19 @@
     function getdocxreview(docxarray) {
         var newaction = '<p>The table is sortable. Anything below a checked title will be grouped together as content, including sub-headings. If you wish to delete anything, now is the time. Note that a proper cover page will be created, so delete anything unrelated to chapters (like title, author, dedication) at this stage.</p><span class="navinput-icon btn btn-default" role="button"><label id="process" for="inputprocess">Accept</label><input id="inputprocess" type="hidden" name="file"></span><hr />';
         var partlast = '<label><small>&nbsp; delete &nbsp;</small><input type="checkbox" name="delete" value="delete" /></label><label><small>chapter &nbsp;</small><input type="checkbox" name="chapter" value="chapter" /></label></li>';
+        var partlastselect = '<label><small>&nbsp; delete &nbsp;</small><input type="checkbox" name="delete" value="delete" /></label><label><small>chapter &nbsp;</small><input type="checkbox" name="chapter" value="chapter" checked /></label></li>';
         var partfirst = '<li data-value="-';
+        var partfirstselect = '<li data-value="T';
         var partmid = '"><span class="ui-icon ui-icon-arrowthick-2-n-s"></span>';
+        var partmidselect = '" style="background-color: rgb(227, 218, 201);"><span class="ui-icon ui-icon-arrowthick-2-n-s"></span>';
         var sortable = newaction + '<ul id="sortable">';
         $.each(docxarray, function(i, c) {
-            sortable = sortable + partfirst + c[1] + partmid + c[0] + partlast;
+            if(c[0].indexOf("<b>") >= 0) {
+                sortable = sortable + partfirstselect + c[1] + partmidselect + c[0] + partlastselect;
+            } else {
+                sortable = sortable + partfirst + c[1] + partmid + c[0] + partlast;
+            }
+            
         });
         sortable = sortable + '</ul>';
         return sortable;
