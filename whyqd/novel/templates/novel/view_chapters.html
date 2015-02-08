@@ -33,22 +33,30 @@
         <input type="hidden" value="false" id="buytrigger"/>
         <p></p>
         {% for key, chapter in chapter_objects.chapters.items|sort %}
+            {% if not forloop.first %}
+                |
+            {% endif %}
+            {% if chapter.is_section %}
+                <h3>
+            {% elif chapter.is_callout %}
+                <blockquote>
+            {% endif %}
             {% if request.user.is_authenticated or chapter.read != "own" %}
                 <a href="{{ chapter.url }}" id="{{ chapter.read }}_{{ forloop.counter }}">
             {% endif %}
-            {% if chapter.is_section %}
-                <h3>{{ chapter.title }}</h3>
-                <p>
-            {% elif chapter.is_callout %}
-                </p><blockquote>{{ chapter.title }}</blockquote>
-                <p>
-            {% else %}
-              {{ chapter.title }}
-            {% endif %}
+            {{ chapter.title }}
             {% if request.user.is_authenticated or chapter.read != "own" %}
                 </a>
-            {% endif %} |
-        {% endfor %}</p>
+            {% endif %}
+            {% if chapter.is_section %}
+                </h3>
+            {% elif chapter.is_callout %}
+                </blockquote>
+            {% endif %}
+            {% if not chapter.is_section and not chapter.is_callout and forloop.last %}
+                |
+            {% endif %}
+        {% endfor %}
     </div>
     {% if show_buy %}
     <div class="col-xs-12 text-center">

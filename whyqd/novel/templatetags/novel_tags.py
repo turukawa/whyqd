@@ -49,7 +49,8 @@ def listsort(value):
             new_dict[key] = value[key]
         return new_dict
     elif isinstance(value, list):
-        return sorted(value)
+        value = sorted([(int(k), v) for (k, v) in value])
+        return value
     else:
         return value
     listsort.is_safe = True
