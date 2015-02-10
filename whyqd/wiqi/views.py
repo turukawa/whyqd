@@ -41,6 +41,14 @@ def index(request, template_name="wiqi/index.html", nav_type="view"):
         HttpResponse(json.dumps({}), content_type="application/json")
     return render(request, template_name, locals())
 
+def view_legal(request, template_name="wiqi/legal.html"):
+    novel_object = Novel.objects.all()
+    if not novel_object:
+        return redirect("create_novel")
+    novel_object = novel_object[0]
+    page_title = novel_object.title
+    return render(request, template_name, locals())
+
 def view_wiqi_list(request, template_name="wiqi/list.html", nav_type="view"):
     ''' Temporary to see what we've got, covered by search later'''
     wiqi_list = get_list_or_404(Wiqi.wiqi_objects.all().published())

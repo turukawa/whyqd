@@ -12,7 +12,8 @@
             {% if novel_object %}
                 <li><a href="{% url 'index' %}">Cover</a></li>
                 <li><a href="{% url 'view_chapters' novel_object.surl %}">Contents</a></li>
-                <li><a href="{% url 'about' %}">Bio & Software</a></li>
+                <li><a href="{% url 'about' %}">About</a></li>
+                <li><a href="{% url 'legal' %}">Legal</a></li>
                 {% if user.is_authenticated and user.manage_novel %}
                 <li><a href="{{ user.manage_novel }}">Share & Manage</a></li>
                 {% endif %}
