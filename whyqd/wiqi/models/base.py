@@ -350,8 +350,9 @@ class WiqiStack(models.Model):
     jsonresponse = JSONField(load_kwargs={'object_pairs_hook': collections.OrderedDict}, blank=True, null=True)
     #original_creator = models.ForeignKey(settings.AUTH_USER_MODEL, null=True)
     wiqi = models.ForeignKey(Wiqi, null=True)
-    reverted_from_content_type = models.ForeignKey(ContentType, related_name="%(app_label)s_%(class)s_reverted_from", null=True)
-    reverted_from_object_id = models.PositiveIntegerField(null=True)
+    reverted_from_content_type = models.ForeignKey(ContentType, related_name="%(app_label)s_%(class)s_reverted_from",
+                                                   null=True, blank=True)
+    reverted_from_object_id = models.PositiveIntegerField(null=True, blank=True)
     reverted_from = generic.GenericForeignKey("reverted_from_content_type", "reverted_from_object_id")
     wiqi_objects = WiqiManager() # To extend QuerySet in derived classes
     
