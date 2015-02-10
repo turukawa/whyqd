@@ -6,7 +6,7 @@ $(document).ready(function() {
                 ns = data.settings;
                 var handler = StripeCheckout.configure({
                     key: ns.stripe_key,
-                    image: '/media/images/qwyre_42.png',
+                    image: '/static/images/qwyre_logo_128pxBW.png',
                     name: ns.novel_title,
                     email: ns.user_email,
                     token: function(token) {
@@ -124,4 +124,19 @@ $(document).ready(function() {
         }
         e.preventDefault();
     });
+    $("#buytrigger").change(function () {
+        var next_page = '<a href="' + $('#nextpagelink').val()
+            + '" class="btn btn-md btn-read nextchapter pull-right" >Next chapter</a>';
+        $('#nextpage').html(next_page);
+    });
+    if ($('#nextPriceText').length) {
+        $('#nextbutton').addClass("two-line");
+    }
+    if ($('#two-line').length) {
+        if ($('#nextbutton').length) {
+            $('#nextbutton').addClass("two-line");
+        } else {
+            $('#two-line').addClass("two-line");
+        }
+    }
 });

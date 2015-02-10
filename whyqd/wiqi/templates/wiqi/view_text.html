@@ -84,24 +84,5 @@
 {% if show_buy %}
 <script src="https://checkout.stripe.com/checkout.js"></script>
 <script src="{% static 'js/jquery.whyqd.buy.js' %}"></script>
-<script>
-    $(document).ready(function() {
-        $("#buytrigger").change(function () {
-            var next_page = '<a href="' + $('#nextpagelink').val()
-                + '" class="btn btn-md btn-read nextchapter pull-right" >Next chapter</a>';
-            $('#nextpage').html(next_page);
-        });
-        if ($('#nextPriceText').length) {
-            $('#nextbutton').addClass("two-line");
-        }
-        if ($('#two-line').length) {
-            if ($('#nextbutton').length) {
-                $('#nextbutton').addClass("two-line");
-            } else {
-                $('#two-line').addClass("two-line");
-            }
-        }
-    });
-</script>
 {% endif %}
 {% endblock extrascripts %}
