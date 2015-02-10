@@ -15,14 +15,16 @@ these folks, but - should you wish to do so - you can copy and include them in
 your own emails.
 {% for token in token_list %}
 * {{ token.recipient }}
-  https://{{ website }}{{ token.get_token_redemption_url }}
+  https://tartarusfalls.com{{ token.get_token_redemption_url }}
 {% endfor %}
 If you wish to make any changes, or have second thoughts, your management page
 on the site will permit you to do the necessary. Visit the following link:
 
-https://{{ website }}{% url 'issue_tokens' token_object.novel.surl %}
+https://tartarusfalls.com{% url 'issue_tokens' token_object.novel.surl %}
 
 Thank you and I hope everyone enjoys your gift,
 
 {{ token_object.novel.creator.facebook_name }}
-Author - {{ website }}
+
+Author - {{ token_object.novel.title }}
+https://tartarusfalls.com/

@@ -1,0 +1,16 @@
+Hi,
+
+This is a test mail for  {{ token_object.novel.title }}.
+
+--------------------------------------------------------------------------------
+
+{{ token_object.novel.summary | safe }}
+
+--------------------------------------------------------------------------------
+
+Thanks and checking to see that this is received.
+
+{{ token_object.novel.creator.facebook_name }}
+
+Author - {{ token_object.novel.title }}
+https://tartarusfalls.com/

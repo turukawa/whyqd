@@ -11,7 +11,7 @@ Thank you for buying a copy of {{ token_object.novel.title }}.
 The link below will take you to the redemption page for you to download an ebook
 version (Kindle, ePub and PDF), and manage your access.
 
-https://{{ website }}{{ token_object.get_token_redemption_url }}
+https://tartarusfalls.com{{ token_object.get_token_redemption_url }}
 
 If you choose to login with Facebook, your online access allows you to:
 
@@ -30,4 +30,4 @@ Thank you once again and I hope you love the book,
 {{ token_object.novel.creator.facebook_name }}
 
 Author - {{ token_object.novel.title }}
-https://{{ website }}/
+https://tartarusfalls.com/

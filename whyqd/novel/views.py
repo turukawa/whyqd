@@ -88,6 +88,7 @@ def buy_novel(request, surl=None, template_name="novel/buy_novel.html"):
         kwargs["creator_ip"] = wiqid.get_user_ip(request)
         kwargs["novel"] = novel_object
         kwargs["charge"] = charge
+        kwargs["stripe_id"] = charge["id"]
         kwargs["is_purchased"] = True
         if request.user.is_authenticated():
             kwargs["creator"] = request.user
@@ -516,6 +517,7 @@ def market_tokens(request, surl):
             data = request.POST
             # Process and test emails
             recipients = xtractemail(data["recipients"])
+            from_address = "%s <%s>" % (request.user.facebook_name, request.user.email)
             kwargs = {}
             kwargs["creator"] = request.user
             kwargs["creator_ip"] = wiqid.get_user_ip(request)
@@ -529,11 +531,10 @@ def market_tokens(request, surl):
                 send_list.append(token_object)
                 if data["custom"] and data["subject"]:
                     email_kwargs = {'to': token_object.recipient,
+                                    'from': from_address,
                                     'subject': data['subject'],
                                     'template': data['custom'],
-                                    'context': {'token_object': token_object,
-                                                'website': request.META['HTTP_HOST']
-                                                }
+                                    'context': {'token_object': token_object}
                                     }
                     send_email(**email_kwargs)
             if send_list:
@@ -542,7 +543,6 @@ def market_tokens(request, surl):
                                 'template': 'issue_purchase',
                                 'context': {'token_object': token_object,
                                             # https://docs.djangoproject.com/en/1.7/ref/request-response/#django.http.HttpRequest.get_host
-                                            'website': request.META['HTTP_HOST'],
                                             'token_list': send_list
                                             }
                                 }

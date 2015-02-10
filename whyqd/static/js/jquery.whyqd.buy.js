@@ -79,9 +79,10 @@ $(document).ready(function() {
                     ns.currency = $('#stripeCurrency').val();
                     // Open Checkout with further options
                     handler.open({
-                      description: ns.description,
-                      amount: ns.price,
-                      currency: ns.currency
+                        name: "Whythawk Limited (Qwyre)",
+                        description: ns.description,
+                        amount: ns.price,
+                        currency: ns.currency
                     });
                     e.preventDefault();
                 });

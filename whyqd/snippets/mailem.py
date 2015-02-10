@@ -5,7 +5,7 @@ from django.template.loader import render_to_string
 def send_email(*args, **kwargs):
     """
     Send email handler; kwargs to include:
-        to (email, or in form '<First Last> email@domain.com')
+        to (email, or in form 'First Last <email@domain.com>')
         subject (string)
         template (string)
         context (dict with appropriate refs for template)
@@ -17,7 +17,8 @@ def send_email(*args, **kwargs):
     if kwargs.get('sendhtml', False):
         email.html('{0}/mail/{1}.html'.format(
             settings.TEMPLATE_DIRS[0], kwargs.get('template')), kwargs.get('context'))
-    email.send()
+    from_address = kwargs.get('from', None)
+    email.send(from_addr=from_address, fail_silently=False)
     
 #def send_email_text(*args, **kwargs):
 #    from django.template import Context, Template

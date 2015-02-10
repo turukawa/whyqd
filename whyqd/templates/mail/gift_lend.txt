@@ -11,7 +11,7 @@ Hi,
 The link below will take you to the redemption page where you can login with
 Facebook and start reading.
 
-https://{{ website }}{{ token_object.get_token_redemption_url }}
+https://tartarusfalls.com{{ token_object.get_token_redemption_url }}
 
 You will have full access to the whole online book. If you don't finish in time,
 you can ask {{ token_object.creator.facebook_name }} to lend it to you again.
@@ -23,4 +23,4 @@ Thank you and I hope you love the book,
 {{ token_object.novel.creator.facebook_name }}
 
 Author - {{ token_object.novel.title }}
-https://{{ website }}/
+https://tartarusfalls.com/

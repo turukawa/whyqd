@@ -15,4 +15,4 @@ Kind regards
 {{ token_object.novel.creator.facebook_name }}
 
 Author - {{ token_object.novel.title }}
-https://{{ website }}/
+https://tartarusfalls.com/

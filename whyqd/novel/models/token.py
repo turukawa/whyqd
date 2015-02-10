@@ -54,6 +54,7 @@ class Token(models.Model):
     redeemer = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, related_name="%(class)s_redeemer")
     redeemer_ip = models.GenericIPAddressField(blank=True, null=True)
     redeemed_on = models.DateTimeField(blank=True, null=True)
+    stripe_id = models.CharField(max_length=30, verbose_name="Stripe ID", null=True, blank=True)
     novel = models.ForeignKey(Novel, blank=True, null=True)
     is_valid = models.BooleanField(default=True)
     is_purchased = models.BooleanField(default=False)
@@ -93,6 +94,7 @@ class Token(models.Model):
         self.is_purchased = kwargs.get("is_purchased", False)
         self.charge = kwargs.get("charge", None)
         self.price = kwargs.get("price", Decimal("0.00"))
+        self.stripe_id = kwargs.get("stripe_id", None)
         # if purchased, and the creator and recipient are the same, then the person is buying this themselves
         # (i.e.) not a gift, the person is logged in and they will automatically take ownership...
         if kwargs["creator"] and kwargs.get("is_purchased", False) and kwargs["creator"].email == kwargs["recipient"]:
