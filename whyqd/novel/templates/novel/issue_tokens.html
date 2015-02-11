@@ -104,14 +104,14 @@
                             <div class="row">
                                 {{ form.id }}
                                 <div class="col-xs-4">
-                                {{ form.recipient|add_class:"form-control input-sm" }}
+                                {{ form.recipient|add_class:"form-control" }}
                                 </div>
                                 <div class="col-xs-8">
                                 {% if form.instance.is_valid %}
-                                    <button type="submit" class="btn btn-default btn-sm"
+                                    <button type="submit" class="btn btn-default"
                                             id="refundToken_{{forloop.counter0}}"
                                             value={% url 'refund_token' form.instance.surl %}>Refund</button>
-                                    <button type="submit" class="btn btn-default btn-sm"
+                                    <button type="submit" class="btn btn-default"
                                             id="resendToken_{{forloop.counter0}}"
                                             value={% url 'resend_token' form.instance.surl %}>Resend</button>
                                 {% endif %}
