@@ -77,7 +77,7 @@ def buy_novel(request, surl=None, template_name="novel/buy_novel.html"):
                 card=data["stripeToken"],
                 description=data["stripeDescription"],
                 statement_description=novel_object.title,
-              )   
+              )
         except stripe.CardError, e:
           # The card has been declined
             if request.is_ajax():
@@ -109,7 +109,6 @@ def buy_novel(request, surl=None, template_name="novel/buy_novel.html"):
                             'template': data['template'],
                             'context': {'token_object': token_object,
                                         # https://docs.djangoproject.com/en/1.7/ref/request-response/#django.http.HttpRequest.get_host
-                                        'website': request.META['HTTP_HOST']
                                         }
                             }
             if token_object.recipient:

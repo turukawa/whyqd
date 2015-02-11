@@ -242,7 +242,7 @@ def check_fraud(user, novel_object, data_object, data_length):
     """
     try:
         check_price = novel_object.sentinal.price * 100
-        if data_object.get("selfPurchase", False) and user.is_authenticated():
+        if data_object.get("selfPurchase", False) == "true" and user.is_authenticated():
             if user.current_price > novel_object.sentinal.price:
                 check_price = user.current_price * 100
         fx = get_forex().get(data_object["stripeCurrency"].lower(), False)
@@ -256,4 +256,4 @@ def check_fraud(user, novel_object, data_object, data_length):
         return False
     except Exception:
         # If anything goes wrong, this throws an exception and returns "fraud".
-        return False
+        return True
