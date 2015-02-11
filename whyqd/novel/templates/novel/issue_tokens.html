@@ -50,7 +50,7 @@
                     <div class="row">
                         <div class="col-sm-4 col-sm-push-4 text-center">
                             <div class="btn-group">
-                                <button id="stripeButton" class="btn btn-lg btn-buy-dropdown" disabled >Buy 1 for &pound;
+                                <button id="stripeButton" class="btn btn-lg btn-buy-dropdown inverse" disabled >Buy 1 for &pound;
                                 {{ novel_object.sentinal.price }}</button>
                                 <button id="stripeCaret" type="button" data-toggle="dropdown"
                                         class="btn btn-lg btn-default dropdown-toggle btn-buy-dropdown">
@@ -81,7 +81,7 @@
                             <div class="row">
                                 {{ form.id }}
                                 <div class="col-xs-4">
-                                {{ form.recipient|add_class:"form-control input-sm"|attr:"placeholder:Email" }}
+                                {{ form.recipient|add_class:"form-control"|attr:"placeholder:Email" }}
                                 </div>
                                 <div class="col-xs-4">
                                 {% if form.instance.days_left %} Loaned for {{ form.instance.days_left }} more days.{% endif %}
@@ -106,7 +106,7 @@
                                 <div class="col-xs-4">
                                 {{ form.recipient|add_class:"form-control input-sm" }}
                                 </div>
-                                <div class="col-xs-4">
+                                <div class="col-xs-8">
                                 {% if form.instance.is_valid %}
                                     <button type="submit" class="btn btn-default btn-sm"
                                             id="refundToken_{{forloop.counter0}}"
