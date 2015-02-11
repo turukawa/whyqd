@@ -8,9 +8,9 @@ function getemaillist(form_text) {
     return emails;
 }
 function setprice() {
-    var count = $("#stripeCount").val();
-    var discount = $("#stripeDiscount").val();
-    var volume = $("#stripeVolume").val();
+    var count = parseInt($("#stripeCount").val());
+    var discount = parseFloat($("#stripeDiscount").val());
+    var volume = parseInt($("#stripeVolume").val());
     var fx_currency = $("#stripeCurrency").val().toLowerCase();
     var fx_price = parseFloat($('#forex_' + fx_currency).attr('data-value').trim()).toFixed(2);
     var base_price = parseFloat($('#basePrice').attr('value').trim()).toFixed(2);
@@ -18,7 +18,7 @@ function setprice() {
     if (count) {
         bulk_price = bulk_price * count;
         if (count >= volume) {
-            bulk_price = bulk_price * (1 - discount);
+            bulk_price = bulk_price / (1 + discount);
         }
     }
     $("#stripePrice").val(bulk_price.toFixed());
@@ -52,17 +52,17 @@ function setcount(volume, discount) {
     setbuttonprice();
 }
 function setbuttonprice() {
-    var count = $("#stripeCount").val();
+    var count = parseInt($("#stripeCount").val());
     var discount = $("#stripeDiscount").val();
-    var volume = $("#stripeVolume").val();
+    var volume = parseInt($("#stripeVolume").val());
     var currency = getcurrencysymbol();
     var price = $("#stripePrice").val();
     var d_text = "Buy " + count + " for " + currency + " " + (price/100).toFixed(2);
-    var cin = count >= volume ? 'btn-success' : 'btn-default';
-    var cout = count < volume ? 'btn-success' : 'btn-default';
+    //var cin = count >= volume ? 'btn-success' : 'btn-default';
+    //var cout = count < volume ? 'btn-success' : 'btn-default';
     d_text = count >= volume ? d_text + " (" + Math.floor(discount*100) + "% discount)" : d_text;
-    $('#stripeButton').html(d_text).addClass(cin).removeClass(cout);
-    $("#stripeCaret").addClass(cin).removeClass(cout);
+    $('#stripeButton').html(d_text); //.addClass(cin).removeClass(cout);
+    //$("#stripeCaret").addClass(cin).removeClass(cout);
 }
 function timer(time,update,complete) {
     // http://stackoverflow.com/a/11336046

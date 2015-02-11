@@ -250,7 +250,7 @@ def check_fraud(user, novel_object, data_object, data_length):
             return True
         check_price = check_price * Decimal(str(fx)) * data_length
         if data_length >= settings.BULK_VOLUME:
-            check_price = check_price * (1 - Decimal(str(settings.BULK_DISCOUNT)))
+            check_price = check_price / (1 + Decimal(str(settings.BULK_DISCOUNT)))
         if closeness(int(check_price), int(data_object["stripePrice"])) < 1.8:
             return True
         return False

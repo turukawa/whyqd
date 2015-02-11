@@ -48,12 +48,12 @@
                     </form>
                     <p></p>
                     <div class="row">
-                        <div class="col-sm-4 col-sm-push-4 text-center">
+                        <div class="col-sm-6 col-sm-push-3 text-center">
                             <div class="btn-group">
                                 <button id="stripeButton" class="btn btn-lg btn-buy-dropdown inverse" disabled >Buy 1 for &pound;
                                 {{ novel_object.sentinal.price }}</button>
                                 <button id="stripeCaret" type="button" data-toggle="dropdown"
-                                        class="btn btn-lg btn-default dropdown-toggle btn-buy-dropdown">
+                                        class="btn btn-lg dropdown-toggle btn-buy-dropdown">
                                     <span class="caret"></span>
                                     <span class="sr-only">Toggle Dropdown</span>
                                 </button>
@@ -63,8 +63,8 @@
                                     <li id="forex_eur" data-value={{ fx.eur }}><a href="#">EUR</a></li>
                                 </ul>
                             </div>
-                            <div class="row col-xs-12 text-center"><span class="smallprint">Payments are securely
-                            processed by Stripe. This site never has access to your credit card number.</span></div>
+                            <span class="smallprint">Payments are securely
+                            processed by Stripe. This site never has access to your credit card number.</span>
                         </div>
                         <div class="col-sm-3 col-md-4" id="bulkbuyinfo"></div>
                     </div>
@@ -80,10 +80,10 @@
                         <div class="form-group">
                             <div class="row">
                                 {{ form.id }}
-                                <div class="col-xs-4">
+                                <div class="col-xs-6">
                                 {{ form.recipient|add_class:"form-control"|attr:"placeholder:Email" }}
                                 </div>
-                                <div class="col-xs-4">
+                                <div class="col-xs-6">
                                 {% if form.instance.days_left %} Loaned for {{ form.instance.days_left }} more days.{% endif %}
                                 </div>
                             </div>
@@ -103,10 +103,10 @@
                         <div class="form-group" id="refundForm_{{forloop.counter0}}">
                             <div class="row">
                                 {{ form.id }}
-                                <div class="col-xs-4">
+                                <div class="col-xs-6">
                                 {{ form.recipient|add_class:"form-control" }}
                                 </div>
-                                <div class="col-xs-8">
+                                <div class="col-xs-6">
                                 {% if form.instance.is_valid %}
                                     <button type="submit" class="btn btn-default"
                                             id="refundToken_{{forloop.counter0}}"
@@ -128,6 +128,7 @@
                     using these details. If they're wrong, or need changing, please fix. You can also opt-out of
                     marketing mail (which will probably be about the next book).</p>
                     <form action="" method="POST" class="form-inline">
+                        <div class="form-group col-xs-6">
                         {% csrf_token %}
                         <input type="hidden" value="{% url 'usr_update' %}" name="user_update" id="user_update" />
                         <input type="text" id="facebookname" class="form-control"
@@ -143,6 +144,7 @@
                         <p></p>
                         <button type="submit" class="btn btn-default" name="change_email"
                                 id="change_email" value="change">Change</button>
+                        </div>
                     </form>
                 </div>
             </div>

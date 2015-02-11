@@ -42,7 +42,8 @@
                 <blockquote>
             {% endif %}
             {% if request.user.is_authenticated or chapter.read != "own" %}
-                <a href="{{ chapter.url }}" id="{{ chapter.read }}_{{ forloop.counter }}">
+                <a href="{{ chapter.url }}" id="{{ chapter.read }}_{{ forloop.counter }}"
+                {% if not can_read and chapter.read != "open" %} class="restricted-read"{% endif %}>
             {% endif %}
             {{ chapter.title }}
             {% if request.user.is_authenticated or chapter.read != "own" %}
@@ -75,17 +76,6 @@
 {% endif %}
 <script>
     $(document).ready(function() {
-        var can_read = $('#can_read').val();
-        if (can_read == 'False') {
-            // Only if the user hasn't borrowed or already owns
-            if ($('[id^=own_]').length) {
-                $('[id^=own_]').addClass("text-danger");
-                $('[id^=login_]').addClass("text-warning");
-            }
-            else {
-                $('[id^=login_]').addClass("text-danger");
-            }
-        }
         $("#buytrigger").change(function () {
             $('#buynowtext').remove();
         });
