@@ -7,6 +7,7 @@ from django.conf import settings
 import stripe
 import json
 from boto.s3.connection import S3Connection
+from boto.exception import AWSConnectionError, S3DataError, S3ResponseError
 from decimal import Decimal
 from guardian.shortcuts import get_objects_for_user
 
@@ -342,7 +343,6 @@ def download_novel(request, surl, template_name="novel/download_novel.html"):
             kwargs["redeemer"] = request.user
         kwargs["redeemer_ip"] = wiqid.get_user_ip(request)
         can_download = True
-        cancel_token = True
     if token_object.is_purchased and request.user.is_authenticated():
         can_download = True
     if can_download:
@@ -350,18 +350,24 @@ def download_novel(request, surl, template_name="novel/download_novel.html"):
         # http://boto.readthedocs.org/en/latest/ref/s3.html#boto.s3.key.Key.generate_url
         # http://ceph.com/docs/next/radosgw/s3/python/
         # http://boto.readthedocs.org/en/latest/boto_config_tut.html may need is_secure=False, validate_certs=False
-        conn = S3Connection(settings.S3_ACCESS_KEY_ID, settings.S3_SECRET_ACCESS_KEY, is_secure=False)
-        bucket = conn.get_bucket(settings.S3_EBOOK_BUCKET)
-        # prepare response
-        downloads = {'response': 'success',
-                     'timer': str(settings.S3_TIMER),
-                     'links': {}
-        }
-        # https://code.google.com/p/boto/wiki/GetAllKeys
-        for k in bucket.list(settings.S3_EBOOK_DOWNLOAD_FOLDER):
-            ky = k.key.replace(settings.S3_EBOOK_DOWNLOAD_FOLDER + "/", "")
-            if ky:
-                downloads['links'][ky] = k.generate_url(settings.S3_TIMER)
+        try:
+            conn = S3Connection(settings.S3_ACCESS_KEY_ID, settings.S3_SECRET_ACCESS_KEY, is_secure=False)
+            bucket = conn.get_bucket(settings.S3_EBOOK_BUCKET)
+            # prepare response
+            downloads = {'response': 'success',
+                         'timer': str(settings.S3_TIMER),
+                         'links': {}
+            }
+            # https://code.google.com/p/boto/wiki/GetAllKeys
+            for k in bucket.list(settings.S3_EBOOK_DOWNLOAD_FOLDER):
+                ky = k.key.replace(settings.S3_EBOOK_DOWNLOAD_FOLDER + "/", "")
+                if ky:
+                    downloads['links'][ky] = k.generate_url(settings.S3_TIMER)
+            if token_object.is_purchased and token_object.is_valid:
+                cancel_token = True
+        except (AWSConnectionError, S3DataError, S3ResponseError) as e:
+            cancel_token = False
+            downloads = {'response': 'failure'}
         if cancel_token:
             # i.e. only do this after the download links have been generated in case this whole thing crashes
             token_object.redeem(**kwargs)
