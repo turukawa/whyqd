@@ -43,7 +43,8 @@
             {% endif %}
             {% if request.user.is_authenticated or chapter.read != "own" %}
                 <a href="{{ chapter.url }}" id="{{ chapter.read }}_{{ forloop.counter }}"
-                {% if not can_read and chapter.read != "open" %} class="restricted-read"{% endif %}>
+                {% if not can_read and request.user.is_authenticated and chapter.read == "own" %} class="restricted-read"
+                {% elif not request.user.is_authenticated and chapter.read != "open" %} class="restricted-read"{% endif %}>
             {% endif %}
             {{ chapter.title }}
             {% if request.user.is_authenticated or chapter.read != "own" %}
