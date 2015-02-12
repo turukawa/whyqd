@@ -78,7 +78,7 @@ function timer(time,update,complete) {
 }
 function setlinks(links) {
     var instruct = '<p>Time remaining before links expire: <span id="timer"></span></p>';
-    var dlist = '<ul>';
+    var dlist = '<ul class="redeem-token">';
     $.each(links, function(k, l) {
         dlist = dlist + '<li><a href=' + l + '>' + k + '</a></li>';
     });
