@@ -16,13 +16,13 @@
                 <p>You have until {{ request.user.deadline|naturalday:"l j E Y" }} to read {{ novel_object.title }} online. You
                 will need to purchase a copy if you wish to download an ereader version.</p>
                 {% else %}
-                <p>You'll need to purchase {{ novel_object.title }} to read the chapters highlighted in red, and the final price
-                will rise with every orange highlighted chapter you read.</p>
+                <p>You'll need to purchase {{ novel_object.title }} to read the muted-coloured chapter links, and the final price
+                will rise the further into the novel you read.</p>
                 {% endif %}
                 {% else %}
-                <p>Once you login you can read the chapters highlighted in red for free. You'll need to buy
-                {{ novel_object.title }} to read the unlinked chapters, and every free chapter you read will raise the final
-                price you pay.</p>                
+                <p>Once you login you can read the muted-coloured chapters for free. You'll need to buy
+                {{ novel_object.title }} to read the unlinked chapters, and the final price
+                will rise the further into the novel you read.</p>                
                 {% endif %}
             </div>
             {% endif %}

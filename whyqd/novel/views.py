@@ -227,6 +227,8 @@ def issue_tokens(request, surl, template_name="novel/issue_tokens.html"):
     tokens_remaining = settings.TOKEN_LIMIT - len(token_issued_list)
     total_duration = settings.TOKEN_DELTA
     total_tokens = settings.TOKEN_LIMIT
+    pro_disc = settings.BULK_DISCOUNT
+    pro_bulk = settings.BULK_VOLUME
     TokenFormSet = modelformset_factory(Token, form=TokenForm, extra=tokens_remaining)
     RefundFormSet = modelformset_factory(Token, form=TokenForm, extra=0)
     # forex settings

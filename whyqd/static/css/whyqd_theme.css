@@ -6530,3 +6530,6 @@ section {
 .checkbox-optout {
   min-width: 30px !important;
 }
+.restricted-read {
+  color: #CC6600 !important;
+}

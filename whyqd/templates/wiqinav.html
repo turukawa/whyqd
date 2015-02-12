@@ -31,7 +31,7 @@
                     <a onclick="F.connect(this.parentNode); return false;"
                        href="javascript:void(0);"><span class="icon-facebook-square"></span> Login</a>
                 </form></li>
-            {% else %}
+            {% elif user.is_superuser %}
                 <li><a href="{% url 'usr_logout' %}">
                     {% if user.first_name or user.last_name %}
                         {{ user.first_name }} {{ user.last_name }}
