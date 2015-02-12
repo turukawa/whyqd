@@ -6369,49 +6369,49 @@ section {
   margin: 0;
   word-break: normal;
 }
-@media (max-width: 4000px) {
+@media (min-width: 1501px) {
   .reading p {
     font-size: 1.15vw;
   }
 }
-@media (max-width: 1500px) {
+@media (min-width: 1201px) and (max-width: 1500px) {
   .reading p {
     font-size: 1.3vw;
   }
 }
-@media (max-width: 1200px) {
+@media (min-width: 1081px) and (max-width: 1200px) {
   .reading p {
     font-size: 1.5vw;
   }
 }
-@media (max-width: 1080px) {
+@media (min-width: 992px) and (max-width: 1080px) {
   .reading p {
     font-size: 1.7vw;
   }
 }
-@media (max-width: 991px) {
+@media (min-width: 841px) and (max-width: 991px) {
   .reading p {
     font-size: 1.9vmin;
   }
 }
-@media (max-width: 840px) {
+@media (min-width: 769px) and (max-width: 840px) {
   .reading p {
     font-size: 2.1vmin;
   }
 }
-@media (max-width: 768px) {
+@media (min-width: 641px) and (max-width: 768px) {
   .reading p {
     font-size: 2.5vmin;
   }
 }
-@media (max-width: 640px) {
+@media (min-width: 481px) and (max-width: 640px) {
   .reading p {
-    font-size: 2.7vmin;
+    font-size: 3.0vmin;
   }
 }
 @media (max-width: 480px) {
   .reading p {
-    font-size: 2.9vmin;
+    font-size: 3.6vmin;
   }
 }
 .reading p p.morespace {
