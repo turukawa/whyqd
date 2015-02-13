@@ -94,7 +94,7 @@
                         <li>You accept that you will have no recourse for a refund or further downloads.</li>
                     </ul>
                 <li>For as long as this token is valid you will be able to visit this page.</li>
-            {% endif %}
+                {% endif %}
                 {% if token_object.is_purchased %}
                 <li>Guidance for reading <a href="https://www.amazon.com/gp/sendtokindle">Kindle/.mobi</a> and
                 <a href="http://www.kobobooks.com/ade">Kobo/Nook/.epub</a>.</li>
@@ -112,6 +112,8 @@
                 <li>You will have full access to the whole online book for {{ days }} days after which you can ask
                 {{ token_object.creator.facebook_name }} to lend it to you again. Or you could just buy it.</li>
                 {% endif %}
+                <li>Besides the terms listed above, all interaction with this site is governed by our
+                <a href="{% url 'legal' %}">Terms of Service</a>.</li>
             </ul>
             </dd></dl>
             {% if token_object.is_valid and token_object.is_purchased and not token_object.creator and not request.user.is_authenticated %}

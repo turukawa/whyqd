@@ -11,10 +11,10 @@ class NovelAdmin(admin.ModelAdmin):
 admin.site.register(Novel, NovelAdmin)
 
 class TokenAdmin(admin.ModelAdmin):
-    list_display = ('surl', 'creator', 'stripe_id', 'is_valid', 'is_purchased', 'price')
+    list_display = ('created_on', 'surl', 'creator', 'recipient', 'stripe_id', 'is_valid', 'is_purchased', 'price')
     list_display_links = ('surl',)
     list_per_page = 50
-    ordering = ['surl']
+    ordering = ['created_on', 'stripe_id']
     search_fields = ['creator', 'redeemer']
 
 admin.site.register(Token, TokenAdmin)
