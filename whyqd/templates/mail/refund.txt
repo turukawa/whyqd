@@ -1,7 +1,8 @@
+{% load mathfilters %}
 --------------------------------------------------------------------------------
 {{ token_object.novel.title }}
 Refund Ref. - #{{ token_object.surl }}
-Price: {{ token_object.charge.currency.upper }} {{ token_object.charge.amount }}
+Price: {{ token_object.charge.currency.upper }} {{ token_object.charge.amount|div:100|floatformat:2 }}
 --------------------------------------------------------------------------------
 
 {% if token_object.creator %}Dear {{ token_object.creator.facebook_name }},{% else %}Hi,{% endif %}
