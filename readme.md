@@ -1,7 +1,23 @@
 Whyqd
 =====
 
-Whyqd is an extensible object-based wiki bringing revision control, content presentation, branching and embedding to any type of digital object.
+Whyqd is an extensible object-based wiki bringing revision control, content presentation, branching and embedding to any type of digital object. The current simplified implementation was developed to present and distribute my science-fiction novel, [Tartarus Falls](https://tartarusfalls.com).
+
+Features:
+
+- Online reading of complete novel;
+- Import novel source DOCX and convert to individual HTML pages for each chapter;
+- Price novel and set which chapters can be viewed as open, login or own;
+- Structure the Contents page;
+- Manage currency conversion, sales and distribution of the novel, including refunds;
+- Create one-time / time-limited download tokens for distribution;
+- Manage marketing and distribution of free review copies by author;
+
+In the future, Whyqd will allow:
+
+- Online creation and editing of novel;
+- Online conversion of HTML pages into epub, mobi and pdf ebooks;
+- Readers can fork, change and re-release books they buy;
 
 Whyqd allows content creators to publish and sell via a personal demand pricing model (e.g. the further a user reads into your novel, the higher the final price will be), and allow users to remix and republish the content after they've bought it.
 
@@ -9,32 +25,30 @@ Remixing means that users could translate a novel, write their own fan-fiction, 
 
 Whyqd is written in Python and Django, with Jquery for the client side.
 
-The current simplified implementation was developed to present and distribute my science-fiction novel, [Tartarus Falls](https://tartarusfalls.com).
-
 Roadmap
 -------
 
 ##### Current version (0.1):
 
- - The following wiqi objects are supported: Text, Images (not live), Maps (not live, handlers still to be written)
- - [Facebook auth system](https://github.com/tschellenbach/Django-facebook) along with per-object permissions;
- - A "book" model so that individual texts can be arranged as a single work;
- - Book management system (shuffling order of chapters);
- - Integration of python-docx for upload of Docx files;
- - [Stripe](https://stripe.com/gb) integration to support author sales of books;
- - [AWS Boto](https://github.com/boto/boto) integration for S3 time-limited download of books;
- - [Open Exchange Rates](https://openexchangerates.org/) for currency conversion;
- - [Mandrill](https://mandrill.com/) integration for distributed mail;
+- The following wiqi objects are supported: Text, Images (not live), Maps (not live, handlers still to be written)
+- [Facebook auth system](https://github.com/tschellenbach/Django-facebook) along with per-object permissions;
+- A "book" model so that individual texts can be arranged as a single work;
+- Book management system (shuffling order of chapters);
+- Integration of python-docx for upload of Docx files;
+- [Stripe](https://stripe.com/gb) integration to support author sales of books;
+- [AWS Boto](https://github.com/boto/boto) integration for S3 time-limited download of books;
+- [Open Exchange Rates](https://openexchangerates.org/) for currency conversion;
+- [Mandrill](https://mandrill.com/) integration for distributed mail;
 
 ##### Next steps:
 
 While maintaining the ability to publish only a single book, the next version should include a minimalist wiqi interface influenced by blog sites like [Medium](http://medium.com) and [WriteBox](http://writeboxapps.com/). [Guardian Scribe](https://github.com/guardian/scribe) is still extremely ugly, but the underlying approach to managing `contenteditable` is the best I've seen. The objective is that readers can remix and republish the novel to create new versions:
 
- - WYSIWIG writing interface: no separation of view vs editing pages;
- - Minimal interface: there is an assumption you know what you're doing, no queries regarding branching, new versions, etc.
- - Permissions-based: if you own a document, you can do what you like, if you don't, you branch it if you want to change it;
- - Merge-changes: if you want to merge two docs, view the diff, edit and commit;
- - D3.js simple tree view to present wiqi stack, as well as branched changes;
+- WYSIWIG writing interface: no separation of view vs editing pages;
+- Minimal interface: there is an assumption you know what you're doing, no queries regarding branching, new versions, etc.
+- Permissions-based: if you own a document, you can do what you like, if you don't, you branch it if you want to change it;
+- Merge-changes: if you want to merge two docs, view the diff, edit and commit;
+- D3.js simple tree view to present wiqi stack, as well as branched changes;
 
 ##### Long-term roadmap:
 
