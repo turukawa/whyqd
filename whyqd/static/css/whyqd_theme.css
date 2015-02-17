@@ -6137,14 +6137,19 @@ p {
     margin: 40px 20px 40px 20px;
   }
 }
-.content.bio p {
+.content.bio p, .content.bio ul {
   font-size: 2vmin;
   text-align: left;
   color: #cccccc;
   margin: 10px 120px;
 }
+.content.bio ul {
+  font-family: "PT Serif", serif;
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+}
 @media (max-width: 768px) {
-  .content.bio p {
+  .content.bio p, .content.bio ul  {
     font-size: 3vmin;
     margin: 5px 20px 5px 20px;
   }
@@ -6369,12 +6374,22 @@ section {
   margin: 0;
   word-break: normal;
 }
-@media (min-width: 1501px) {
+@media (min-width: 1801px) {
+  .reading p {
+    font-size: 0.95vw;
+  }
+}
+@media (min-width: 1551px) and (max-width: 1800px) {
+  .reading p {
+    font-size: 1.1vw;
+  }
+}
+@media (min-width: 1351px) and (max-width: 1550px) {
   .reading p {
     font-size: 1.15vw;
   }
 }
-@media (min-width: 1201px) and (max-width: 1500px) {
+@media (min-width: 1201px) and (max-width: 1350px) {
   .reading p {
     font-size: 1.3vw;
   }
