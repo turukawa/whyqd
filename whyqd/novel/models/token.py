@@ -94,6 +94,7 @@ class Token(models.Model):
         self.is_purchased = kwargs.get("is_purchased", False)
         self.charge = kwargs.get("charge", None)
         self.price = kwargs.get("price", Decimal("0.00"))
+        self.currency = kwargs.get("currency", "gbp")
         self.stripe_id = kwargs.get("stripe_id", None)
         # if purchased, and the creator and recipient are the same, then the person is buying this themselves
         # (i.e.) not a gift, the person is logged in and they will automatically take ownership...

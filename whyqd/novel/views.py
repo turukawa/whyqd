@@ -72,13 +72,24 @@ def buy_novel(request, surl=None, template_name="novel/buy_novel.html"):
             return HttpResponse(json.dumps(buy_response), content_type="application/json")
         # Create the charge on Stripe's servers - this will charge the user's card
         try:
-            charge = stripe.Charge.create(
-                amount=data["stripePrice"], # amount in pence
-                currency=data["stripeCurrency"],
-                card=data["stripeToken"],
-                description=data["stripeDescription"],
-                statement_description=novel_object.title,
-              )
+            # If Bitcoin, process a BitcoinReceiver first
+            if data["stripeBitcoin"] == "true":
+                #receiver = stripe.BitcoinReceiver.retrieve(data["stripeToken"])
+                #receiver(refund_mispayments=True)
+                charge = stripe.Charge.create(
+                    amount=data["stripePrice"], # amount in pence
+                    currency=data["stripeCurrency"],
+                    source=data["stripeToken"],
+                    description=data["stripeDescription"],
+                    )
+            else:
+                charge = stripe.Charge.create(
+                    amount=data["stripePrice"], # amount in pence
+                    currency=data["stripeCurrency"],
+                    card=data["stripeToken"],
+                    description=data["stripeDescription"],
+                    statement_description=novel_object.title,
+                    )
         except stripe.CardError, e:
           # The card has been declined
             if request.is_ajax():
@@ -89,6 +100,7 @@ def buy_novel(request, surl=None, template_name="novel/buy_novel.html"):
         kwargs["creator_ip"] = wiqid.get_user_ip(request)
         kwargs["novel"] = novel_object
         kwargs["charge"] = charge
+        kwargs["currency"] = data["stripeCurrency"].lower()
         kwargs["stripe_id"] = charge["id"]
         kwargs["is_purchased"] = True
         if request.user.is_authenticated():
@@ -302,6 +314,7 @@ def redeem_token(request, surl, template_name="novel/redeem_token.html"):
     token_object = get_object_or_404(Token, surl=surl)
     if not token_object.is_purchased:
         days = settings.TOKEN_DELTA
+    show_refund = False
     if request.user.is_authenticated():
         # check if user already owns this item and ignore redemption if they do
         if request.user.can_read(token_object.novel) == "owns":
@@ -316,6 +329,13 @@ def redeem_token(request, surl, template_name="novel/redeem_token.html"):
             return redirect("view_wiqi", wiqi_surl=token_object.novel.sentinal.surl)
     else:
         expiry = settings.S3_TIMER
+        if token_object.is_valid and \
+            token_object.is_purchased and \
+            not token_object.creator:
+            show_refund = True
+            show_bitcoin_refund = False
+        if show_refund  and not token_object.charge["card"]:
+            show_bitcoin_refund = True
     page_title = token_object.novel.title
     novel_object = token_object.novel
     page_subtitle = "Redemption"
@@ -387,9 +407,12 @@ def refund_token(request, surl, template_name="novel/refund_token.html"):
     page_title = token_object.novel.title
     refund_response = {'response': 'failure'}
     token_refund = False
+    data = request.POST
     if token_object.is_valid and token_object.is_purchased:
         if request.user.is_authenticated() or not token_object.creator:
             token_refund = True
+        if not token_object.charge["card"] and (data["bitcoin_refund"] == "false" or data["bitcoin_refund"] == ""):
+            token_refund = False # No bitcoin address for refund.
     if token_refund:
         stripe_key = settings.STRIPE_PUBLISHABLE_KEY
         # Set your secret key: remember to change this to your live secret key in production
@@ -398,10 +421,22 @@ def refund_token(request, surl, template_name="novel/refund_token.html"):
         try:
             # Get the token key
             stripe_charge = stripe.Charge.retrieve(token_object.charge["id"])
-            stripe_refund = stripe_charge.refunds.create(
-                amount= int(token_object.price * 100), # amount in pence / cents
-                reason = "requested_by_customer",
-              )
+            if token_object.charge["card"]:
+                stripe_refund = stripe_charge.refunds.create(
+                    amount = int(token_object.price * 100), # amount in pence / cents
+                    reason = "requested_by_customer",
+                  )
+            else:
+                try:
+                    stripe_refund = stripe_charge.refunds.create(
+                        refund_address = data["bitcoin_refund"],
+                        amount = int(token_object.price * 100), # amount in pence / cents
+                      )
+                except stripe.InvalidRequestError, e:
+                    # Stripe insists on a single repayment wallet address
+                    stripe_refund = stripe_charge.refunds.create(
+                        amount = int(token_object.price * 100), # amount in pence / cents
+                      )
             token_object.charge = stripe_refund
             token_object.is_valid = False
             token_object.is_purchased = False
@@ -415,7 +450,7 @@ def refund_token(request, surl, template_name="novel/refund_token.html"):
                                         }
                             }
             send_email(**email_kwargs)
-        except stripe.CardError, e:
+        except stripe.CardError, e: 
             # The refund has been declined
             refund_response = {'response': 'failure'}
     if request.is_ajax():

@@ -39,9 +39,11 @@
             <li id="forex_usd" data-value="{{ fx.usd }}"><a href="#">USD</a></li>
             <li id="forex_gbp" data-value="{{ fx.gbp }}"><a href="#">GBP</a></li>
             <li id="forex_eur" data-value="{{ fx.eur }}"><a href="#">EUR</a></li>
+            <li id="forex_btc" data-value="{{ fx.btc }}"><a href="#">BTC</a></li>
         </ul>
     </div>
-    <p></p>
-    <div class="row col-xs-12 text-center"><span class="smallprint">For Kindle & ePub readers. DRM-free. Payments are
-    securely processed by Stripe. This site never has access to your credit card number.</span></div>
+    <div class="row col-xs-12 text-center" id="buynowresponse"><span class="smallprint">For Kindle & ePub readers.
+    DRM-free. Payments securely processed by Stripe. BTC is an estimate until confirmed by Stripe.
+    This site never has access to your credit card number. Please review our
+    <a href="{% url 'legal' %}">Terms of Service</a></span></div>
 </div>

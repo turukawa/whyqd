@@ -5,7 +5,7 @@ import urllib2                    # For downloading the currency data
 import json                       # Allows the data to be decoded
 # https://github.com/ashokfernandez/PyExchangeRates/blob/master/PyExchangeRates.py
 
-CURRENCY_CHOICE = ("gbp", "usd", "eur")
+CURRENCY_CHOICE = ("gbp", "usd", "eur", "btc")
 BASE_CURRENCY = "gbp"
 
 def get_forex():

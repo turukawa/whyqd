@@ -98,9 +98,14 @@ $(document).ready(function() {
                 image: '/static/images/qwyre_logo_128pxBW.png',
                 name: ns.novel_title,
                 email: ns.user_email,
+                bitcoin: "true",
                 token: function(token) {
                     // http://stackoverflow.com/a/22461608
                     // You can access the token ID with `token.id`
+                    var is_bitcoin = false;
+                    if (token.type === "bitcoin_receiver") {
+                        is_bitcoin = true;
+                    }
                     $.ajax({
                         url: $('#stripeBuy').val(),
                         type: 'post',
@@ -111,6 +116,7 @@ $(document).ready(function() {
                             stripeCurrency: ns.currency,
                             stripeEmails: ns.emails,
                             selfPurchase: false,
+                            stripeBitcoin: is_bitcoin,
                             template: 'gift_purchase'
                         },
                         success: function(data) {
@@ -119,7 +125,7 @@ $(document).ready(function() {
                                 window.location.href = window.location.href;;
                             }
                             else {
-                                $('#bulkbuyinfo').html(
+                                $('#bulkbuyinfo').before(
                                     '<div class="alert alert-danger alert-dismissable">'+
                                         '<button type="button" class="close" ' + 
                                             'data-dismiss="alert" aria-hidden="true">' + '&times;' + 
@@ -130,7 +136,7 @@ $(document).ready(function() {
                             }
                         },
                         error: function(data) {
-                            $('#bulkbuyinfo').html(
+                            $('#bulkbuyinfo').before(
                                 '<div class="alert alert-danger alert-dismissable">'+
                                     '<button type="button" class="close" ' + 
                                         'data-dismiss="alert" aria-hidden="true">' + '&times;' + 
@@ -213,8 +219,16 @@ $(document).ready(function() {
     $('[id^=refundToken_]').on('click', function (e) {
         var tid = this;
         var rid = tid.id.replace("refundToken_", "");
+        var bitid = false;
+        if ($('#refundTokenWallet_' + rid).length != 0) {
+            bitid = $('#refundTokenWallet_' + rid).val();
+        }
         $.ajax({
-            url: tid.value
+            url: tid.value,
+            type: 'post',
+            data: {
+                bitcoin_refund: bitid
+            }
             }).done(function(data) {
                 if (data.response == 'success') {
                     $('#refundForm_' + rid).remove();

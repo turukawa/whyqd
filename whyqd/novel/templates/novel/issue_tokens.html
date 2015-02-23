@@ -66,10 +66,11 @@
                                     <li id="forex_eur" data-value={{ fx.eur }}><a href="#">EUR</a></li>
                                 </ul>
                             </div>
-                            <span class="smallprint">Payments are securely
-                            processed by Stripe. This site never has access to your credit card number.</span>
+                            <span class="smallprint" id="bulkbuyinfo">Payments are securely
+                            processed by Stripe. Select USD to pay in BTC (at rate calculated by Stripe). This site
+                            never has access to your credit card number. Please review our
+                            <a href="{% url 'legal' %}">Terms of Service</a></span>
                         </div>
-                        <div class="col-sm-3 col-md-4" id="bulkbuyinfo"></div>
                     </div>
                 </div>
                 <div id="tab-lend" class="tab-pane">
@@ -108,6 +109,10 @@
                                 {{ form.id }}
                                 <div class="col-xs-6">
                                 {{ form.recipient|add_class:"form-control" }}
+                                {% if form.instance.is_valid and not form.instance.charge.card %}
+                                <input type="text" class="form-control" placeholder="Enter refund wallet number"
+                                       id="refundTokenWallet_{{forloop.counter0}}" />
+                                {% endif %}
                                 </div>
                                 <div class="col-xs-6">
                                 {% if form.instance.is_valid %}

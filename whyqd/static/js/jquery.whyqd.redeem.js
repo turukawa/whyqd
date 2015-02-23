@@ -63,8 +63,16 @@ $(document).ready(function() {
     });
     $('#refundToken').on('click', function (e) {
         var tid = this;
+        var bitid = false;
+        if ($('#refundTokenWallet').length != 0) {
+            bitid = $('#refundTokenWallet').val();
+        }
         $.ajax({
-            url: tid.value
+            url: tid.value,
+            type: 'post',
+            data: {
+                bitcoin_refund: bitid
+            }
             }).done(function(data) {
                 if (data.response == 'success') {
                     window.location.href = '/';

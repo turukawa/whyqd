@@ -9,11 +9,17 @@ $(document).ready(function() {
                     image: '/static/images/qwyre_logo_128pxBW.png',
                     name: ns.novel_title,
                     email: ns.user_email,
+                    bitcoin: "true",
+                    refund_mispayments: "true",
                     token: function(token) {
                         // http://stackoverflow.com/a/22461608
                         // You can access the token ID with `token.id`
                         if (!ns.user_email) {
                             ns.user_email = token.email;
+                        }
+                        var is_bitcoin = false;
+                        if (token.type === "bitcoin_receiver") {
+                            is_bitcoin = true;
                         }
                         $.ajax({
                             url: $('#stripeBuy').val(),
@@ -25,6 +31,7 @@ $(document).ready(function() {
                                 stripeCurrency: ns.currency,
                                 stripeEmails: ns.user_email,
                                 selfPurchase: true, // Buying for own use
+                                stripeBitcoin: is_bitcoin,
                                 template: 'purchase'
                             },
                             success: function(data) {
@@ -33,7 +40,7 @@ $(document).ready(function() {
                                     $("#buytrigger").val(true).change();
                                     $('#buynow').empty();
                                     if (data.registered) {
-                                        $('#buynow').after(
+                                        $('#buynow').before(
                                             '<div class="alert alert-success alert-dismissable">'+
                                             '<button type="button" class="close" ' + 
                                             'data-dismiss="alert" aria-hidden="true">' + '&times;' + 
@@ -50,7 +57,7 @@ $(document).ready(function() {
                                     }
                                 }
                                 else {
-                                    $('#buynow').after(
+                                    $('#buynowresponse').before(
                                         '<div class="alert alert-danger alert-dismissable">'+
                                             '<button type="button" class="close" ' + 
                                                 'data-dismiss="alert" aria-hidden="true">' + '&times;' + 
@@ -61,7 +68,7 @@ $(document).ready(function() {
                                 }
                             },
                             error: function(data) {
-                                $('#buynow').after(
+                                $('#buynowresponse').after(
                                     '<div class="alert alert-danger alert-dismissable">'+
                                         '<button type="button" class="close" ' + 
                                             'data-dismiss="alert" aria-hidden="true">' + '&times;' + 
@@ -90,39 +97,47 @@ $(document).ready(function() {
     }
     $('[id^=forex_]').on('click', function (e) {
         var forex = this;
-        var base_price = parseFloat($('#basePrice').attr('value').trim()).toFixed(2);
+        var base_price = parseFloat($('#basePrice').attr('value').trim());
         var next_price = $('#nextPrice').attr('value').trim();
-        var select_price = parseFloat($(this).attr('data-value').trim()).toFixed(2);
-        console.log(base_price);
-        console.log($('#'+this.id).val());
+        var select_price = parseFloat($(this).attr('data-value').trim());
         var new_price = (select_price * base_price);
         if (next_price) {
-            next_price = (parseFloat(next_price).toFixed(2) * select_price/100).toFixed(2);
+            next_price = (parseFloat(next_price) * select_price/100);
         }
-        $("#stripePrice").val(new_price.toFixed());
         switch (this.id) {
             case 'forex_usd':
                 $('#stripeButton').html("Buy for $ " + (new_price/100).toFixed(2));
                 $("#stripeCurrency").val('USD');
                 if (next_price) {
-                    $('#nextPriceText').html("Price increases to $ " + next_price);
+                    $('#nextPriceText').html("Price increases to $ " + next_price.toFixed(2));
                 }
                 break;
             case 'forex_gbp':
                 $('#stripeButton').html("Buy for &pound; " + (new_price/100).toFixed(2));
                 $("#stripeCurrency").val('GBP');
                 if (next_price) {
-                    $('#nextPriceText').html("Price increases to &pound; " + next_price);
+                    $('#nextPriceText').html("Price increases to &pound; " + next_price.toFixed(2));
                 }
                 break;
             case 'forex_eur':
                 $('#stripeButton').html("Buy for &euro; " + (new_price/100).toFixed(2));
                 $("#stripeCurrency").val('EUR');
                 if (next_price) {
-                    $('#nextPriceText').html("Price increases to &euro; " + next_price);
+                    $('#nextPriceText').html("Price increases to &euro; " + next_price.toFixed(2));
                 }
                 break;
+            case 'forex_btc':
+                $('#stripeButton').html("Buy for &#3647; " + (new_price/100).toFixed(4));
+                if (next_price) {
+                    $('#nextPriceText').html("Price increases to &#3647; " + next_price.toFixed(4));
+                }
+                // Stripe needs this to be in USD for 10min period conversion rate
+                var USD_price = parseFloat($('#forex_usd').attr('data-value').trim());
+                new_price = (USD_price * base_price);
+                $("#stripeCurrency").val('USD');
+                break;
         }
+        $("#stripePrice").val(new_price.toFixed());
         e.preventDefault();
     });
     $("#buytrigger").change(function () {

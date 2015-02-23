@@ -245,13 +245,14 @@ def check_fraud(user, novel_object, data_object, data_length):
         if data_object.get("selfPurchase", False) == "true" and user.is_authenticated():
             if user.current_price > novel_object.sentinal.price:
                 check_price = user.current_price * 100
+        received_price = int(data_object["stripePrice"])
         fx = get_forex().get(data_object["stripeCurrency"].lower(), False)
         if not fx:
             return True
         check_price = check_price * Decimal(str(fx)) * data_length
         if data_length >= settings.BULK_VOLUME:
             check_price = check_price / (1 + Decimal(str(settings.BULK_DISCOUNT)))
-        if closeness(int(check_price), int(data_object["stripePrice"])) < 1.8:
+        if closeness(int(check_price), received_price) < 1.8:
             return True
         return False
     except Exception:
