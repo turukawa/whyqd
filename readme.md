@@ -5,9 +5,9 @@ Whyqd is an extensible object-based wiki bringing revision control, content pres
 
 Features:
 
-- Online reading of complete novel;
+- HTML-based presentation of complete novel;;
 - Import novel source DOCX and convert to individual HTML pages for each chapter;
-- Price novel and set which chapters can be viewed as open, login or own;
+- Price and set permissions for each chapter (as open, login or own);
 - Structure the Contents page;
 - Manage currency conversion, sales and distribution of the novel, including refunds;
 - Create one-time / time-limited download tokens for distribution;
@@ -15,7 +15,7 @@ Features:
 
 In the future, Whyqd will allow:
 
-- Online creation and editing of novel;
+- Online creation and editing of a novel;
 - Online conversion of HTML pages into epub, mobi and pdf ebooks;
 - Readers can fork, change and re-release books they buy;
 
