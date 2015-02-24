@@ -4184,7 +4184,7 @@ body.home .navbar-nav li a:hover {
   color: #ffa2a2 !important;
 }
 .container-fluid.page-background {
-  background: url("http://tartarusfalls.com/static/images/Tartarus_Bkg_1600x828.jpg") no-repeat 50% 0;
+  background: url("/static/images/Tartarus_Bkg_1600x828.jpg") no-repeat 50% 0;
   background-size: 63% auto;
 }
 .checkbox-optout {
@@ -4659,7 +4659,7 @@ section {
   font-size: 100%;
   color: white;
 }
-.redeem .redeem-token {
+.redeem .redeem-token, .redeem-token {
   font-size: 3.5vmin;
   list-style-type: none !important;
 }
