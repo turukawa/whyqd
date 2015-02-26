@@ -30,7 +30,9 @@ def index(request, template_name="wiqi/index.html", nav_type="view"):
     fx = get_forex()
     fxd = settings.DEFAULT_CURRENCY
     page_price = novel_object.sentinal.price
-    show_buy = True
+    show_buy = False
+    if novel_object.show_buy:
+        show_buy = True
     if request.user.is_authenticated():
         can_read = request.user.can_read(novel_object)
         if can_read == "owns":
@@ -88,7 +90,9 @@ def view_wiqi(request, wiqi_surl, wiqi_type=None, template_name="wiqi/view.html"
         fx = get_forex()
         fxd = settings.DEFAULT_CURRENCY
         page_price = wiqi_object.price
-        show_buy = True
+        show_buy = False
+        if novel_object.show_buy:
+            show_buy = True
         if request.user.is_authenticated():
             can_read = request.user.can_read(novel_object)
             if can_read == "owns":

@@ -50,6 +50,9 @@ def view_chapters(request, surl, template_name="novel/view_chapters.html"):
             show_buy = False
         elif can_read != "borrowed" and request.user.current_price > page_price:
             page_price = request.user.current_price
+    if not novel_object.show_buy:
+        show_buy = False
+        can_read = True
     return render(request, template_name, locals())
 
 def buy_novel(request, surl=None, template_name="novel/buy_novel.html"):

@@ -80,6 +80,7 @@ class Novel(models.Model):
     ebook_mobi = models.FileField(upload_to=get_ebookname, blank=True)
     ebook_pdf = models.FileField(upload_to=get_ebookname, blank=True)
     ebook_azw = models.FileField(upload_to=get_ebookname, blank=True)
+    show_buy = models.BooleanField(default=True)
     defaultcurrency = models.CharField(max_length=7, choices=CURRENCY_CHOICE, default="gbp")
     defaultprice = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
     discountvolume = models.IntegerField(blank=True, null=True)
