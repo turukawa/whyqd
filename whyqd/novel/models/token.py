@@ -21,7 +21,7 @@ class TokenQuerySet(QuerySet):
         """
         Return filtered list of active and valid tokens.
         """
-        deadline = pytz.UTC.localize(datetime.now()) - timedelta(days=settings.TOKEN_DELTA)
+        deadline = pytz.UTC.localize(datetime.now()) - timedelta(days=self.novel.lenddays)
         return self.filter(Q(creator=user) &
                            Q(is_purchased=False) &
                            (Q(is_valid=True) |
@@ -147,7 +147,7 @@ class Token(models.Model):
     def days_left(self):
         try:
             return (self.redeemed_on.date()
-                    + timedelta(days=settings.TOKEN_DELTA)
+                    + timedelta(days=self.novel.lenddays)
                     - pytz.UTC.localize(datetime.now()).date()).days
         except:
             return False

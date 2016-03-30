@@ -37,13 +37,13 @@ Derived classes:
 
 from django.db import models, IntegrityError
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.contenttypes import generic
+from django.contrib.contenttypes.fields import GenericForeignKey
 from django.db.models.query import QuerySet
 from django.db.models import Q
-# Allowing generic relations - https://docs.djangoproject.com/en/dev/ref/contrib/contenttypes/
+# Allowing generic relations - https://docs.djangoproject.com/en/1.9/ref/contrib/contenttypes/#generic-relations
 #         content_type = models.ForeignKey(ContentType)
 #         object_id = models.PositiveIntegerField()
-#         content_object = generic.GenericForeignKey("content_type", "object_id")
+#         content_object = GenericForeignKey("content_type", "object_id")
 from django.conf import settings
 from django.core.urlresolvers import reverse
 
@@ -104,18 +104,18 @@ class Wiqi(models.Model):
     is_deleted = models.BooleanField(default=False)
     stack_content_type = models.ForeignKey(ContentType, related_name="%(app_label)s_%(class)s_base", null=True)
     stack_object_id = models.PositiveIntegerField(null=True)
-    stack = generic.GenericForeignKey("stack_content_type", "stack_object_id")
+    stack = GenericForeignKey("stack_content_type", "stack_object_id")
     branched_content_type = models.ForeignKey(ContentType, related_name="%(app_label)s_%(class)s_branched", null=True)
     branched_object_id = models.PositiveIntegerField(null=True)
-    branched = generic.GenericForeignKey("branched_content_type", "branched_object_id")
+    branched = GenericForeignKey("branched_content_type", "branched_object_id")
     branchlist = models.ManyToManyField("self", blank=True)
     merged_content_type = models.ForeignKey(ContentType, related_name="%(app_label)s_%(class)s_merged", null=True)
     merged_object_id = models.PositiveIntegerField(null=True)
-    merged = generic.GenericForeignKey("merged_content_type", "merged_object_id")
+    merged = GenericForeignKey("merged_content_type", "merged_object_id")
     next_wiqi = models.ForeignKey("self", related_name="%(app_label)s_%(class)s_next", null=True)
     previous_wiqi = models.ForeignKey("self", related_name="%(app_label)s_%(class)s_previous", null=True)
     currency = models.CharField(max_length=7, choices=CURRENCY_CHOICE, default="gbp")
-    read_if = models.CharField(max_length=5, choices=READ_IF_CHOICE, default="open")
+    read_if = models.CharField(max_length=5, choices=READ_IF_CHOICE, default="own")
     price = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
     wiqi_objects = WiqiManager() # To extend QuerySet in derived classes
 
@@ -236,6 +236,7 @@ class Wiqi(models.Model):
         self.is_live_from = kwargs.get("is_live_from", pytz.UTC.localize(datetime.now()))
         self.is_live_to = kwargs.get("is_live_to",None)
         self.is_private = kwargs.get("is_private",False)
+        self.price = kwargs.get("price", "0.00")
         self.next_wiqi = kwargs.get("next", None)
         self.previous_wiqi = kwargs.get("previous", None)
         self.save()
@@ -353,7 +354,7 @@ class WiqiStack(models.Model):
     reverted_from_content_type = models.ForeignKey(ContentType, related_name="%(app_label)s_%(class)s_reverted_from",
                                                    null=True, blank=True)
     reverted_from_object_id = models.PositiveIntegerField(null=True, blank=True)
-    reverted_from = generic.GenericForeignKey("reverted_from_content_type", "reverted_from_object_id")
+    reverted_from = GenericForeignKey("reverted_from_content_type", "reverted_from_object_id")
     wiqi_objects = WiqiManager() # To extend QuerySet in derived classes
     
     class QuerySet(QuerySet):

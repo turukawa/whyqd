@@ -5,11 +5,12 @@ from django.forms.models import modelformset_factory
 from django.conf import settings
 
 import stripe
-import json
+import simplejson as json #Decimal value support
 from boto.s3.connection import S3Connection
 from boto.exception import AWSConnectionError, S3DataError, S3ResponseError
 from decimal import Decimal
 from guardian.shortcuts import get_objects_for_user
+from bs4 import BeautifulSoup
 
 from whyqd.novel.models import Novel, Token
 from whyqd.novel.forms import NovelForm, TokenForm, BulkBuyForm
@@ -33,6 +34,15 @@ def view_novel(request, surl, template_name="novel/view_novel.html"):
     page_title = novel_object.title
     return render(request, template_name, locals())
 
+@login_required
+def test_novel(request, template_name="novel/test_novel.html"):
+    if not request.user.is_superuser:
+        return Http404
+    novel_object = get_list_or_404(Novel)[0]
+    page_title = novel_object.title
+    data = request.META
+    return render(request, template_name, locals())
+
 def view_chapters(request, surl, template_name="novel/view_chapters.html"):
     novel_object = get_object_or_404(Novel, surl=surl)
     page_title = novel_object.title
@@ -40,7 +50,7 @@ def view_chapters(request, surl, template_name="novel/view_chapters.html"):
     chapter_objects = json.loads(novel_object.chapterformat)
     # forex and pricing settings
     fx = get_forex()
-    fxd = settings.DEFAULT_CURRENCY
+    fxd = novel_object.defaultcurrency
     page_price = novel_object.sentinal.price
     show_buy = True
     can_read = False
@@ -158,12 +168,13 @@ def novel_settings(request, surl=None):
             novel_object = get_object_or_404(Novel, surl=surl)
         else:
             novel_object = get_list_or_404(Novel)[0]
+        a = wiqid.get_user_ip(request)
         response_dict = {'settings': {
             'stripe_key': settings.STRIPE_PUBLISHABLE_KEY,
-            'bulk_discount': settings.BULK_DISCOUNT,
-            'bulk_volume': settings.BULK_VOLUME,
-            'bulk_price': str(novel_object.sentinal.price),
-            'novel_price': str(novel_object.sentinal.price),
+            'bulk_discount': novel_object.discountpercent,
+            'bulk_volume': novel_object.discountvolume,
+            'bulk_price': novel_object.sentinal.price,
+            'novel_price': novel_object.sentinal.price,
             'novel_title': novel_object.title,
             'user_email': ''
             }
@@ -208,7 +219,7 @@ def resend_token(request, surl, template_name="novel/issue_tokens.html"):
                                 'template': 'gift_purchase',
                                 'context': {'token_object': token_object,
                                             'website': request.META['HTTP_HOST'],
-                                            'days': settings.TOKEN_DELTA
+                                            'days': token_object.novel.lenddays
                                             }
                                 }
                 send_email(**email_kwargs)
@@ -239,16 +250,16 @@ def issue_tokens(request, surl, template_name="novel/issue_tokens.html"):
     token_purchased_list = Token.query.valid_purchased(request.user, False).all()
     # only need one if intend to download, doesn't matter which since they did buy
     token_download = request.user.current_token(purchased=True)
-    tokens_remaining = settings.TOKEN_LIMIT - len(token_issued_list)
-    total_duration = settings.TOKEN_DELTA
-    total_tokens = settings.TOKEN_LIMIT
-    pro_disc = settings.BULK_DISCOUNT
-    pro_bulk = settings.BULK_VOLUME
+    tokens_remaining = novel_object.lendnumber - len(token_issued_list)
+    total_duration = novel_object.lenddays
+    total_tokens = novel_object.lendnumber
+    pro_disc = novel_object.discountpercent
+    pro_bulk = novel_object.discountvolume
     TokenFormSet = modelformset_factory(Token, form=TokenForm, extra=tokens_remaining)
     RefundFormSet = modelformset_factory(Token, form=TokenForm, extra=0)
     # forex settings
     fx = get_forex()
-    fxd = settings.DEFAULT_CURRENCY
+    fxd = novel_object.defaultcurrency
     fxp = int(novel_object.sentinal.price*100)
     if request.method == "POST":
         send_list = []
@@ -316,7 +327,7 @@ def issue_tokens(request, surl, template_name="novel/issue_tokens.html"):
 def redeem_token(request, surl, template_name="novel/redeem_token.html"):
     token_object = get_object_or_404(Token, surl=surl)
     if not token_object.is_purchased:
-        days = settings.TOKEN_DELTA
+        days = token_object.novel.lenddays
     show_refund = False
     if request.user.is_authenticated():
         # check if user already owns this item and ignore redemption if they do
@@ -343,10 +354,10 @@ def redeem_token(request, surl, template_name="novel/redeem_token.html"):
     novel_object = token_object.novel
     page_subtitle = "Redemption"
     page_class = "home"
-    pro_disc = settings.BULK_DISCOUNT
-    pro_bulk = settings.BULK_VOLUME
-    pro_lend = settings.TOKEN_LIMIT
-    pro_days = settings.TOKEN_DELTA
+    pro_disc = novel_object.discountpercent
+    pro_bulk = novel_object.discountvolume
+    pro_lend = novel_object.lendnumber
+    pro_days = novel_object.lenddays
     return render(request, template_name, locals())
 
 def download_novel(request, surl, template_name="novel/download_novel.html"):
@@ -465,10 +476,15 @@ def create_novel(request, template_name="novel/create_novel.html"):
     """
     Create the novel but does not yet populate the chapters.
     """
+    print "-------------------------------------------------------------------------------"
+    print "Initialising"
+    print "-------------------------------------------------------------------------------"
     if not request.user.is_superuser:
         return render(request, '404.html', status=403)
     if request.method == "POST":
         novel_form = NovelForm(request.POST)
+        print "-------------------------------------------------------------------------------"
+        print "Posting part"
         if novel_form.is_valid():
             kwargs = request.POST.dict()
             kwargs["creator"] = request.user
@@ -519,7 +535,8 @@ def organise_novel(request, surl, template_name="novel/create_novel.html", permi
             kwargs = json.loads(request.body)
             kwargs["common"] = {"creator": request.user,
                                 "creator_ip": wiqid.get_user_ip(request),
-                                "WiqiStack": wiqid.get_wiqi_or_404('text')
+                                "WiqiStack": wiqid.get_wiqi_or_404('text'),
+                                "price": novel_object.defaultprice,
                                 }
             novel_object = novel_object.add_chapters(**kwargs)
             return HttpResponse(json.dumps({'response': 'success'}), content_type="application/json")

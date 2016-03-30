@@ -48,7 +48,7 @@ class User(AbstractUser, FacebookModel):
         try:
             if not token_object:
                 token_object = self.current_token()
-            return token_object.redeemed_on + timedelta(days=settings.TOKEN_DELTA)
+            return token_object.redeemed_on + timedelta(days=token_object.novel.lenddays)
         except:
             return False
         

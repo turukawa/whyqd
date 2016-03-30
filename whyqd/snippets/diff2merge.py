@@ -1,5 +1,5 @@
 from bs4 import BeautifulSoup
-from pydocx import Docx2Html
+from pydocx import PyDocX
 import re
 
 def cleanhtml(html, **kwargs):
@@ -36,7 +36,7 @@ def docxtract(docxfile, **kwargs):
     Get a docx file and extract chapters. Return an array for further processing by the user.
     '''
     header = [u'h1', u'h2', u'h3', u'h4']
-    html = Docx2Html(docxfile).parsed
+    html = PyDocX.to_html(docxfile)
     html = cleanhtml(html, **kwargs)
     # Get the tree
     p = False

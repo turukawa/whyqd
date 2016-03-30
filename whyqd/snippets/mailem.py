@@ -13,10 +13,10 @@ def send_email(*args, **kwargs):
     """
     email = Emailer(to=kwargs.get('to'), subject=kwargs.get('subject'))
     email.text('{0}/mail/{1}.txt'.format(
-        settings.TEMPLATE_DIRS[0], kwargs.get('template')), kwargs.get('context'))
+        settings.TEMPLATES[0]['DIRS'][0], kwargs.get('template')), kwargs.get('context'))
     if kwargs.get('sendhtml', False):
         email.html('{0}/mail/{1}.html'.format(
-            settings.TEMPLATE_DIRS[0], kwargs.get('template')), kwargs.get('context'))
+            settings.TEMPLATES[0]['DIRS'][0], kwargs.get('template')), kwargs.get('context'))
     from_address = kwargs.get('from', None)
     email.send(from_addr=from_address, fail_silently=False)
     

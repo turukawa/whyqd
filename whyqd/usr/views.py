@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import Http404, HttpResponse
 from django.contrib.auth import logout
 
-import json
+import simplejson as json
 
 from whyqd.usr.forms import SubscribeForm
 from whyqd.snippets.diff2merge import xtractemail

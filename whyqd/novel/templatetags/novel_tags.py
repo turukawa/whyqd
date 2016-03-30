@@ -1,6 +1,7 @@
 from django import template
 from django.core.exceptions import ObjectDoesNotExist
-from django.utils.datastructures import SortedDict
+#https://docs.python.org/3/library/collections.html#collections.OrderedDict
+from collections import OrderedDict as SortedDict
 
 register = template.Library()
 

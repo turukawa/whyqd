@@ -17,6 +17,11 @@
                 </div></small></h1>
                 </div>
             </div>
+            {% if user.is_superuser %}
+            <div class="col-xs-12 text-center">
+                <p class="text-right"><a href="{{ wiqi_object.get_edit_url}}">edit</a></p>
+            </div>
+            {% endif %}
         </div>
         <div class="row col-xs-12 col-lg-10 col-lg-push-1" id="content">
         {% if diff_wiqis %}{{ diff_wiqis|safe }}{% else %}{{ wiqi_object.htmlresponse|safe }}{% endif %}

@@ -20,10 +20,12 @@
         <h2><div id="title" class="editable" contenteditable="true" data-placeholder="Title" data-medium-element="true"></div></h2>
         <div id="pitch" class="editable" contenteditable="true" data-placeholder="Pitch your book in 503 characters" data-medium-element="true"></div>
         <p><small id="charactercount">503 characters remaining...</small></p>
+        <p></p>
+        <div id="defaultprice" class="editable" type="number" contenteditable="true" data-placeholder="Decimal base price of your book in GBP" data-medium-element="true"></div>
         <!--
         <form action="" enctype="multipart/form-data" method="POST" class="inline">
             {% csrf_token %}
-            {% for field in wiqistack_form %}
+            {% for field in novel_form %}
                 <p>{{ field.label_tag }} {{ field }}</p>
                 <p><small>{{ field.help_text }}</small></p>
             {% endfor %}
@@ -59,8 +61,10 @@ function hidebookempties() {
     if (!$('#pitch').html().trim()) {
         $('#pitch').hide();
     }
+    if (!$('#defaultprice').html().trim()) {
+        $('#defaultprice').hide();
+    }
 }
-
 $(document).ready(function() {
         $.getJSON("/media/quotes.txt",function(result){
             var num = Math.floor(Math.random() * 101)+ '';

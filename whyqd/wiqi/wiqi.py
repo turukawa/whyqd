@@ -26,6 +26,11 @@ def get_user_ip(request):
         ip = request.META.get('REMOTE_ADDR')
     return ip
 
+def get_user_country(request):
+    # Specific to using CloudFlare
+    # https://support.cloudflare.com/hc/en-us/articles/205072537-What-are-the-two-letter-country-codes-for-the-Access-Rules-
+    return request.META.get('HTTP_CF_IPCOUNTRY')
+
 def get_wiqi_or_404(wiqi_type):
     """
     Return appropriate Wiqi class
@@ -46,6 +51,11 @@ def has_permission(wiqi_object, usr, permission):
             return wiqi_object.wiqi.can_do(usr, permission)
     return True
 
+def save_user_view(usr, wiqi_object):
+    if usr.is_authenticated():
+        usr.current_view = wiqi_object.surl
+        usr.save()
+            
 def get_user_view_rights(usr, wiqi_object):
     """
     Test the user viewing rights and update the current view for later reference;
@@ -55,6 +65,7 @@ def get_user_view_rights(usr, wiqi_object):
     :return:
     """
     if wiqi_object.read_if == "open":
+        save_user_view(usr, wiqi_object)
         return wiqi_object
     if usr.is_authenticated():
         can_read = usr.can_read(wiqi_object)
@@ -63,8 +74,7 @@ def get_user_view_rights(usr, wiqi_object):
             if wiqi_object.price > usr.current_price and can_read != "borrowed":
                 # Leave the price as is if borrowed.
                 usr.current_price = wiqi_object.price
-            usr.current_view = wiqi_object.surl
-            usr.save()
+            save_user_view(usr, wiqi_object)
             return wiqi_object
     # If user is not authenticated, or has no viewing rights,
     # return False to force redirect to register/login, or to buy
@@ -250,8 +260,8 @@ def check_fraud(user, novel_object, data_object, data_length):
         if not fx:
             return True
         check_price = check_price * Decimal(str(fx)) * data_length
-        if data_length >= settings.BULK_VOLUME:
-            check_price = check_price / (1 + Decimal(str(settings.BULK_DISCOUNT)))
+        if data_length >= novel_object.discountvolume:
+            check_price = check_price / (1 + Decimal(str(novel_object.discountpercent)))
         if closeness(int(check_price), received_price) < 1.8:
             return True
         return False

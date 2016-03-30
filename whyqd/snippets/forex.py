@@ -2,7 +2,7 @@ from django.conf import settings
 from django.core.cache import cache
 
 import urllib2                    # For downloading the currency data
-import json                       # Allows the data to be decoded
+import simplejson as json         # Allows the data to be decoded
 # https://github.com/ashokfernandez/PyExchangeRates/blob/master/PyExchangeRates.py
 
 CURRENCY_CHOICE = ("gbp", "usd", "eur", "btc")

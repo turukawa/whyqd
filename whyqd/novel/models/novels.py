@@ -137,6 +137,8 @@ class Novel(models.Model):
         self.creator = kwargs["creator"]
         self.creator_ip = kwargs.get("creator_ip",None)
         self.licensing = kwargs.get("licensing","(c)")
+        self.pitch = BeautifulSoup(kwargs.get("pitch", "")[:503]).get_text().strip()
+        self.defaultprice = kwargs.get("defaultprice", "0.00")
         self.save()
 
     def assign_all_perm(self, usr):

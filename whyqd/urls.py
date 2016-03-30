@@ -2,18 +2,20 @@ from django.conf.urls import patterns, include, url
 from django.conf.urls.static import static
 from django.contrib.staticfiles.storage import staticfiles_storage
 from django.views.generic.base import RedirectView
-from whyqd import settings
+
+# new format import, deprecating patterns
+from whyqd import settings, novel, usr, wiqi
+from django.contrib.staticfiles import views
 
 # from django.contrib import admin
 from django.contrib import admin
 admin.autodiscover()
 
-urlpatterns = patterns('',
-    (r'^media/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.MEDIA_ROOT}),
-    url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
-    url(r'^admin/', include(admin.site.urls)),
-    (r'^facebook/', include('django_facebook.urls')),
-    (r'^accounts/', include('django_facebook.auth_urls')),
+urlpatterns = [
+    url(r'^media/(?P<path>.*)$', views.serve),
+    url(r'^admin/', admin.site.urls, name="test"),
+    url(r'^facebook/', include('django_facebook.urls')),
+    url(r'^accounts/', include('django_facebook.auth_urls')),
     url(r'^usr/', include('whyqd.usr.urls')),
     url(r'^my/', include('whyqd.novel.urls')),
     # App icons
@@ -69,9 +71,10 @@ urlpatterns = patterns('',
         permanent=False), name="browserconfig"),
     # End app icons
     url(r'^', include('whyqd.wiqi.urls')),
-)
+    ]
 
+#https://docs.djangoproject.com/en/1.9/howto/static-files/#serving-static-files-during-development
 if settings.DEBUG:
-    urlpatterns += patterns('',
-        (r'^static/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.STATIC_ROOT}),
-    ) + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+    urlpatterns += [
+        url(r'^static/(?P<path>.*)$', views.serve),
+    ] + static(settings.STATIC_URL)

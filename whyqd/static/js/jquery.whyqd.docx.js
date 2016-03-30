@@ -20,6 +20,11 @@
         sortable = sortable + '</ul>';
         return sortable;
     }
+    function strip(html) {
+        var tmp = document.createElement("DIV");
+        tmp.innerHTML = html;
+        return tmp.textContent || tmp.innerText || "";
+    }
 
     $(document).ready(function() {
         var editor = new MediumEditor('.editable', {
@@ -59,7 +64,10 @@
                                 $("#booksort").html(dlist);
                                 $("#sortable").sortable();
                                 $("#sortable").disableSelection();
-                                $.post(window.location.pathname, editor.serialize(), function(data) {
+                                // Strip function: http://stackoverflow.com/a/822486
+                                var novel_data = editor.serialize()
+                                novel_data.defaultprice = strip(novel_data.defaultprice)
+                                $.post(window.location.pathname, novel_data, function(data) {
                                     localStorage.setItem('book', data.novel);
                                     $('#bookintro').empty();
                                     $('#charactercount').empty();

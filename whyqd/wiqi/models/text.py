@@ -48,6 +48,9 @@ class Text(WiqiStack):
                                help_text="An elaboration of the title.")
     content = models.TextField(blank=True, verbose_name="Content", 
                                help_text="Use html format to enter text.")
+    custom_div = models.CharField(max_length=500, blank=True,
+                                  verbose_name="Custom Div",
+                                  help_text="Use html format to enter text.")
     word_count = models.IntegerField(blank=True, null=True)
     
     class Meta(WiqiStack.Meta):

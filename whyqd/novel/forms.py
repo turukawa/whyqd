@@ -4,7 +4,7 @@ from whyqd.novel.models import Novel, Token
 class NovelForm(forms.ModelForm):
     class Meta:
         model = Novel
-        fields = ('title', 'pitch', )
+        fields = ('title', 'pitch', 'defaultprice')
         # https://docs.djangoproject.com/en/dev/topics/forms/modelforms/#overriding-the-default-fields
         widgets = {
             'pitch': forms.Textarea(attrs={'cols': 120, 'rows': 5}),

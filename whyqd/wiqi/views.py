@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import Http404, HttpResponse
 from django.conf import settings
 
-import json
+import simplejson as json
 from guardian.shortcuts import assign_perm, get_objects_for_user, get_perms
 
 from whyqd.wiqi.models import Wiqi, DEFAULT_WIQISTACK_TYPE
@@ -28,7 +28,7 @@ def index(request, template_name="wiqi/index.html", nav_type="view"):
     nav_set = None
     # forex and pricing settings
     fx = get_forex()
-    fxd = settings.DEFAULT_CURRENCY
+    fxd = novel_object.defaultcurrency
     page_price = novel_object.sentinal.price
     show_buy = False
     if novel_object.show_buy:
@@ -58,14 +58,16 @@ def view_wiqi_list(request, template_name="wiqi/list.html", nav_type="view"):
     nav_set = None
     return render(request, template_name, locals())
 
-def view_wiqi(request, wiqi_surl, wiqi_type=None, template_name="wiqi/view.html", nav_type="view"):
+def view_wiqi(request, wiqi_surl, wiqi_type=None, template_name="wiqi/view.html", nav_type="view",
+              permission=None):
     """
     Return wiqi view, or the view of the stack (item or list) from the wiqi.
     """
-    wiqi_object = wiqid.get_wiqi_object_or_404(wiqi_surl, request.user, wiqi_type, None, nav_type)
+    wiqi_object = wiqid.get_wiqi_object_or_404(wiqi_surl, request.user, wiqi_type, permission,
+                                               nav_type)
     if wiqi_object:
         # If no wiqi object, user has no rights to view, and must login or buy...
-        nav_set = wiqid.get_wiqi_nav(request, nav_type, wiqi_object)
+        # nav_set = wiqid.get_wiqi_nav(request, nav_type, wiqi_object)
         template_name = "wiqi/view_%s.html" % wiqi_object.get_class
         try:
             chapter_title = wiqi_object.stack.title
@@ -79,7 +81,11 @@ def view_wiqi(request, wiqi_surl, wiqi_type=None, template_name="wiqi/view.html"
         page_title = novel_object.title
         page_subtitle = chapter_title
         # Prepare for viewing next_wiqi
-        next_wiqi = wiqi_object.next_wiqi
+        try:
+            next_wiqi = wiqi_object.next_wiqi
+        except:
+            # It's a wiqi_object
+            next_wiqi = wiqi_object.wiqi.next_wiqi
         if next_wiqi:
             can_read_next = False
             if request.user.is_authenticated():
@@ -88,8 +94,12 @@ def view_wiqi(request, wiqi_surl, wiqi_type=None, template_name="wiqi/view.html"
                 can_read_next = next_wiqi.read_if
         # forex and pricing settings
         fx = get_forex()
-        fxd = settings.DEFAULT_CURRENCY
-        page_price = wiqi_object.price
+        fxd = novel_object.defaultcurrency
+        try:
+            page_price = wiqi_object.price
+        except:
+            # It's a wiqi_object
+            page_price = wiqi_object.wiqi.price
         show_buy = False
         if novel_object.show_buy:
             show_buy = True
@@ -117,7 +127,7 @@ def view_wiqistacklist(request, wiqi_surl, wiqi_type=None, template_name="wiqi/v
     Return wiqi list view from the wiqi.
     """
     wiqi_object = wiqid.get_wiqi_object_or_404(wiqi_surl, request.user, wiqi_type, permission)
-    nav_set = wiqid.get_wiqi_nav(request, nav_type, wiqi_object)
+    #nav_set = wiqid.get_wiqi_nav(request, nav_type, wiqi_object)
     template_name = "wiqi/viewstack_%s.html" % wiqi_object.get_class
     # The wiqi must not be a stack pointer
     page_title = wiqi_object.stack.title
@@ -134,24 +144,19 @@ def view_wiqistacklist(request, wiqi_surl, wiqi_type=None, template_name="wiqi/v
         return HttpResponse(json.dumps(nav_set), content_type="application/json")
     else:
         return render(request, template_name, locals())
-
+    
 @login_required
 def edit_wiqi(request, wiqi_type=None, wiqi_surl=None, previous_wiqi=None,
               template_name="wiqi/edit", nav_type="edit", permission="can_edit"):
     """
-    Edit existing or create new wiqistack object.
-    Performs branch from any wiqistack item.
+    Shortened version of full edit wiqi
+    Removed create, branch and javascript support
     """
     if wiqi_type is None and nav_type == "create":
         wiqi_type = DEFAULT_WIQISTACK_TYPE
     if wiqi_type is None:
         # Strictly enforce wiqi type binding to any editing or branching behaviour, ensures always in WiqiStack
         return Http404
-    # Set the template
-    if request.GET.get('j', None):
-        template_name = "wiqi/view_%s.html" % wiqi_type
-    else:
-        template_name = "wiqi/edit_%s.html" % wiqi_type
     if nav_type == "create":
         # Create wiqi_object
         wiqi_object = Wiqi()
@@ -162,6 +167,8 @@ def edit_wiqi(request, wiqi_type=None, wiqi_surl=None, previous_wiqi=None,
         wiqistack_object = wiqid.get_wiqi_object_or_404(wiqi_surl, request.user, wiqi_type, permission)
         wiqi_object = wiqistack_object.wiqi
         page_title = wiqistack_object.title
+        novel_object = wiqi_object.novel_chapterlist.all()[0]
+    template_name = "wiqi/edit_%s.html" % wiqi_object.get_class
     # This is for a standard call to the non-ajax editing form
     WiqiStackForm = wiqid.get_wiqi_form(wiqi_type)
     if request.method == "POST":
@@ -169,35 +176,84 @@ def edit_wiqi(request, wiqi_type=None, wiqi_surl=None, previous_wiqi=None,
         if not kwargs:
             wiqistack_form = WiqiStackForm(request.POST, request.FILES)
             return render(request, template_name, locals())
-        if nav_type == "branch":
-            # Get the new wiqi item as the new reference
-            wiqi_object = wiqistack_object.branch(**kwargs)
-            wiqistack_object = wiqi_object.stack
         if nav_type == "edit" and not wiqistack_object.is_top_of_stack:
             # Test whether wiqistack_object is at the top of the stack
             # Revert it to the top if it isn't, then make changes below
             wiqistack_object.revert(**kwargs)
-        if nav_type == "create":
-            # Create the Wiqi with kwargs
-            wiqi_object.set(**kwargs)
+        # Assign the previous wiqi to this wiqi, if it exists
         if nav_type != "branch":
             # Update the wiqi to link Wiqi to Stack
             wiqi_object.update(**kwargs)
-        if nav_type != "edit" and request.user.is_subscribed:
-            # assign all permissions to this wiqi to the user
-            wiqi_object.assign_all_perm(request.user)
-        # Assign the previous wiqi to this wiqi, if it exists
         if previous_wiqi:
             previous_wiqi_object, wiqi_object = wiqid.link_previous_wiqi(request, wiqi_object, previous_wiqi, permission)
-        if request.is_ajax():
-            nav_set = wiqid.get_wiqi_nav(request, nav_type, wiqi_object)
-            nav_set['wiqi'] = wiqi_object.jsonresponse
-            return HttpResponse(json.dumps(nav_set), content_type="application/json")
-        else:
-            return redirect(wiqi_object)
+        return redirect(wiqi_object)
     else:
         wiqistack_form = WiqiStackForm(instance=wiqistack_object)
     return render(request, template_name, locals())
+
+# @login_required
+# def edit_wiqi(request, wiqi_type=None, wiqi_surl=None, previous_wiqi=None,
+#               template_name="wiqi/edit", nav_type="edit", permission="can_edit"):
+#     """
+#     Edit existing or create new wiqistack object.
+#     Performs branch from any wiqistack item.
+#     """
+#     if wiqi_type is None and nav_type == "create":
+#         wiqi_type = DEFAULT_WIQISTACK_TYPE
+#     if wiqi_type is None:
+#         # Strictly enforce wiqi type binding to any editing or branching behaviour, ensures always in WiqiStack
+#         return Http404
+#     # Set the template
+#     if request.GET.get('j', None):
+#         template_name = "wiqi/view_%s.html" % wiqi_type
+#     else:
+#         template_name = "wiqi/edit_%s.html" % wiqi_type
+#     if nav_type == "create":
+#         # Create wiqi_object
+#         wiqi_object = Wiqi()
+#         wiqistack_object = None
+#         page_title = None
+#     else:
+#         # Get the wiqi object to be edited or branched
+#         wiqistack_object = wiqid.get_wiqi_object_or_404(wiqi_surl, request.user, wiqi_type, permission)
+#         wiqi_object = wiqistack_object.wiqi
+#         page_title = wiqistack_object.title
+#     # This is for a standard call to the non-ajax editing form
+#     WiqiStackForm = wiqid.get_wiqi_form(wiqi_type)
+#     if request.method == "POST":
+#         kwargs = wiqid.get_wiqi_kwargs(request, wiqi_type, WiqiStackForm)
+#         if not kwargs:
+#             wiqistack_form = WiqiStackForm(request.POST, request.FILES)
+#             return render(request, template_name, locals())
+#         if nav_type == "branch":
+#             # Get the new wiqi item as the new reference
+#             wiqi_object = wiqistack_object.branch(**kwargs)
+#             wiqistack_object = wiqi_object.stack
+#         if nav_type == "edit" and not wiqistack_object.is_top_of_stack:
+#             # Test whether wiqistack_object is at the top of the stack
+#             # Revert it to the top if it isn't, then make changes below
+#             wiqistack_object.revert(**kwargs)
+#         if nav_type == "create":
+#             # Create the Wiqi with kwargs
+#             wiqi_object.set(**kwargs)
+#         if nav_type != "branch":
+#             # Update the wiqi to link Wiqi to Stack
+#             wiqi_object.update(**kwargs)
+#         if nav_type != "edit" and request.user.is_subscribed:
+#             # assign all permissions to this wiqi to the user
+#             wiqi_object.assign_all_perm(request.user)
+#         # Assign the previous wiqi to this wiqi, if it exists
+#         if previous_wiqi:
+#             previous_wiqi_object, wiqi_object = wiqid.link_previous_wiqi(request, wiqi_object, previous_wiqi, permission)
+#         if request.is_ajax():
+#             nav_set = wiqid.get_wiqi_nav(request, nav_type, wiqi_object)
+#             nav_set['wiqi'] = wiqi_object.jsonresponse
+#             return HttpResponse(json.dumps(nav_set), content_type="application/json")
+#         else:
+#             return redirect(wiqi_object)
+#     else:
+#         wiqistack_form = WiqiStackForm(instance=wiqistack_object)
+#     return render(request, template_name, locals())
 
 @login_required
 def compare_wiqi(request, wiqi_surl, template_name="compare.html", nav_type="compare", permission="can_view_stack"):

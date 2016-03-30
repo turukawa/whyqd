@@ -1,7 +1,7 @@
 Whyqd
 =====
 
-Whyqd is an extensible object-based wiki bringing revision control, content presentation, branching and embedding to any type of digital object. The current simplified implementation was developed to present and distribute my science-fiction novel, [Tartarus Falls](https://tartarusfalls.com).
+Whyqd is an extensible object-based wiki bringing revision control, content presentation, branching and embedding to any type of digital object. The current simplified implementation was developed to present and distribute my science-fiction novel, [Lament for the Fallen](https://lamentforthefallen.com).
 
 Features:
 
@@ -28,9 +28,16 @@ Whyqd is written in Python and Django, with Jquery for the client side.
 Roadmap
 -------
 
-##### Current version (0.1):
+##### Current version (0.2):
 
-- The following wiqi objects are supported: Text, Images (not live), Maps (not live, handlers still to be written)
+- Updated libraries to latest (Django 1.9);
+- Deprecated Mandrill, since they no longer offer this service, and replaced with Django mail;
+- Text pages can have custom class defined in div;
+- Imported DOCX can set a default price for each chapter;
+
+##### Previous version (0.1):
+
+- The following wiqi objects are supported: Text, Images (not live), Maps (not live, handlers still to be written);
 - [Facebook auth system](https://github.com/tschellenbach/Django-facebook) along with per-object permissions;
 - A "book" model so that individual texts can be arranged as a single work;
 - Book management system (shuffling order of chapters);

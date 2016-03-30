@@ -37,7 +37,10 @@ class WiqiPriceForm(forms.ModelForm):
 class TextForm(forms.ModelForm):
     class Meta:
         model = Text
-        fields = ('title', 'content', )
+        fields = ('title', 'content', 'custom_div')
+        widgets = {
+            'content': forms.Textarea(attrs={'cols': 80, 'rows': 20}),
+        }
         
 #class ImageForm(forms.ModelForm):
 #    class Meta:
