@@ -8,7 +8,6 @@ Abstract classes:
                     is_live_from
                     is_live_to
                     is_active
-                    is_private
                     is_searchable
                     is_deleted
                     stack (generic foreign key)
@@ -59,7 +58,7 @@ from decimal import Decimal
 from guardian.core import ObjectPermissionChecker
 from guardian.shortcuts import assign_perm, get_objects_for_user, get_perms
 
-LICENSE_CHOICE = (("(c)","All Rights Reserved"),
+LICENCE_CHOICE = (("(c)","All Rights Reserved"),
                   ("CC0","No Rights Reserved"),
                   ("CC BY","CC Attribution"),
                   ("CC BY-ND","CC Attribution + NoDerivatives"),
@@ -97,8 +96,6 @@ class Wiqi(models.Model):
                                         help_text="Leave blank to publish immediately, otherwise select a future publication date.")
     is_live_to = models.DateTimeField(blank=True, null=True, verbose_name="Publish until", 
                                       help_text="Leave blank for permanent publication, otherwise select a date to end publication.")
-    is_private = models.BooleanField(default=False, verbose_name="Private", 
-                                     help_text="If unselected, the wiqi will be public.")
     is_active = models.BooleanField(default=True)
     is_searchable = models.BooleanField(default=True)
     is_deleted = models.BooleanField(default=False)
@@ -131,13 +128,9 @@ class Wiqi(models.Model):
                                Q(is_active = True) & 
                                (Q(is_live_to__gte = now) | 
                                Q(is_live_to = None)))
-        def private(self):
-            return self.filter(is_private = True)
-        def public(self):
-            return self.filter(is_private = False)
 
     class Meta:
-        app_label = "wiqi"
+        #app_label = "wiqi"
         permissions = (
                        # "change" permission is reserved for public objects.
                        ("can_create", "Can create new documents."),
@@ -149,7 +142,7 @@ class Wiqi(models.Model):
                        ("can_revert", "Can revert live object from historical object."),
                        ("can_branch", "Can branch the object to a new wiqi."),
                        ("can_merge", "Can merge the object into an existing wiqi."),
-                       ("owns", "Has purchased the object."),
+                       ("purchased", "Has purchased the object."),
                        ("borrowed", "Has borrowed the object."),
                        # Access to any of the above properties doesn't apply the right to share any of these with others. Unless below also included.
                        ("can_share_view", "Can share access of private object with others."),
@@ -235,7 +228,6 @@ class Wiqi(models.Model):
                 break
         self.is_live_from = kwargs.get("is_live_from", pytz.UTC.localize(datetime.now()))
         self.is_live_to = kwargs.get("is_live_to",None)
-        self.is_private = kwargs.get("is_private",False)
         self.price = kwargs.get("price", "0.00")
         self.next_wiqi = kwargs.get("next", None)
         self.previous_wiqi = kwargs.get("previous", None)
@@ -287,19 +279,18 @@ class Wiqi(models.Model):
         self.is_deleted = True
         self.save()
         return self
-        
+    
     def can_do(self, usr, permission):
         '''
-        Return whether the user has rights for a specific permission for this wiqi.
-        Anyone can view public wiqis, however.  Viewing the stack requires permissions.
+        Return whether the user has rights for a specific permission to perform a specific activity
+        for this wiqi:
+            - Anyone can view;
+            - After that, if the user is logged in, test for permission ... this is set by the
+              creator.
         '''
-        if permission == "can_view" and not self.is_private:
+        if permission == "can_view":
             return True
-        if not self.is_private and usr.is_authenticated():
-            return True
-        if self.is_private and usr.has_perm(permission, self) and usr.profile.is_subscribed:
-            return True
-        if not self.is_private and usr.has_perm(permission, self):
+        if usr.is_authenticated() and usr.has_perm(permission, self):
             return True
         return False
         
@@ -344,8 +335,8 @@ class WiqiStack(models.Model):
     creator = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, related_name="%(app_label)s_%(class)s_creator")
     creator_ip = models.GenericIPAddressField(blank=True, null=True, default="255.255.255.255")
     created_on = models.DateTimeField(auto_now_add=True)
-    license = models.CharField(max_length=50, choices=LICENSE_CHOICE, default="All Rights Reserved", 
-                               verbose_name="Release License", help_text="What form of copyright do you offer?")
+    licence = models.CharField(max_length=50, choices=LICENCE_CHOICE, default="All Rights Reserved", 
+                               verbose_name="Release Licence", help_text="What form of copyright do you offer?")
     citation = models.CharField(max_length=150, blank=True, default="",
                                 help_text="Please reference the original creator, if it wasn't you.")
     jsonresponse = JSONField(load_kwargs={'object_pairs_hook': collections.OrderedDict}, blank=True, null=True)
@@ -374,7 +365,7 @@ class WiqiStack(models.Model):
     
     class Meta:
         abstract = True
-        app_label = "wiqi"
+        #app_label = "wiqi"
         get_latest_by = "created_on"
         ordering = ("created_on", )
 
@@ -437,7 +428,7 @@ class WiqiStack(models.Model):
         self.title = kwargs["title"]
         self.creator = kwargs["creator"]
         self.creator_ip =kwargs.get("creator_ip",None)
-        self.license = kwargs.get("license","All Rights Reserved")
+        self.licence = kwargs.get("licence","All Rights Reserved")
         self.citation = kwargs.get("citation", "")
         #self.original_creator = kwargs["original_creator"]
         self.reverted_from = kwargs.get("reverted_from", None)
@@ -453,7 +444,7 @@ class WiqiStack(models.Model):
         # assert(kwargs["many"].difference(self.many.all()) == set([]))
 
     def preprocess(self, **kwargs):
-        kwargs["title"] = BeautifulSoup(kwargs.get("title", "")[:250]).get_text().strip()
+        kwargs["title"] = BeautifulSoup(kwargs.get("title", "")[:250], "html.parser").get_text().strip()
         return kwargs
 
     def copy(self, **kwargs):

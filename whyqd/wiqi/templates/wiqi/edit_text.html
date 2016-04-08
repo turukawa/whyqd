@@ -1,8 +1,3 @@
-{% extends "wrapper.html" %}
-
-
-
-{% block content %}
 <div class="container">
     <div class="col-xs-12 col-md-8 col-md-push-2 whyqd-content reading content">
 		<div class="row col-xs-12 col-lg-10 col-lg-push-1" id="content">
@@ -10,14 +5,11 @@
     	    {% csrf_token %}
     	    <input id="previous" type="hidden" value="{% if wiqi_object.stack %}{{ wiqi_object.get_previous }}
     	       {% else %}{{ wiqi_object.wiqi.get_previous }}{% endif %}"/>
-			
     		{% for field in wiqistack_form %}
     			<p>{{ field.label_tag }}</p><p>{{ field }}</p>
     		{% endfor %}
-			
     		<button type="submit" class="btn btn-md btn-read" name="_{{ nav_type }}" value="{{ nav_type }}">{{ nav_type }}</button>
     	</form>
 		</div>
 	</div>
 </div>
-{% endblock content %}

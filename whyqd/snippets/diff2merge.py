@@ -9,7 +9,7 @@ def cleanhtml(html, **kwargs):
     valid_keep = kwargs.get('valid_keep', ['b', 'i', 'u', 'strong', 'em', 'blockquote', 'div', 'ins', 'span'])
     valid_del = kwargs.get('valid_del', ['del', 'hr'])
     # https://medium.com/p/f2fa442daf99
-    soup = BeautifulSoup(html, 'html.parser')
+    soup = BeautifulSoup(html, "html.parser")
     if soup.body:
         soup = soup.body
     # http://tezro.livejournal.com/219164.html

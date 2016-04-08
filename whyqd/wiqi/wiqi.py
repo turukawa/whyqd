@@ -12,7 +12,6 @@ from whyqd.wiqi.models import Wiqi, Text, WIQI_TYPE_DICT, DEFAULT_WIQISTACK_TYPE
 from whyqd.wiqi.forms import TextForm, WIQI_FORM_TYPE_DICT#, GeomapForm, ImageForm
 from whyqd.snippets import html2text 
 from whyqd.snippets.diff_match_patch import diff_match_patch
-from whyqd.snippets.forex import get_forex
 
 import markdown2
 import math
@@ -26,11 +25,6 @@ def get_user_ip(request):
         ip = request.META.get('REMOTE_ADDR')
     return ip
 
-def get_user_country(request):
-    # Specific to using CloudFlare
-    # https://support.cloudflare.com/hc/en-us/articles/205072537-What-are-the-two-letter-country-codes-for-the-Access-Rules-
-    return request.META.get('HTTP_CF_IPCOUNTRY')
-
 def get_wiqi_or_404(wiqi_type):
     """
     Return appropriate Wiqi class
@@ -42,7 +36,7 @@ def get_wiqi_or_404(wiqi_type):
     except KeyError:
         raise Http404
 
-def has_permission(wiqi_object, usr, permission):
+def user_has_permission(wiqi_object, usr, permission):
     if permission:
         try:
             return wiqi_object.can_do(usr, permission)
@@ -50,36 +44,7 @@ def has_permission(wiqi_object, usr, permission):
             # it's in the stack, so check the wiqi for permissions
             return wiqi_object.wiqi.can_do(usr, permission)
     return True
-
-def save_user_view(usr, wiqi_object):
-    if usr.is_authenticated():
-        usr.current_view = wiqi_object.surl
-        usr.save()
             
-def get_user_view_rights(usr, wiqi_object):
-    """
-    Test the user viewing rights and update the current view for later reference;
-    If viewing free while logged in, update price to current maximum;
-    :param usr:
-    :param wiqi_object:
-    :return:
-    """
-    if wiqi_object.read_if == "open":
-        save_user_view(usr, wiqi_object)
-        return wiqi_object
-    if usr.is_authenticated():
-        can_read = usr.can_read(wiqi_object)
-        if wiqi_object.read_if == "login" \
-                or (wiqi_object.read_if == "own" and can_read):
-            if wiqi_object.price > usr.current_price and can_read != "borrowed":
-                # Leave the price as is if borrowed.
-                usr.current_price = wiqi_object.price
-            save_user_view(usr, wiqi_object)
-            return wiqi_object
-    # If user is not authenticated, or has no viewing rights,
-    # return False to force redirect to register/login, or to buy
-    return False
-
 def get_wiqi_object_or_404(wiqi_surl, usr, wiqi_type=None, permission=None, nav_type=False):
     """
     Get wiqi object and check that user has permissions to perform task
@@ -93,9 +58,9 @@ def get_wiqi_object_or_404(wiqi_surl, usr, wiqi_type=None, permission=None, nav_
     else:
         wiqi_object = get_object_or_404(Wiqi, surl=wiqi_surl)
     if nav_type == "view":
-        return get_user_view_rights(usr, wiqi_object)
-    if not has_permission(wiqi_object, usr, permission):
-        return False
+        return wiqi_object
+    if not user_has_permission(wiqi_object, usr, permission):
+        raise Http404
     return wiqi_object
 
 def get_wiqi_kwargs(request, wiqi_type, WiqiStackForm, **kwargs):
@@ -166,52 +131,6 @@ def get_wiqi_form(wiqistack_type):
         return WIQI_FORM_TYPE_DICT[wiqistack_type]
     except KeyError:
         raise Http404
-
-def get_wiqi_nav(request, nav_type, wiqi_object):
-    """
-    Convert list of nav-types and nav-permissions into set of nav-types and links.
-    """
-    nav_response = []
-    nav_set_true = {"view": ["edit"],
-                    "edit": ["edit", "stack", "branch", "create"],
-                    "can_edit": True
-                    }
-    nav_set_false = {"view": ["branch"],
-                     "edit": ["branch", "stack", "create"],
-                    "can_edit": False
-                     }
-    nav_set = nav_set_false
-    nav_loop = ["view"]
-    try:
-        if request.user == wiqi_object.creator:
-            nav_set = nav_set_true
-    except AttributeError:
-        return {"nav": nav_response.append([nav_type, None])}
-    # Navigation Set: [link_function, link_permission]
-    else:
-    # if nav_type not view, then return either of edit or branch
-    # else, return either of view edit or branch
-        if nav_type == "view":
-            nav_loop.extend(nav_set["view"])
-        else:
-            nav_loop.extend(nav_set["edit"])
-        nav_get = {"view": [wiqi_object.get_url(), "can_view"],
-                   "edit": [wiqi_object.get_edit_url(), "can_edit"],
-                   "stack": [wiqi_object.get_stacklist_url(),"can_view_stack"],
-                   #"share": [wiqi_object.get_share_url,"can_share"],
-                   #"revert": [wiqi_object.get_revert_url(),"can_revert"], 
-                   "branch": [wiqi_object.get_branch_url(),"can_branch"],
-                   "create": [reverse('create_previous_wiqi', kwargs={'wiqi_type': wiqi_object.get_class, 'previous_wiqi': wiqi_object.surl}), "can_create"],
-                   #"merge": [wiqi_object.get_merge_url,"can_merge"],
-                   }
-        for nav_item in nav_loop:
-            nav_url, nav_permission = nav_get[nav_item]
-            if not has_permission(wiqi_object, request.user, nav_permission):
-                continue
-            #if not nav_set["can_edit"] and nav_item == "branch":
-            #    nav_item = "edit"
-            nav_response.append([nav_item, nav_url])
-    return {"nav": nav_response}
     
 def compare_wiqis(wiqi1, wiqi2):
     """
@@ -229,42 +148,3 @@ def compare_wiqis(wiqi1, wiqi2):
         elif op == dmp.DIFF_EQUAL:
             html.append("%s" % text)
     return markdown2.markdown("".join(html))
-
-def closeness(a, b):
-    """
-    Returns measure of equality, in unit of decimal significant figures.
-    http://stackoverflow.com/a/564086
-    """
-    a = float(a)
-    b = float(b)
-    if a == b:
-        return float("infinity")
-    difference = abs(a - b)
-    avg = (a + b)/2
-    return math.log10( avg / difference )
-
-def check_fraud(user, novel_object, data_object, data_length):
-    """
-    Very basic fraud protection / detection.
-    Anyone who wants to spend time defrauding me of 2 pounds
-    is clearly insane and not much I can do about it.
-    data_object is the data received from the user
-    """
-    try:
-        check_price = novel_object.sentinal.price * 100
-        if data_object.get("selfPurchase", False) == "true" and user.is_authenticated():
-            if user.current_price > novel_object.sentinal.price:
-                check_price = user.current_price * 100
-        received_price = int(data_object["stripePrice"])
-        fx = get_forex().get(data_object["stripeCurrency"].lower(), False)
-        if not fx:
-            return True
-        check_price = check_price * Decimal(str(fx)) * data_length
-        if data_length >= novel_object.discountvolume:
-            check_price = check_price / (1 + Decimal(str(novel_object.discountpercent)))
-        if closeness(int(check_price), received_price) < 1.8:
-            return True
-        return False
-    except Exception:
-        # If anything goes wrong, this throws an exception and returns "fraud".
-        return True

@@ -65,14 +65,25 @@
                                 $("#sortable").sortable();
                                 $("#sortable").disableSelection();
                                 // Strip function: http://stackoverflow.com/a/822486
-                                var novel_data = editor.serialize()
-                                novel_data.defaultprice = strip(novel_data.defaultprice)
+                                //var novel_data = editor.serialize()
+                                //novel_data.defaultprice = strip(novel_data.defaultprice)
+                                // Using Django standard form for the moment since require publish
+                                // dates ... and can't think of a way to get that as text just yet.
+                                var novel_data = $('#noveldata').serialize();
+                                var array_novel_data = $('#noveldata').serializeArray();
+                                var array_data = {};
+                                $(array_novel_data).each(function(index, obj){
+                                    array_data[obj.name] = obj.value;
+                                });
                                 $.post(window.location.pathname, novel_data, function(data) {
                                     localStorage.setItem('book', data.novel);
-                                    $('#bookintro').empty();
+                                    //$('#bookintro').empty();
                                     $('#charactercount').empty();
                                     editor.deactivate();
-                                    hidebookempties();
+                                    //hidebookempties();
+                                    $('#noveldata').hide();
+                                    $('#this_title').text(array_data.title);
+                                    $('#this_pitch').text(array_data.pitch);
                                 });
                             }
                         });

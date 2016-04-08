@@ -97,6 +97,7 @@ $(document).ready(function() {
     }
     $('[id^=forex_]').on('click', function (e) {
         var forex = this;
+        var preorder_text = $('#novelPreorder').attr('value').trim();
         var base_price = parseFloat($('#basePrice').attr('value').trim());
         var next_price = $('#nextPrice').attr('value').trim();
         var select_price = parseFloat($(this).attr('data-value').trim());
@@ -106,28 +107,28 @@ $(document).ready(function() {
         }
         switch (this.id) {
             case 'forex_usd':
-                $('#stripeButton').html("Buy for $ " + (new_price/100).toFixed(2));
+                $('#stripeButton').html(preorder_text + " for $ " + (new_price/100).toFixed(2));
                 $("#stripeCurrency").val('USD');
                 if (next_price) {
                     $('#nextPriceText').html("Price increases to $ " + next_price.toFixed(2));
                 }
                 break;
             case 'forex_gbp':
-                $('#stripeButton').html("Buy for &pound; " + (new_price/100).toFixed(2));
+                $('#stripeButton').html(preorder_text + " for &pound; " + (new_price/100).toFixed(2));
                 $("#stripeCurrency").val('GBP');
                 if (next_price) {
                     $('#nextPriceText').html("Price increases to &pound; " + next_price.toFixed(2));
                 }
                 break;
             case 'forex_eur':
-                $('#stripeButton').html("Buy for &euro; " + (new_price/100).toFixed(2));
+                $('#stripeButton').html(preorder_text + " for &euro; " + (new_price/100).toFixed(2));
                 $("#stripeCurrency").val('EUR');
                 if (next_price) {
                     $('#nextPriceText').html("Price increases to &euro; " + next_price.toFixed(2));
                 }
                 break;
             case 'forex_btc':
-                $('#stripeButton').html("Buy for &#3647; " + (new_price/100).toFixed(4));
+                $('#stripeButton').html(preorder_text + " for &#3647; " + (new_price/100).toFixed(4));
                 if (next_price) {
                     $('#nextPriceText').html("Price increases to &#3647; " + next_price.toFixed(4));
                 }

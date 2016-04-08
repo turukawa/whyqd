@@ -1,11 +1,5 @@
-{% extends "wrapper.html" %}
-{% load humanize %}
-{% load staticfiles %}
-{% load mathfilters %}
-
-{% block content %}
 <div class="container">
-    <div class="col-xs-12 col-md-8 col-md-push-2 whyqd-content reading content">
+    <div class="col-xs-12 col-md-8 col-md-push-2 whyqd-content reading content {{ wiqi_object.stack.custom_div }}">
         <div class="whyqd-header">
             <div class="whyqd-text-black">
                 <div class="col-xs-12 text-center">
@@ -26,67 +20,5 @@
         <div class="row col-xs-12 col-lg-10 col-lg-push-1" id="content">
         {% if diff_wiqis %}{{ diff_wiqis|safe }}{% else %}{{ wiqi_object.htmlresponse|safe }}{% endif %}
         </div>
-        <div class="row" id="pagenav">
-            <div class="col-xs-12 col-lg-6" id="previouspage">
-            {% if wiqi_object.previous_wiqi %}
-                <a href="{{ wiqi_object.previous_wiqi.get_url }}" class="btn btn-md btn-read"
-                   role="button">Previous</a>
-            {% endif %}
-            </div>
-            {% if wiqi_object.next_wiqi %}
-                <div class="col-xs-12 col-lg-6" id="nextpage">
-                    <input type="hidden" value="false" id="buytrigger"/>
-                    <input type="hidden" value="{{ next_wiqi.get_url }}" id="nextpagelink"/>
-                {% if can_read_next == "open" %}
-                    <a href="{{ next_wiqi.get_url }}" class="btn btn-md btn-read pull-right"
-                              role="button">Next chapter</a>
-                {% elif not request.user.is_authenticated %}
-                    <form action="{% url 'facebook_connect' %}?next={{ next_wiqi.get_url }}&facebook_login=1" method="post">
-                        {% csrf_token %}
-                        <input type="hidden" value="1" name="connect" />
-                        <input type="hidden" value="{{ next_wiqi.get_url }}" name="next" />
-                        <input type="hidden" value="{{ next_wiqi.get_url }}" name="register_next" />
-                        <input type="hidden" value="{{ request.path }}" name="error_next" />
-                        <a onclick="F.connect(this.parentNode); return false;" href="javascript:void(0);"
-                           class="btn btn-md btn-read pull-right"
-                           id="nextbutton" role="button"><span class="icon-facebook-square"></span>
-                            Login to read next
-                           chapter{% if next_price %}<br/><small id="nextPriceText">Price increases to
-                           &pound; {{ next_price }}</small>{% endif %}</a>
-                    </form>
-                {% else %}
-                    {# Subtlety here ... if "owns" then owns the book, if "own" then still has to buy #}
-                    {% if can_read_next != "own" %}<a id="nextbutton" href="{{ next_wiqi.get_url }}"
-                                                      class="btn btn-md btn-read pull-right"
-                                                      role="button">Next chapter
-                        {% if can_read_next == "login" and next_price %}<br/><small id="nextPriceText">Price increases to
-                           &pound; {{ next_price }}</small>
-                        {% elif can_read_next == "borrowed" %}
-                        <br/><small id="two-line">Loaned until {{ request.user.deadline|naturalday:"l j E Y" }}</small>
-                        {% endif %}</a>
-                    {% elif can_read_next == "own" %}<button class="btn btn-md btn-read pull-right"
-                                                             id="two-line" disabled>This isn't
-                                                    the end.<br/><small>Buy {{ page_title }} and keep
-                                                    reading.</small></button>
-                    {% endif %}
-                {% endif %}
-                </div>
-            {% endif %}
-        </div>
-        <div class="text-center">
-            {% if show_buy %}
-            {% block buynovel %}
-                {% include 'novel/buy_novel.html' %}
-            {% endblock buynovel %}
-            {% endif %}
-        </div>
     </div>
 </div>
-{% endblock content %}
-
-{% block extrascripts %}
-{% if show_buy %}
-<script src="https://checkout.stripe.com/checkout.js"></script>
-<script src="{% static 'js/jquery.whyqd.buy.js' %}"></script>
-{% endif %}
-{% endblock extrascripts %}

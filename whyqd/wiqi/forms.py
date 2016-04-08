@@ -27,7 +27,7 @@ class WiqiForm(forms.ModelForm):
 
     class Meta:
         model = Wiqi
-        fields = ('is_live_from', 'is_live_to', 'is_private', )
+        fields = ('is_live_from', 'is_live_to',  )
 
 class WiqiPriceForm(forms.ModelForm):
     class Meta:

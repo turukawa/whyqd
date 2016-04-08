@@ -8,7 +8,6 @@ Abstract classes:
                     is_live_from
                     is_live_to
                     is_active
-                    is_private
                     is_searchable
                     is_deleted
                     stack (generic foreign key)
@@ -62,9 +61,10 @@ class Text(WiqiStack):
             kwargs = self.preprocess(**kwargs)
         self.subtitle = kwargs["subtitle"]
         self.content = kwargs["content"]
+        self.custom_div = kwargs["custom_div"]
         self.word_count = 0
         if self.content:
-            words = BeautifulSoup(self.content).get_text()
+            words = BeautifulSoup(self.content, "html.parser").get_text()
             self.word_count = len(words.split())
         super(Text, self).set(**kwargs)
         self.postprocess(**kwargs)
@@ -76,6 +76,7 @@ class Text(WiqiStack):
         try:
             assert(self.subtitle == kwargs.get("subtitle",""))
             assert(self.content == kwargs.get("content", ""))
+            assert(self.custom_div == kwargs.get("custom_div", ""))
             super(Text, self).update(**kwargs)
             return False
         except AssertionError:
@@ -85,8 +86,9 @@ class Text(WiqiStack):
 
     def preprocess(self, **kwargs):
         kwargs = super(Text, self).preprocess(**kwargs)
-        kwargs["subtitle"] = BeautifulSoup(kwargs.get("subtitle","")[:500]).get_text().strip()
+        kwargs["subtitle"] = BeautifulSoup(kwargs.get("subtitle","")[:500], "html.parser").get_text().strip()
         kwargs["content"] = mergediff(kwargs.get("content", ""))
+        kwargs["custom_div"] = BeautifulSoup(kwargs.get("custom_div","")[:500], "html.parser").get_text().strip()
         kwargs["set"] = True
         return kwargs
     
@@ -96,6 +98,7 @@ class Text(WiqiStack):
                    'content': self.content,
                    'title': self.title,
                    'subtitle': self.subtitle,
+                   'custom_div': self.custom_div,
                    }
         if not self.jsonresponse:
             self.jsonresponse = jsonset
@@ -110,6 +113,7 @@ class Text(WiqiStack):
         """
         kwargs["subtitle"] = self.subtitle
         kwargs["content"] = self.content
+        kwargs["custom_div"] = self.custom_div
         kwargs["word_count"] = self.word_count
         super(Text, self).revert(Text, **kwargs)
 

@@ -5,25 +5,31 @@ Whyqd is an extensible object-based wiki bringing revision control, content pres
 
 Features:
 
-- HTML-based presentation of complete novel;;
-- Import novel source DOCX and convert to individual HTML pages for each chapter;
-- Price and set permissions for each chapter (as open, login or own);
-- Structure the Contents page;
-- Manage currency conversion, sales and distribution of the novel, including refunds;
-- Create one-time / time-limited download tokens for distribution;
-- Manage marketing and distribution of free review copies by author;
-
-In the future, Whyqd will allow:
-
-- Online creation and editing of a novel;
-- Online conversion of HTML pages into epub, mobi and pdf ebooks;
-- Readers can fork, change and re-release books they buy;
-
-Whyqd allows content creators to publish and sell via a personal demand pricing model (e.g. the further a user reads into your novel, the higher the final price will be), and allow users to remix and republish the content after they've bought it.
-
-Remixing means that users could translate a novel, write their own fan-fiction, or expand on existing work all without having to do more than start editing.
+- Fully-implemented a text wiki, with a base wiqi for developing other types of wiki;
+- Wiki can be branched, as well as the usual tools for version control;
 
 Whyqd is written in Python and Django, with Jquery for the client side.
+
+Quick start
+-----------
+
+1. Add "whyqd" to your INSTALLED_APPS setting like this::
+
+    `INSTALLED_APPS = [
+        ...
+        'whyqd',
+    ]`
+
+2. Include the whyqd URLconf in your project urls.py like this::
+
+    `url(r'^wiqi/', include('whyqd.urls')),`
+
+3. Run `python manage.py migrate` to create the whyqd models.
+
+4. Start the development server and visit http://127.0.0.1:8000/create/
+   to create your first Text wiqi.
+
+5. Visit http://127.0.0.1:8000/ to view the list of wiqis.
 
 Roadmap
 -------
@@ -31,21 +37,12 @@ Roadmap
 ##### Current version (0.2):
 
 - Updated libraries to latest (Django 1.9);
-- Deprecated Mandrill, since they no longer offer this service, and replaced with Django mail;
 - Text pages can have custom class defined in div;
-- Imported DOCX can set a default price for each chapter;
 
 ##### Previous version (0.1):
 
 - The following wiqi objects are supported: Text, Images (not live), Maps (not live, handlers still to be written);
 - [Facebook auth system](https://github.com/tschellenbach/Django-facebook) along with per-object permissions;
-- A "book" model so that individual texts can be arranged as a single work;
-- Book management system (shuffling order of chapters);
-- Integration of python-docx for upload of Docx files;
-- [Stripe](https://stripe.com/gb) integration to support author sales of books;
-- [AWS Boto](https://github.com/boto/boto) integration for S3 time-limited download of books;
-- [Open Exchange Rates](https://openexchangerates.org/) for currency conversion;
-- [Mandrill](https://mandrill.com/) integration for distributed mail;
 
 ##### Next steps:
 
@@ -59,7 +56,7 @@ While maintaining the ability to publish only a single book, the next version sh
 
 ##### Long-term roadmap:
 
-Once the basic system is up and stable, then adding in new wiqi objects to support a much richer environment of book creation, including technical textbooks. I would also like the software to handle multiple books (requiring a search interface and a completely different approach to presenting the content).
+Once the basic system is up and stable, then adding in new wiqi objects to support a much richer environment of book creation, including technical textbooks.
 
 There's a long way to go and I would be grateful for code review and forks.
 
@@ -73,6 +70,6 @@ My thanks to everyone, too numerous across the community of coders, are offered 
 License
 -------
 
-Whyqd is copyright Gavin Chait and [Whythawk](http://www.whythawk.com). The software is released under the [GNU Affero General Public License](http://www.gnu.org/licenses/agpl-3.0.html). All visual and design elements are copyright Gavin Chait. The Red Maple image is copyright [Rodd Halstead](http://www.gettyimages.co.uk/detail/photo/red-maple-fruit-samara-royalty-free-image/89736283).
+Whyqd is copyright Gavin Chait and [Whythawk](http://www.whythawk.com). The software is released under the [GNU Affero General Public License](http://www.gnu.org/licenses/agpl-3.0.html). All visual and design elements are copyright Gavin Chait.
 
 The **personal demand pricing** approach adopted here is similar to that in use by airlines, congestion charging in cities, and is documented extensively (cf. peak pricing, demand pricing, Pareto efficiency, etc.). It is not patented and this implementation serves as prior art for anyone wanting to implement such a system in their own publication platform.

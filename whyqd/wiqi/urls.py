@@ -5,20 +5,8 @@ from whyqd.wiqi import views
 
 urlpatterns = [
                 # General
-                url(r'^$', views.index, {"template_name": "wiqi/index.html", "nav_type":"view"},
+                url(r'^$', views.index, {"template_name": "wiqi/list.html"},
                     name='index'),
-                url(r"^about/", views.index, {"template_name": "wiqi/about.html", "nav_type":"view"},
-                    name="about"),
-                url(r"^resellers/", views.index, {"template_name": "wiqi/resellers.html", "nav_type":"view"},
-                    name="resellers"),
-                url(r"^legal/", views.view_legal, {"template_name": "wiqi/legal.html"},
-                    name="legal"),
-                url(r"^nav/(?P<nav_type>[-\w]+)/(?P<wiqi_surl>[-\w]+)/", views.view_nav,
-                    {"template_name": "wiqi/view.html", "permission":"can_view"},
-                    name="view_nav"),
-                url(r"^embed/(?P<wiqi_surl>[-\w]+)/", views.view_wiqi,
-                    {"template_name": "wiqi/embed.html", "nav_type":"view", "permission":"can_view"},
-                    name="embed_wiqi"),
                 # Create Wiqi
                 url(r"^create/(?P<wiqi_type>[-\w]+)/(?P<previous_wiqi>[-\w]+)/", views.edit_wiqi,
                     {"template_name": "wiqi/edit.html", "nav_type":"create", "permission":None},
